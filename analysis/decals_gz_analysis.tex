@@ -24,6 +24,38 @@ Abstract.
 \keywords{keywords}
 \maketitle
 
+\section{Science case}
+
+The morphology of galaxies has long been a critical parameter in studying their formation and evolution over cosmic time. This includes basic divisions between early-type, late-type, and merging galaxies as well as more detailed measurements of bulge/disk ratio, spiral arm angle and orientation, and fainter features such as tidal tails or dust lanes. The former parameters measure the large scale integrated dynamical history of the galaxy, as well as its history of star formation \citep{sch14}, while the latter categories typically probe secular processes acting on longer timescales.
+
+Automated measurements of galaxy morphology, however, are not yet sufficiently accurate to be used on large scale surveys, especially for faint targets and features with small angular sizes. The Galaxy Zoo project has provided reliable morphologies for several large surveys (including SDSS, UKIDSS, COSMOS, and CANDELS) by leveraging crowdsourced visual classifications into quantitative probabilities. This technique shows each image to dozens of people and seeks consensus answers, using our knowledge of user reliability to weight their responses, and has been proven \citep{lin11,wil13} to be as reliable (and in many cases better) that state-of-the art automated methods. By using the DECaLS images in the existing Galaxy Zoo platform, the team will provide morphologies that complement the other globally measured host galaxy properties such as colour and luminosity. Galaxy Zoo has a strong track record in publication from Galaxy Zoo morphologies, with 50 publications which collectively have $\sim2000$~citations. Some of our science highlights include the discovery of new types of galaxies \citep[e.g. green peas;][]{car09}, as well as the investigation of red spirals \citep{bam09,mas10a} and blue ellipticals \citep{sch09}.
+
+The advantage of the DECaLS images over existing GZ measurements is primarily driven by two aspects: namely, the deeper imaging (especially in $g$- and $z$-bands, but also $r$-band), as well as improved spatial resolution compared to the SDSS which has provided the bulk of the low-redshift GZ images to date.
+
+In addition, the Dark Energy Spectroscopic Instrument \citep[DESI;][]{lev13a} is planning to use DECaLS for targets as part of major new galaxy redshift surveys covert 14000~deg$^2$ of the northern sky. The low redshift part of this is the Bright Galaxy Sample (BGS) which will use bright time to observe 10~million nearby galaxies (median redshift of $z=0.2$) from a simple magnitude-limited sample of $r<19.5$. Galaxy Zoo morphologies of BGS galaxies will provide several scientific opportunities, especially studying the clustering (real and redshift space) of galaxies as a function of their detailed morphologies. Such measurements will be significant improvements on existing SDSS-based GZ measurements \citep[see ][]{ski09,ski12} as it will provide greater statistics, larger scales and finer morphologies (e.g. better bar and bulge classifications). Moreover, morphologies may offer a new and unique way of helping to characterise the halo occupation statistics of galaxies thus assisting the detailed modeling of the DESI galaxies as a function of galaxy properties e.g., bright, massive, ellipticals are usually central halo galaxies. Moreover, morphologies may offer a new and unique way to help characterize the halo occupation statistics of galaxies, thus assisting the detailed modelling of the DESI galaxies as a function of galaxy properties, since bright massive ellipticals are usually central halo galaxies. In addition, they will enable analyses of the morphology-halo mass relation of galaxies with better precision than previous surveys.
+
+We list below four example science cases that can be addressed using the combination of DECaLS imaging/metadata and GZ crowdsourced morphologies.
+
+\begin{enumerate}
+    \item \textbf{Statistical studies of galaxy evolution with morphology} \textit{ (Lead GZ scientists: Lintott, Masters, Skibba, Schawinski, Willett).} The complexity of galaxy evolution, along with the development of large surveys, like SDSS has driven forward the technique of statistical galaxy evolution in recent years, revolutionising our understanding of the galaxy population, and revealing the complex interdependence of galaxy properties such as mass, environment, dynamics, morphology and their star formation histories. The multi-dimensional correlations common in galaxy evolution (e.g. between stellar mass, colour, environment and morphology) makes larger samples vital to disentangle the primary variables. Galaxy Zoo has enable the addition of quantitative visual morphology to these techniques, and the involvement of a large number of Galaxy Zoo team members in this project underscores how this covers the core GZ:DECaLS science). Our previous work with GZ:SDSS has found that samples of $N\simeq10^4$ may be needed for even a detection of some effects \citep{ski12}. GZ:DECaLS data (especially when combined with GZ:DES, a proposal for which is under review within DES) will reduce the statistical uncertainty in such measurements. Questions we will address are:
+    \begin{itemize}
+        \item How does star formation history correlate with morphology as a function of stellar mass and environment? Schawinski will provide significant expertise on constraining galaxy star formation histories and their links to morphology, also see \citet{sme15}.
+        \item Are bars triggered or destroyed by galaxy interactions in different environments? Follows on previous work by Skibba, Masters to greater statistical significance \citep{ski12,mas11c,mas12a}.
+        \item What is the contribution of bar dynamics to the feeding of AGN? e.g. an extension of \citet{gal15} to greater statistical significance.
+    \end{itemize}
+    \item \textbf{Discovery of rare objects} \textit{ (Lead GZ Scientists: Keel, Maksym, Simmons and Lintott).} The Galaxy Zoo experience with the SDSS data showed the value of having classifiers able to note objects which fell outside the normal range of galaxy structure, both as regards color and morphology; the greater surface brightness sensitivity, in particular, the DECaLS data promises to similarly reward broad inspection. Galaxy Zoo is perhaps best well known by the public for its discovery of a variety of unusual objects with very low spatial densities. The most famous is ``Hanny's Voorwerp'' (an AGN-ionized gas cloud) \citep{lin09}, but GZ has also discovered other classes of rare objects, including smaller versions of the Voorwerp \citep{kee12}, the ``green peas'' \citep[compact star forming galaxies;][]{car09}, bulgeless galaxies with AGN \citep{sim13}, and overlapping galaxies for studying dust content \citep{kee13}. We expect that new classes of objects that may be revealed by deeper imaging, and intend to not only use catalogues on known galaxies in GZ:DECaLS, but also include Tractor identification of extended objects which are not otherwise catalogued.
+    \item \textbf{Galaxy morphology at low luminosities} \textit{ (Lead GZ scientists: Bamford and Willett).} Visual morphologies for large, low-redshift samples have so far been limited by the depth and resolution of SDSS and UKIDSS. Studies that have pushed down to low luminosities have therefore been restricted to small volumes and correspondingly small samples. For example, the GAMA survey study by \citet{kel14a} studies only 3727~galaxies down to $M_r < -17.4$~mag, as it is limited to redshifts below $0.06$. GAMA will soon gain greater depth with VST-KiDS imaging, and has complete spectroscopic coverage, but covers only 250~deg$^2$. DECaLS will reach similar depths, but over a much larger area. GZ:DECaLS data will therefore greatly improve upon both the quality and number of classifications at fainter luminosities. Combining results from these complementary surveys will enable us to make a definitive morphological census of the ``faint end of the Hubble sequence'', where the galaxy population is dominated by very late-type disks, irregulars and dwarf spheroidals.
+    \item \textbf{Exploring the role of minor mergers} \textit{ (Lead GZ Scientist: Kaviraj).} Minor merging is a fundamental process that is thought to drive around half of the local star formation budget ($\sim40\%$ in local spirals) \citep{kav14a}. However, this process is poorly explored because minor mergers produce only faint tidal features that are invisible in typical imaging surveys (e.g. SDSS). We will use the deep DECaLS images to select minor merger remnants and study this process in detail in the local and intermediate redshift Universe ($z < 0.5$). Minor merger remnants will be selected by identifying spiral galaxies (i.e. galaxies which cannot have had a major merger) that are morphologically disturbed (so must have had a minor merger). This sample will be used to answer the following questions:
+    \begin{itemize}
+        \item What is the minor merger rate at $z = 0$ and does it show an evolution to intermediate redshift?
+        \item Do minor mergers trigger AGN activity? What role do they play in the low and high excitation modes in active galaxies?
+        \item How does the minor merger rate depend on stellar mass and environment?
+        \item What is the star formation enhancement due to minor merging in the host galaxies? Does this enhancement show any evolution with redshift?
+        \item What fraction of the star formation budget is driven by minor merging in the nearby Universe?
+    \end{itemize}
+    The methodology for this project has already been developed in \citet{kav14a} who performed an identical study using Stripe~82 (see Figure~1 in that paper for examples of deep images that will allow us to select minor merger remnants).
+\end{enumerate}
+
 \section{Selection criteria}
 
 Galaxy Zoo 2 --- main spectroscopic sample
@@ -60,18 +92,6 @@ So the Sloan and DECaLS samples definitely were not selected in the same manner.
 
 There are 32,429~images of galaxies in GZ-DECaLS.
 
-%Veggies es bonus vobis, proinde vos postulo essum magis kohlrabi welsh onion daikon amaranth tatsoi tomatillo melon azuki bean garlic.
-%
-%Gumbo beet greens corn soko endive gumbo gourd. Parsley shallot courgette tatsoi pea sprouts fava bean collard greens dandelion okra wakame tomato. Dandelion cucumber earthnut pea peanut soko zucchini.
-%
-%Turnip greens yarrow ricebean rutabaga endive cauliflower sea lettuce kohlrabi amaranth water spinach avocado daikon napa cabbage asparagus winter purslane kale. Celery potato scallion desert raisin horseradish spinach carrot soko. Lotus root water spinach fennel kombu maize bamboo shoot green bean swiss chard seakale pumpkin onion chickpea gram corn pea. Brussels sprout coriander water chestnut gourd swiss chard wakame kohlrabi beetroot carrot watercress. Corn amaranth salsify bunya nuts nori azuki bean chickweed potato bell pepper artichoke.
-%Veggies es bonus vobis, proinde vos postulo essum magis kohlrabi welsh onion daikon amaranth tatsoi tomatillo melon azuki bean garlic.
-%
-%Gumbo beet greens corn soko endive gumbo gourd. Parsley shallot courgette tatsoi pea sprouts fava bean collard greens dandelion okra wakame tomato. Dandelion cucumber earthnut pea peanut soko zucchini.
-%
-%Turnip greens yarrow ricebean rutabaga endive cauliflower sea lettuce kohlrabi amaranth water spinach avocado daikon napa cabbage asparagus winter purslane kale. Celery potato scallion desert raisin horseradish spinach carrot soko. Lotus root water spinach fennel kombu maize bamboo shoot green bean swiss chard seakale pumpkin onion chickpea gram corn pea. Brussels sprout coriander water chestnut gourd swiss chard wakame kohlrabi beetroot carrot watercress. Corn amaranth salsify bunya nuts nori azuki bean chickweed potato bell pepper artichoke.
-
-
 \section{Data}
 
 There is some overlap between the existing morphological classifications from Galaxy Zoo 2 \citep{wil13}. Most of the difference comes from the fact that SDSS was located at Apache Point Observatory in the Northern Hemisphere (latitude~$32.780278^\circ$), while the DECaLS camera is mounted on the Blanco 4-m telescope at CTIO in the Southern Hemisphere ($-30.169661^\circ$). They can cover a significant fraction of the same portion of the sky, but DECaLS will be limited at high northerly latitudes. Figure~\ref{fig:overlap_map} shows the overlap between the NASA-Sloan ATLAS\footnote{\url{http://www.nsatlas.org/}} (derived from SDSS) and DECaLS DR1. 
@@ -99,7 +119,7 @@ However, there are many DECaLS galaxies in the imaging area covered by the main 
 \begin{figure}
 \centering
 \includegraphics[width=80mm]{../plots/mismatch_hist.pdf}
-\caption{GZ-DECaLS galaxies in the Stripe~82 region. Galaxies with a match in the main GZ2 sample are shown the filled yellow symbols. Galaxies without a GZ2 match (open blue symbols) are due to a combination of lying outside the SDSS DR7 footprint and/or being fainter than the $m_r=17.0$ magnitude limit for GZ2.\label{fig:mismatch_hist}}
+\caption{Histogram of the apparent $r$-band magnitude distribution for various GZ-DECaLS subsamples, binned in $\Delta m_r=0.1$. The red histogram shows galaxies classified in both GZ2 and GZ-DECaLS; the blue represents GZ-DECaLS galaxies from the Stripe~82 region but not detected in GZ2, and the yellow represents GZ-DECaLS galaxies from outside the Stripe~82 region but not detected in GZ2\label{fig:mismatch_hist}}
 \end{figure}
 
 \emph{Summary: roughly 40\% of the DECaLS galaxies have morphological measurements from GZ2, and can be used for direct comparison. We believe we understand the reasons for the remainder of DECaLS images that are not matched to GZ2; these will be valuable scientific additions as new targets, and can serve as independent checks on the accuracy of the classifications.}
@@ -205,7 +225,6 @@ However, there are many DECaLS galaxies in the imaging area covered by the main 
 
 
 \acknowledgments{
-  Acknowledgments. 
 }
 
 \bibliographystyle{yahapj}
