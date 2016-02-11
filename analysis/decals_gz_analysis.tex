@@ -102,7 +102,7 @@ There is some overlap between the existing morphological classifications from Ga
 \caption{Overlap between galaxies in the NASA-Sloan Atlas (red) and selected targets for Galaxy Zoo from DECaLS DR1 (blue).\label{fig:overlap_map}}
 \end{figure*}
 
-Morphologies for this analysis are taken from the published GZ2 tables in \citet{wil13} for SDSS. The DECaLS morphologies have been collated and weighted, but not systematically debiased to account for changes in morphological fraction as a function of apparent size and brightness. Therefore, we only compare \emph{weighted vote fractions} ($f_{w,morph}$) for galaxies in each sample. 
+Morphologies for this analysis are taken from the published GZ2 tables in \citet{wil13} for SDSS. The DECaLS morphologies have been collated, but not systematically debiased to account for changes in morphological fraction as a function of apparent size and brightness. Therefore, we only compare the \emph{weighted vote fractions} ($f_{w,morph}$) from GZ2 to the \emph{raw vote fractions} ($f_{r,morph}$) from DECaLS.
 
 In the GZ2 main spectroscopic sample (243,500~galaxies), we matched galaxies within a $3^{\prime\prime}.0$ radius and find 9,281 subjects appearing in both catalogs. We match a further 5,800~subjects using the same radius for the Stripe~82 data. There is overlap of 2,814 bright Stripe~82 galaxies that are included in both. The unique total of 12,267~subjects is only 38\% of the GZ-DECaLS catalog, despite the fact that the original SDSS~Legacy sky coverage \citep{str02} overlaps with all of the current DECaLS bricks. 
 
@@ -138,7 +138,7 @@ However, there are many DECaLS galaxies in the imaging area covered by the main 
     
     smooth                  & 179153 & 0.74    & 0.74    &  16209 & 0.82    & 0.82    & 23292 & 0.72    & 0.72 \\
     features/disk           &  64067 & 0.26    & 0.26    &   3346 & 0.17    & 0.17    &  7967 & 0.25    & 0.25 \\
-    star/artifact           &    280 & $<0.01$ & $<0.01$ &    210 & 0.01    & 0.01    &  1170 & 0.04    & 0.04 \\
+    star/artifact           &    280 & 0.00    & 0.00    &    210 & 0.01    & 0.01    &  1170 & 0.04    & 0.04 \\
     \hline                                                                    
     edge-on                 &   9932 & 0.04    & 0.16    &    624 & 0.03    & 0.19    &  1726 & 0.05    & 0.22 \\
     not edge-on             &  54135 & 0.22    & 0.84    &   2722 & 0.14    & 0.81    &  6241 & 0.19    & 0.78 \\
@@ -153,21 +153,21 @@ However, there are many DECaLS galaxies in the imaging area covered by the main 
     medium spiral arms      &  20691 & 0.08    & 0.46    &    981 & 0.05    & 0.40    &  1637 & 0.05    & 0.33 \\
     loose spiral arms       &   6821 & 0.03    & 0.15    &    388 & 0.02    & 0.16    &   871 & 0.02    & 0.18 \\
     \hline                                                                            
-    1 spiral arm            &   1879 & 0.01    & 0.04    &    119 & 0.01    & 0.05    &   237 & $<0.01$ & 0.05 \\
+    1 spiral arm            &   1879 & 0.01    & 0.04    &    119 & 0.01    & 0.05    &   237 & 0.00    & 0.05 \\
     2 spiral arms           &  26413 & 0.11    & 0.59    &   1602 & 0.08    & 0.65    &  3566 & 0.10    & 0.72 \\
     3 spiral arms           &   3025 & 0.01    & 0.07    &    188 & 0.01    & 0.08    &   625 & 0.01    & 0.13 \\
-    4 spiral arms           &    837 & $<0.01$ & 0.02    &     51 & $<0.01$ & 0.02    &   192 & $<0.01$ & 0.04 \\
-    $5+$ spiral arms        &    758 & $<0.01$ & 0.02    &     44 & $<0.01$ & 0.02    &   167 & $<0.01$ & 0.03 \\
+    4 spiral arms           &    837 & 0.00    & 0.02    &     51 & 0.00    & 0.02    &   192 & 0.00    & 0.04 \\
+    $5+$ spiral arms        &    758 & 0.00    & 0.02    &     44 & 0.00    & 0.02    &   167 & 0.00    & 0.03 \\
     ?? spiral arms          &  11922 & 0.05    & 0.27    &    478 & 0.02    & 0.19    &  $--$ & $--$    & $--$ \\
     \hline                                                                            
     no bulge                &   3962 & 0.02    & 0.07    &    103 & 0.01    & 0.04    &   593 & 0.01    & 0.10 \\
     noticeable bulge        &  34139 & 0.14    & 0.63    &   1139 & 0.06    & 0.42    &  $--$ & $--$    & $--$ \\
     obvious bulge           &  15791 & 0.06    & 0.29    &   1321 & 0.07    & 0.48    &  5316 & 0.16    & 0.85 \\
-    dominant bulge          &    361 & $<0.01$ & 0.01    &    170 & 0.01    & 0.06    &   432 & 0.01    & 0.07 \\
+    dominant bulge          &    361 & 0.00    & 0.01    &    170 & 0.01    & 0.06    &   432 & 0.01    & 0.07 \\
     \hline                                                                      
     round edge-on bulge     &   6506 & 0.03    & 0.66    &    524 & 0.03    & 0.85    &  1244 & 0.03    & 0.76 \\
-    boxy edge-on bulge      &    173 & $<0.01$ & 0.02    &      5 & $<0.01$ & 0.01    &    53 & $<0.01$ & 0.03 \\
-    no edge-on bulge        &   3135 & 0.01    & 0.32    &     84 & $<0.01$ & 0.14    &   329 & 0.01    & 0.20 \\
+    boxy edge-on bulge      &    173 & 0.00    & 0.02    &      5 & 0.00    & 0.01    &    53 & 0.00    & 0.03 \\
+    no edge-on bulge        &   3135 & 0.01    & 0.32    &     84 & 0.00    & 0.14    &   329 & 0.01    & 0.20 \\
     \hline                                                                   
     round elliptical        &  62308 & 0.26    & 0.35    &   6092 & 0.31    & 0.38    &  9279 & 0.28    & 0.39 \\
     in-between elliptical   &  91284 & 0.37    & 0.51    &   8331 & 0.42    & 0.51    & 11369 & 0.35    & 0.48 \\
@@ -177,26 +177,27 @@ However, there are many DECaLS galaxies in the imaging area covered by the main 
     no odd features         & 219425 & 0.90    & 0.90    &  17842 & 0.90    & 0.91    &  $--$ & $--$    & $--$ \\
     \hline                                                                            
     ring                    &   4099 & 0.02    & 0.18    &    178 & 0.01    & 0.11    &   317 & 0.01    & 0.01 \\
-    lens/arc                &    155 & $<0.01$ & 0.01    &     17 & $<0.01$ & 0.01    &     4 & $<0.01$ & $<0.01$ \\
-    disturbed               &    720 & $<0.01$ & 0.03    &     47 & $<0.01$ & 0.03    &  $--$ & $--$    & $--$ \\
-    irregular               &   5761 & 0.02    & 0.25    &    113 & 0.01    & 0.07    &    44 & $<0.01$ & $<0.01$ \\
-    other                   &   4919 & 0.02    & 0.21    &    589 & 0.03    & 0.38    &    14 & $<0.01$ & $<0.01$ \\
+    lens/arc                &    155 & 0.00    & 0.01    &     17 & 0.00    & 0.01    &     4 & 0.00    & 0.00    \\
+    disturbed               &    720 & 0.00    & 0.03    &     47 & 0.00    & 0.03    &  $--$ & $--$    & $--$ \\
+    irregular               &   5761 & 0.02    & 0.25    &    113 & 0.01    & 0.07    &    44 & 0.00    & 0.00    \\
+    other                   &   4919 & 0.02    & 0.21    &    589 & 0.03    & 0.38    &    14 & 0.00    & 0.00    \\
     merger                  &   7018 & 0.03    & 0.31    &    599 & 0.03    & 0.39    &  $--$ & $--$    & $--$ \\
-    dust lane               &    220 & $<0.01$ & 0.01    &      6 & $<0.01$ & $<0.01$ &   141 & $<0.01$ & $<0.01$ \\
-    overlapping             &   $--$ & $--$    & $--$    &   $--$ & $--$    & $--$    &    52 & $<0.01$ & $<0.01$ \\
+    dust lane               &    220 & 0.00    & 0.01    &      6 & 0.00    & 0.00    &   141 & 0.00    & 0.00    \\
+    overlapping             &   $--$ & $--$    & $--$    &   $--$ & $--$    & $--$    &    52 & 0.00    & 0.00    \\
     nothing                 &   $--$ & $--$    & $--$    &   $--$ & $--$    & $--$    &   979 & 0.03    & 0.03 \\
     \hline
     merger                  & $--$ & $--$ & $--$ & $--$ & $--$ & $--$ &  1543 & 0.04 & 0.04 \\
     tidal debris            & $--$ & $--$ & $--$ & $--$ & $--$ & $--$ &   343 & 0.01 & 0.01 \\
-    merger and tidal debris & $--$ & $--$ & $--$ & $--$ & $--$ & $--$ &   141 & $<0.01$ & $<0.01$ \\
+    merger and tidal debris & $--$ & $--$ & $--$ & $--$ & $--$ & $--$ &   141 & 0.00    & 0.00    \\
     neither                 & $--$ & $--$ & $--$ & $--$ & $--$ & $--$ & 29232 & 0.93 & 0.93 \\
 \hline\hline
 \end{tabular}
+\tablecomments{A value of $0.00$ is rounded down, indicating that the fraction of galaxies in this category was $f<0.01$.}
 \end{table*}
 
 \begin{table*}
 \centering
-\caption{Galaxy Zoo morphological demographics for low-$z$ optical imaging --- overlaps only}\label{tbl-overlaps}
+\caption{Galaxy Zoo morphological demographics for low-$z$ optical imaging --- GZ2/DECaLS overlaps only}\label{tbl-overlaps}
 \begin{tabular}{l|rcc|rcc|rcc}
 \hline\hline
     Task & \multicolumn{3}{c}{SDSS main sample} & \multicolumn{3}{c}{Stripe 82 coadd} & \multicolumn{3}{c}{DECaLS} \\
@@ -204,10 +205,65 @@ However, there are many DECaLS galaxies in the imaging area covered by the main 
     & $N_{tot}$ & $f_{tot}$ & $f_{prev task}$ & $N_{tot}$ & $f_{tot}$ & $f_{prev task}$ & $N_{tot}$ & $f_{tot}$ & $f_{prev task}$ \\
     \hline
     
-    smooth                  & 179153 & 0.74    & 0.74    &  16209 & 0.82    & 0.82    & 23292 & 0.72    & 0.72 \\
+    smooth                  &   6715 & 0.72 & 0.72 &   4705 & 0.81 & 0.81       &   7583 & 0.62 & 0.62                                                    \\
+    features/disk           &   2554 & 0.28 & 0.28 &   1054 & 0.18 & 0.18       &   4482 & 0.37 & 0.37                                                    \\
+    star/artifact           &     12 & 0.00 & 0.00 &     41 & 0.01 & 0.01       &    202 & 0.02 & 0.02                                                    \\
+    \hline                                                                                                                                         
+    edge-on                 &    395 & 0.04 & 0.15 &    211 & 0.04 & 0.20       &    781 & 0.06 & 0.17                                                    \\
+    not edge-on             &   2159 & 0.23 & 0.85 &    843 & 0.15 & 0.80       &   3701 & 0.30 & 0.83                                                    \\
+    \hline                                                                                                                                         
+    barred disk             &    528 & 0.06 & 0.24 &    257 & 0.04 & 0.30       &    706 & 0.06 & 0.19                                                    \\
+    no bar                  &   1636 & 0.18 & 0.76 &    589 & 0.10 & 0.70       &   3049 & 0.25 & 0.81                                                    \\
+    \hline                                                                                                                                         
+    spiral                  &   1842 & 0.20 & 0.85 &    785 & 0.14 & 0.93       &   3044 & 0.25 & 0.81                                                    \\
+    no spiral               &    322 & 0.03 & 0.15 &     61 & 0.01 & 0.07       &    711 & 0.06 & 0.19                                                    \\
+    \hline                                                                                                                                         
+    tight spiral arms       &    654 & 0.07 & 0.36 &    355 & 0.06 & 0.46       &   1545 & 0.13 & 0.52                                                    \\
+    medium spiral arms      &    848 & 0.09 & 0.47 &    300 & 0.05 & 0.39       &    974 & 0.08 & 0.33                                                    \\
+    loose spiral arms       &    315 & 0.03 & 0.17 &    118 & 0.02 & 0.15       &    428 & 0.03 & 0.15                                                    \\
+    \hline                                                                                                                                         
+    1 spiral arm            &     73 & 0.01 & 0.04 &     34 & 0.01 & 0.04       &    125 & 0.01 & 0.04                                                    \\
+    2 spiral arms           &   1055 & 0.11 & 0.58 &    488 & 0.08 & 0.63       &   2136 & 0.17 & 0.72                                                    \\
+    3 spiral arms           &    120 & 0.01 & 0.07 &     60 & 0.01 & 0.08       &    442 & 0.04 & 0.15                                                    \\
+    4 spiral arms           &     35 & 0.00 & 0.02 &     18 & 0.00 & 0.02       &    142 & 0.01 & 0.05                                                    \\
+    $5+$ spiral arms        &     24 & 0.00 & 0.01 &     14 & 0.00 & 0.02       &    102 & 0.01 & 0.03                                                    \\
+    ?? spiral arms          &    510 & 0.05 & 0.28 &    159 & 0.03 & 0.21       &   $--$ & $--$ & $--$                                                    \\
+    \hline                                                                                                                  
+    no bulge                &    152 & 0.02 & 0.07 &     36 & 0.01 & 0.04       &    191 & 0.02 & 0.05                                                   \\
+    noticeable bulge        &   1410 & 0.15 & 0.65 &    374 & 0.06 & 0.44       &   $--$ & $--$ & $--$                                                   \\
+    obvious bulge           &    590 & 0.06 & 0.27 &    382 & 0.07 & 0.45       &   3293 & 0.27 & 0.88                                                   \\
+    dominant bulge          &     12 & 0.00 & 0.01 &     54 & 0.01 & 0.06       &    271 & 0.02 & 0.07                                                   \\
+    \hline                                                                                                                                         
+    round edge-on bulge     &    266 & 0.03 & 0.68 &    183 & 0.03 & 0.88       &    566 & 0.05 & 0.78                                                   \\
+    boxy edge-on bulge      &      7 & 0.00 & 0.02 &      2 & 0.00 & 0.01       &     23 & 0.00 & 0.03                                                   \\
+    no edge-on bulge        &    117 & 0.01 & 0.30 &     23 & 0.00 & 0.11       &    138 & 0.01 & 0.19                                                   \\
+    \hline                                                                                                                                         
+    round elliptical        &   2198 & 0.24 & 0.33 &   1581 & 0.27 & 0.34       &   3160 & 0.26 & 0.42                                                   \\
+    in-between elliptical   &   3482 & 0.38 & 0.52 &   2513 & 0.43 & 0.53       &   3583 & 0.29 & 0.47                                                   \\
+    cigar-shaped elliptical &   1035 & 0.11 & 0.15 &    611 & 0.11 & 0.13       &    840 & 0.07 & 0.11                                                   \\
+    \hline                                                                                                                                         
+    odd feature             &    763 & 0.08 & 0.08 &    407 & 0.07 & 0.07       &  $--$  & $--$ & $--$                                                   \\
+    no odd features         &   8506 & 0.92 & 0.92 &   5352 & 0.92 & 0.93       &  $--$  & $--$ & $--$                                                   \\
+    \hline                                                                                                                                         
+    ring                    &    142 & 0.02 & 0.20 &     51 & 0.01 & 0.14       &    200 & 0.02 & 0.34                                                   \\
+    lens/arc                &      4 & 0.00 & 0.01 &      6 & 0.00 & 0.02       &      3 & 0.00 & 0.01                                                   \\
+    disturbed               &     30 & 0.00 & 0.04 &     15 & 0.00 & 0.04       &   $--$ & $--$ & $--$                                                   \\
+    irregular               &    223 & 0.02 & 0.31 &     40 & 0.01 & 0.11       &     12 & 0.00 & 0.02                                                   \\
+    other                   &    126 & 0.01 & 0.17 &    107 & 0.02 & 0.29       &      9 & 0.00 & 0.02                                                   \\
+    merger                  &    188 & 0.02 & 0.26 &    143 & 0.02 & 0.39       &   $--$ & $--$ & $--$                                                   \\
+    dust lane               &      9 & 0.00 & 0.01 &      1 & 0.00 & 0.00       &     46 & 0.00 & 0.08                                                   \\
+    overlapping             &  $--$  & $--$ & $--$ &   $--$ & $--$ & $--$       &     14 & 0.00 & 0.02                                                   \\
+    nothing                 &  $--$  & $--$ & $--$ &   $--$ & $--$ & $--$       &    296 & 0.02 & 0.51                                                   \\
+    \hline                                                                                     
+    merger                  & $--$ & $--$ & $--$ & $--$ & $--$ & $--$           &    458 & 0.04 & 0.04                               \\
+    tidal debris            & $--$ & $--$ & $--$ & $--$ & $--$ & $--$           &    167 & 0.01 & 0.01                               \\
+    merger and tidal debris & $--$ & $--$ & $--$ & $--$ & $--$ & $--$           &     64 & 0.01 & 0.01                               \\
+    neither                 & $--$ & $--$ & $--$ & $--$ & $--$ & $--$           &  11376 & 0.93 & 0.94                               \\
 \hline\hline
 \end{tabular}
+\tablecomments{A value of $0.00$ is rounded down, indicating that the fraction of galaxies in this category was $f<0.01$.}
 \end{table*}
+                                           
 
 \section{Analysis}
 
