@@ -1,0 +1,30 @@
+\begin{thebibliography}{}
+\providecommand\natexlab[1]{#1}
+\providecommand\JournalTitle[1]{#1}
+
+\bibitem[{{Annis} {et~al.}(2014){Annis}, {Soares-Santos}, {Strauss}, {Becker},
+  {Dodelson}, {Fan}, {Gunn}, {Hao}, {Ivezi{\'c}}, {Jester}, {Jiang},
+  {Johnston}, {Kubo}, {Lampeitl}, {Lin}, {Lupton}, {Miknaitis}, {Seo}, {Simet},
+  \& {Yanny}}]{ann14}
+{Annis}, J., {Soares-Santos}, M., {Strauss}, M.~A., {et~al.} 2014,
+  \href{http://dx.doi.org/10.1088/0004-637X/794/2/120}{\JournalTitle{\apj},
+  794, 120}
+
+\bibitem[{{Strauss} {et~al.}(2002){Strauss}, {Weinberg}, {Lupton}, {Narayanan},
+  {Annis}, {Bernardi}, {Blanton}, {Burles}, {Connolly}, {Dalcanton}, {Doi},
+  {Eisenstein}, {Frieman}, {Fukugita}, {Gunn}, {Ivezi{\'c}}, {Kent}, {Kim},
+  {Knapp}, {Kron}, {Munn}, {Newberg}, {Nichol}, {Okamura}, {Quinn}, {Richmond},
+  {Schlegel}, {Shimasaku}, {SubbaRao}, {Szalay}, {Vanden Berk}, {Vogeley},
+  {Yanny}, {Yasuda}, {York}, \& {Zehavi}}]{str02}
+{Strauss}, M.~A., {Weinberg}, D.~H., {Lupton}, R.~H., {et~al.} 2002,
+  \href{http://dx.doi.org/10.1086/342343}{\JournalTitle{\aj}, 124, 1810}
+
+\bibitem[{{Willett} {et~al.}(2013){Willett}, {Lintott}, {Bamford}, {Masters},
+  {Simmons}, {Casteels}, {Edmondson}, {Fortson}, {Kaviraj}, {Keel}, {Melvin},
+  {Nichol}, {Raddick}, {Schawinski}, {Simpson}, {Skibba}, {Smith}, \&
+  {Thomas}}]{wil13}
+{Willett}, K.~W., {Lintott}, C.~J., {Bamford}, S.~P., {et~al.} 2013,
+  \href{http://dx.doi.org/10.1093/mnras/stt1458}{\JournalTitle{\mnras}, 435,
+  2835}
+
+\end{thebibliography}

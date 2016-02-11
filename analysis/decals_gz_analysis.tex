@@ -1,0 +1,214 @@
+\documentclass[iop,apj,tighten]{emulateapj}
+%\pdfoutput=1 %for arxiv submission to use pdf
+\usepackage{apjfonts} %If missing fonts, comment out this or google apjfonts to download
+\usepackage{amsmath,amstext}
+\usepackage[breaklinks,colorlinks,citecolor=blue,linkcolor=magenta]{hyperref} 
+\usepackage[all]{hypcap} %Links go to figures. This breaks deluxetables; use \capstartfalse \capstarttrue around deluxetables to fix it.
+
+\renewcommand*{\sectionautorefname}{Section} %for \autoref
+\renewcommand*{\subsectionautorefname}{Section} %for \autoref
+
+\shorttitle{Galaxy Zoo: DECaLS}
+\shortauthors{Willett et al.}
+
+\begin{document}
+
+\title{Initial analysis of crowdsourced morphological classifications of DECaLS images}
+\author{K.W. Willett\altaffilmark{1} et al.}
+\affil{$^1$University of Minnesota}
+
+\begin{abstract}
+Abstract.
+\end{abstract}
+
+\keywords{keywords}
+\maketitle
+
+\section{Selection criteria}
+
+Galaxy Zoo 2 --- main spectroscopic sample
+
+\begin{itemize}
+    \item Galaxy in MGS or Stripe 82
+    \item spectroscopic redshift available
+    \item $0.0005 < z_{spec} < 0.25$
+    \item $m_r < 17.0$
+    \item $\texttt{petro90\_r} > 3^{\prime\prime}$
+    \item flag is not SATURATED, BRIGHT, or BLENDED
+\end{itemize}
+
+Galaxy Zoo 2 --- Stripe 82 coadd
+
+\begin{itemize}
+    \item version 1 of coadded data
+    \item same as MGS with exception of $m_r < 17.77$
+\end{itemize}
+
+Dark Energy Camera Legacy Survey (DECaLS)
+
+\begin{itemize}
+    \item Galaxies in NASA-Sloan (Extended) Atlas
+    \item Good-quality measurements in $g$, $r$, $z$ bands as of Jun 2015
+    \item NSA: $\texttt{brick\_primary} = 1$
+    \item NSA: $\texttt{decam\_anymask} = 0$
+    \item NSA: $\texttt{decam\_nobs} \geq 1$
+    \item $\theta_r > 10^{\prime\prime}$
+    \item no magnitude cutoff
+\end{itemize}
+
+So the Sloan and DECaLS samples definitely were not selected in the same manner. However, all the relevant parameters are stored in the NASA-Sloan Atlas if we wanted to cut on that. More specifically, we can do a simple match (ideally through previously matched catalogs, but if necessary through a tight positional match) to directly compare morphological measurements for \emph{the same galaxies} (Table \ref{tbl-overlaps}).
+
+There are 32,429~images of galaxies in GZ-DECaLS.
+
+%Veggies es bonus vobis, proinde vos postulo essum magis kohlrabi welsh onion daikon amaranth tatsoi tomatillo melon azuki bean garlic.
+%
+%Gumbo beet greens corn soko endive gumbo gourd. Parsley shallot courgette tatsoi pea sprouts fava bean collard greens dandelion okra wakame tomato. Dandelion cucumber earthnut pea peanut soko zucchini.
+%
+%Turnip greens yarrow ricebean rutabaga endive cauliflower sea lettuce kohlrabi amaranth water spinach avocado daikon napa cabbage asparagus winter purslane kale. Celery potato scallion desert raisin horseradish spinach carrot soko. Lotus root water spinach fennel kombu maize bamboo shoot green bean swiss chard seakale pumpkin onion chickpea gram corn pea. Brussels sprout coriander water chestnut gourd swiss chard wakame kohlrabi beetroot carrot watercress. Corn amaranth salsify bunya nuts nori azuki bean chickweed potato bell pepper artichoke.
+%Veggies es bonus vobis, proinde vos postulo essum magis kohlrabi welsh onion daikon amaranth tatsoi tomatillo melon azuki bean garlic.
+%
+%Gumbo beet greens corn soko endive gumbo gourd. Parsley shallot courgette tatsoi pea sprouts fava bean collard greens dandelion okra wakame tomato. Dandelion cucumber earthnut pea peanut soko zucchini.
+%
+%Turnip greens yarrow ricebean rutabaga endive cauliflower sea lettuce kohlrabi amaranth water spinach avocado daikon napa cabbage asparagus winter purslane kale. Celery potato scallion desert raisin horseradish spinach carrot soko. Lotus root water spinach fennel kombu maize bamboo shoot green bean swiss chard seakale pumpkin onion chickpea gram corn pea. Brussels sprout coriander water chestnut gourd swiss chard wakame kohlrabi beetroot carrot watercress. Corn amaranth salsify bunya nuts nori azuki bean chickweed potato bell pepper artichoke.
+
+
+\section{Data}
+
+There is some overlap between the existing morphological classifications from Galaxy Zoo 2 \citep{wil13}. Most of the difference comes from the fact that SDSS was located at Apache Point Observatory in the Northern Hemisphere (latitude~$32.780278^\circ$), while the DECaLS camera is mounted on the Blanco 4-m telescope at CTIO in the Southern Hemisphere ($-30.169661^\circ$). They can cover a significant fraction of the same portion of the sky, but DECaLS will be limited at high northerly latitudes. Figure~\ref{fig:overlap_map} shows the overlap between the NASA-Sloan ATLAS\footnote{\url{http://www.nsatlas.org/}} (derived from SDSS) and DECaLS DR1. 
+
+\begin{figure*}
+\centering
+\includegraphics[width=160mm]{../plots/decals_allimages_nsa_map.pdf}
+\caption{Overlap between galaxies in the NASA-Sloan Atlas (red) and selected targets for Galaxy Zoo from DECaLS DR1 (blue).\label{fig:overlap_map}}
+\end{figure*}
+
+Morphologies for this analysis are taken from the published GZ2 tables in \citet{wil13} for SDSS. The DECaLS morphologies have been collated and weighted, but not systematically debiased to account for changes in morphological fraction as a function of apparent size and brightness. Therefore, we only compare \emph{weighted vote fractions} ($f_{w,morph}$) for galaxies in each sample. 
+
+In the GZ2 main spectroscopic sample (243,500~galaxies), we matched galaxies within a $3^{\prime\prime}.0$ radius and find 9,281 subjects appearing in both catalogs. We match a further 5,800~subjects using the same radius for the Stripe~82 data. There is overlap of 2,814 bright Stripe~82 galaxies that are included in both. The unique total of 12,267~subjects is only 38\% of the GZ-DECaLS catalog, despite the fact that the original SDSS~Legacy sky coverage \citep{str02} overlaps with all of the current DECaLS bricks. 
+
+Part of the mismatch comes from the limited spatial coverage of the Stripe 82 region in SDSS, which only covered a declination range of $-1.26^\circ<\delta<+1.26^\circ$ \citep{ann14}. The DECaLS imaging bricks have NSA targets in a larger area, extending between roughly $-2.5^\circ<\delta<+2.5^\circ$ (Figure~\ref{fig:mismatch_map}). These are presumbly targets imaged in SDSS DR8 or later, since otherwise they would have been included in the original GZ2 selection. 
+
+\begin{figure}
+\centering
+\includegraphics[width=80mm]{../plots/stripe82_mismatch.pdf}
+\caption{GZ-DECaLS galaxies in the Stripe~82 region. Galaxies with a match in the main GZ2 sample are shown the filled yellow symbols. Galaxies without a GZ2 match (open blue symbols) are due to a combination of lying outside the SDSS DR7 footprint and/or being fainter than the $m_r=17.0$ magnitude limit for GZ2.\label{fig:mismatch_map}}
+\end{figure}
+
+However, there are many DECaLS galaxies in the imaging area covered by the main Legacy survey. Galaxies in DECaLS but \emph{not} GZ2 have $\langle m_r\rangle = 17.27$~mag, $\langle r_{petro}\rangle = 6^{\prime\prime}.64$, $\langle z\rangle = 0.093$. Galaxies in \emph{both} DECaLS and GZ2 are on average brighter ($\langle m_r\rangle = 16.29$~mag), larger ($\langle r_{petro}\rangle = 7^{\prime\prime}.99$), and lower-redshift ($\langle z\rangle = 0.080$). The vast majority of the DECaLS images with no GZ2 counterpart are galaxies with $17.0 < m_r < 17.77$ --- the fainter magnitude limit is that set by the GZ2 main sample, and the brighter was the spectroscopic targeting limit for SDSS (required for a redshift and inclusion in the NSA; Figure~\ref{fig:mismatch_hist}). The few remaining galaxies brighter than 17.0~mag but not in GZ2 may be the result of positional matching errors, very low-redshift ($z<0.0005$) galaxies or targets with a large angular size that were shredded in the initial SDSS pipeline. 
+
+\begin{figure}
+\centering
+\includegraphics[width=80mm]{../plots/mismatch_hist.pdf}
+\caption{GZ-DECaLS galaxies in the Stripe~82 region. Galaxies with a match in the main GZ2 sample are shown the filled yellow symbols. Galaxies without a GZ2 match (open blue symbols) are due to a combination of lying outside the SDSS DR7 footprint and/or being fainter than the $m_r=17.0$ magnitude limit for GZ2.\label{fig:mismatch_hist}}
+\end{figure}
+
+\emph{Summary: roughly 40\% of the DECaLS galaxies have morphological measurements from GZ2, and can be used for direct comparison. We believe we understand the reasons for the remainder of DECaLS images that are not matched to GZ2; these will be valuable scientific additions as new targets, and can serve as independent checks on the accuracy of the classifications.}
+
+
+
+\begin{table*}
+\centering
+\caption{Galaxy Zoo morphological demographics for low-$z$ optical imaging --- all galaxies}\label{tbl-allgals}
+\begin{tabular}{l|rcc|rcc|rcc}
+\hline\hline
+    Task & \multicolumn{3}{c}{SDSS main sample} & \multicolumn{3}{c}{Stripe 82 coadd} & \multicolumn{3}{c}{DECaLS} \\
+    
+    & $N_{tot}$ & $f_{tot}$ & $f_{prev task}$ & $N_{tot}$ & $f_{tot}$ & $f_{prev task}$ & $N_{tot}$ & $f_{tot}$ & $f_{prev task}$ \\
+    \hline
+    
+    smooth                  & 179153 & 0.74    & 0.74    &  16209 & 0.82    & 0.82    & 23292 & 0.72    & 0.72 \\
+    features/disk           &  64067 & 0.26    & 0.26    &   3346 & 0.17    & 0.17    &  7967 & 0.25    & 0.25 \\
+    star/artifact           &    280 & $<0.01$ & $<0.01$ &    210 & 0.01    & 0.01    &  1170 & 0.04    & 0.04 \\
+    \hline                                                                    
+    edge-on                 &   9932 & 0.04    & 0.16    &    624 & 0.03    & 0.19    &  1726 & 0.05    & 0.22 \\
+    not edge-on             &  54135 & 0.22    & 0.84    &   2722 & 0.14    & 0.81    &  6241 & 0.19    & 0.78 \\
+    \hline                                                                              
+    barred disk             &  14366 & 0.06    & 0.26    &    801 & 0.04    & 0.29    &  1174 & 0.03    & 0.19 \\
+    no bar                  &  39887 & 0.16    & 0.74    &   1932 & 0.10    & 0.71    &  5167 & 0.15    & 0.81 \\
+    \hline                                                                              
+    spiral                  &  45462 & 0.19    & 0.84    &   2520 & 0.13    & 0.92    &  4973 & 0.15    & 0.80 \\
+    no spiral               &   8791 & 0.04    & 0.16    &    213 & 0.01    & 0.08    &  1368 & 0.04    & 0.20 \\
+    \hline                                                                            
+    tight spiral arms       &  17322 & 0.07    & 0.39    &   1113 & 0.06    & 0.45    &  2279 & 0.07    & 0.46 \\
+    medium spiral arms      &  20691 & 0.08    & 0.46    &    981 & 0.05    & 0.40    &  1637 & 0.05    & 0.33 \\
+    loose spiral arms       &   6821 & 0.03    & 0.15    &    388 & 0.02    & 0.16    &   871 & 0.02    & 0.18 \\
+    \hline                                                                            
+    1 spiral arm            &   1879 & 0.01    & 0.04    &    119 & 0.01    & 0.05    &   237 & $<0.01$ & 0.05 \\
+    2 spiral arms           &  26413 & 0.11    & 0.59    &   1602 & 0.08    & 0.65    &  3566 & 0.10    & 0.72 \\
+    3 spiral arms           &   3025 & 0.01    & 0.07    &    188 & 0.01    & 0.08    &   625 & 0.01    & 0.13 \\
+    4 spiral arms           &    837 & $<0.01$ & 0.02    &     51 & $<0.01$ & 0.02    &   192 & $<0.01$ & 0.04 \\
+    $5+$ spiral arms        &    758 & $<0.01$ & 0.02    &     44 & $<0.01$ & 0.02    &   167 & $<0.01$ & 0.03 \\
+    ?? spiral arms          &  11922 & 0.05    & 0.27    &    478 & 0.02    & 0.19    &  $--$ & $--$    & $--$ \\
+    \hline                                                                            
+    no bulge                &   3962 & 0.02    & 0.07    &    103 & 0.01    & 0.04    &   593 & 0.01    & 0.10 \\
+    noticeable bulge        &  34139 & 0.14    & 0.63    &   1139 & 0.06    & 0.42    &  $--$ & $--$    & $--$ \\
+    obvious bulge           &  15791 & 0.06    & 0.29    &   1321 & 0.07    & 0.48    &  5316 & 0.16    & 0.85 \\
+    dominant bulge          &    361 & $<0.01$ & 0.01    &    170 & 0.01    & 0.06    &   432 & 0.01    & 0.07 \\
+    \hline                                                                      
+    round edge-on bulge     &   6506 & 0.03    & 0.66    &    524 & 0.03    & 0.85    &  1244 & 0.03    & 0.76 \\
+    boxy edge-on bulge      &    173 & $<0.01$ & 0.02    &      5 & $<0.01$ & 0.01    &    53 & $<0.01$ & 0.03 \\
+    no edge-on bulge        &   3135 & 0.01    & 0.32    &     84 & $<0.01$ & 0.14    &   329 & 0.01    & 0.20 \\
+    \hline                                                                   
+    round elliptical        &  62308 & 0.26    & 0.35    &   6092 & 0.31    & 0.38    &  9279 & 0.28    & 0.39 \\
+    in-between elliptical   &  91284 & 0.37    & 0.51    &   8331 & 0.42    & 0.51    & 11369 & 0.35    & 0.48 \\
+    cigar-shaped elliptical &  25561 & 0.10    & 0.14    &   1786 & 0.09    & 0.11    &  2644 & 0.08    & 0.11 \\
+    \hline                                                                            
+    odd feature             &  23795 & 0.10    & 0.10    &   1713 & 0.09    & 0.09    &  $--$ & $--$    & $--$ \\
+    no odd features         & 219425 & 0.90    & 0.90    &  17842 & 0.90    & 0.91    &  $--$ & $--$    & $--$ \\
+    \hline                                                                            
+    ring                    &   4099 & 0.02    & 0.18    &    178 & 0.01    & 0.11    &   317 & 0.01    & 0.01 \\
+    lens/arc                &    155 & $<0.01$ & 0.01    &     17 & $<0.01$ & 0.01    &     4 & $<0.01$ & $<0.01$ \\
+    disturbed               &    720 & $<0.01$ & 0.03    &     47 & $<0.01$ & 0.03    &  $--$ & $--$    & $--$ \\
+    irregular               &   5761 & 0.02    & 0.25    &    113 & 0.01    & 0.07    &    44 & $<0.01$ & $<0.01$ \\
+    other                   &   4919 & 0.02    & 0.21    &    589 & 0.03    & 0.38    &    14 & $<0.01$ & $<0.01$ \\
+    merger                  &   7018 & 0.03    & 0.31    &    599 & 0.03    & 0.39    &  $--$ & $--$    & $--$ \\
+    dust lane               &    220 & $<0.01$ & 0.01    &      6 & $<0.01$ & $<0.01$ &   141 & $<0.01$ & $<0.01$ \\
+    overlapping             &   $--$ & $--$    & $--$    &   $--$ & $--$    & $--$    &    52 & $<0.01$ & $<0.01$ \\
+    nothing                 &   $--$ & $--$    & $--$    &   $--$ & $--$    & $--$    &   979 & 0.03    & 0.03 \\
+    \hline
+    merger                  & $--$ & $--$ & $--$ & $--$ & $--$ & $--$ &  1543 & 0.04 & 0.04 \\
+    tidal debris            & $--$ & $--$ & $--$ & $--$ & $--$ & $--$ &   343 & 0.01 & 0.01 \\
+    merger and tidal debris & $--$ & $--$ & $--$ & $--$ & $--$ & $--$ &   141 & $<0.01$ & $<0.01$ \\
+    neither                 & $--$ & $--$ & $--$ & $--$ & $--$ & $--$ & 29232 & 0.93 & 0.93 \\
+\hline\hline
+\end{tabular}
+\end{table*}
+
+\begin{table*}
+\centering
+\caption{Galaxy Zoo morphological demographics for low-$z$ optical imaging --- overlaps only}\label{tbl-overlaps}
+\begin{tabular}{l|rcc|rcc|rcc}
+\hline\hline
+    Task & \multicolumn{3}{c}{SDSS main sample} & \multicolumn{3}{c}{Stripe 82 coadd} & \multicolumn{3}{c}{DECaLS} \\
+    
+    & $N_{tot}$ & $f_{tot}$ & $f_{prev task}$ & $N_{tot}$ & $f_{tot}$ & $f_{prev task}$ & $N_{tot}$ & $f_{tot}$ & $f_{prev task}$ \\
+    \hline
+    
+    smooth                  & 179153 & 0.74    & 0.74    &  16209 & 0.82    & 0.82    & 23292 & 0.72    & 0.72 \\
+\hline\hline
+\end{tabular}
+\end{table*}
+
+\section{Analysis}
+
+\begin{figure*}
+\centering
+\includegraphics[width=160mm]{../plots/feature_ratio.pdf}
+\caption{Average spiral-elliptical ratio for various galaxy samples as a function of optical $(u-r)$ color. From left to right, curves are for the GZ2 main spectroscopic sample, the deeper Stripe~82 coadded images, and the DECaLS images. Colors/linestyles show different volume/absolute magnitude limits for each sample.\label{fig:feature_ratio}}
+\end{figure*}
+
+\begin{figure*}
+\centering
+\includegraphics[width=160mm]{../plots/color_hist.pdf}
+\caption{Histograms of the optical $(u-r)$ color distribution for various volume-limited and sample choices, separated by highly-confident $(p >= 0.8)$ morphological classifications into spiral and ellipticals. Galaxies with intermediate morphologies $(0.2 < p < 0.8)$ are not shown. \textbf{Top row}: GZ2 main spectroscopic sample. \textbf{Middle row}: Stripe~82 coadded. \textbf{Bottom row}: DECaLS. \label{fig:color_hist}}
+\end{figure*}
+
+
+\acknowledgments{
+  Acknowledgments. 
+}
+
+\bibliographystyle{yahapj}
+\bibliography{kwrefs}
+
+\end{document}
