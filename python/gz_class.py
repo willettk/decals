@@ -687,7 +687,7 @@ def plurality(datarow,survey='decals',check_threshold = 0.50):
         # Discuss
         task_eval[11] = 1
 
-    if survey in ('gz2',):
+    if survey in ('gz2','stripe82',):
         
         d = { 0:{'idx': 0,'len':3},       # 'Shape', 'Is the galaxy simply smooth and rounded, with no sign of a disk?', ->
               1:{'idx': 3,'len':2},       # 'Disk', 'Could this be a disk viewed edge-on?', ->

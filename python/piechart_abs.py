@@ -32,6 +32,7 @@ def survey_dict():
         u'sloan_singleband':{'name':u'SDSS single-band','retire_limit':40},
         u'ukidss':          {'name':u'UKIDSS','retire_limit':40},
         #u'sloan':          {'name':u'SDSS DR8','retire_limit':60},
+        u'stripe82':        {'name':u'Stripe 82','retire_limit':40},
         u'gz2':             {'name':u'SDSS DR7','retire_limit':40}}
 
     return d
@@ -128,7 +129,10 @@ def morphology_distribution(survey='candels'):
 
     return None
 
-def morph_table_gz2(survey='gz2'):
+def morph_table_gz2():
+
+    overlap = True
+    survey = 'decals'
 
     # Get weights
     try:
@@ -137,9 +141,21 @@ def morph_table_gz2(survey='gz2'):
         colnames = []
         for i in range(hdr['TFIELDS']):
             colnames.append(hdr['TTYPE{0}'.format(i+1)])
-        collation_file = "{0}/dr10/dr10_gz2_main_specz.csv".format(gzpath)
-        collation_file = "{0}/dr10/dr10_gz2_stripe82_coadd1.csv".format(gzpath)
-        collated = pd.read_csv(collation_file,names=colnames)
+
+        if overlap:
+            if survey == 'gz2':
+                collation_file = "{0}/decals/csv/decals_gz2_main.csv".format(gzpath)
+            elif survey == 'stripe82':
+                collation_file = "{0}/decals/csv/decals_gz2_stripe82c1.csv".format(gzpath)
+            elif survey == 'decals':
+                collation_file = "{0}/decals/csv/decals_gz2_union.csv".format(gzpath)
+            collated = pd.read_csv(collation_file)
+        else:
+            if survey == 'gz2':
+                collation_file = "{0}/dr10/dr10_gz2_main_specz.csv".format(gzpath)
+            elif survey == 'stripe82':
+                collation_file = "{0}/dr10/dr10_gz2_stripe82_coadd1.csv".format(gzpath)
+            collated = pd.read_csv(collation_file,names=colnames)
     except IOError:
         print "Collation file for {0:} does not exist. Aborting.".format(survey)
         return None
@@ -147,11 +163,19 @@ def morph_table_gz2(survey='gz2'):
     columns = collated.columns
 
     fraccols,colnames = [],[]
-    for c in columns:
-        if c[-17:] == 'weighted_fraction':
-            fraccols.append(c)
-        if c[0] == 't' and is_number(c[1:3]):
-            colnames.append(c[:3])
+    if survey == 'decals':
+        for c in columns:
+            if len(c) > 10:
+                if c[-4:] == 'frac' and c[:6] == 'decals':
+                    fraccols.append(c)
+                if c[7] == 't' and is_number(c[8:10]):
+                    colnames.append(c[7:10])
+    else:
+        for c in columns:
+            if c[-17:] == 'weighted_fraction':
+                fraccols.append(c)
+            if c[0] == 't' and is_number(c[1:3]):
+                colnames.append(c[:3])
 
     collist = list(set(colnames))
     collist.sort()
@@ -170,8 +194,12 @@ def morph_table_gz2(survey='gz2'):
         seen_add = seen.add
         return [x for x in seq if not (x in seen or seen_add(x))] 
 
-    tasklabels = f7([re.split("[ax][0-9]",f)[0][4:-1] for f in fraccols])
-    labels = [re.split("[ax][0-9]",f[4:-18])[-1][2:] for f in fraccols]
+    if survey == 'decals':
+        tasklabels = f7([re.split("[ax][0-9]",f)[0][11:-1] for f in fraccols])
+        labels = [re.split("[ax][0-9]",f)[-1][1:-5] for f in fraccols]
+    else:
+        tasklabels = f7([re.split("[ax][0-9]",f)[0][4:-1] for f in fraccols])
+        labels = [re.split("[ax][0-9]",f[4:-18])[-1][2:] for f in fraccols]
 
     # Make pie charts of the plurality votes
 
@@ -214,7 +242,8 @@ def morph_table_gz2(survey='gz2'):
             ax.set_axis_off()
 
     fig.set_tight_layout(True)
-    plt.savefig('{1}/decals/plots/pie_stripe82_coadd1.eps'.format(survey,gzpath))
+    suffix = '_overlap' if overlap else ''
+    plt.savefig('{1}/decals/plots/pie_{0}{2}.eps'.format(survey,gzpath,suffix))
     plt.close()
 
     return None

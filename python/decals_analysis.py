@@ -1,6 +1,7 @@
 # Do some preliminary analysis on the results of the DECaLS-Galaxy Zoo data. 
 
 from matplotlib import pyplot as plt
+from matplotlib import cm
 import numpy as np
 from astropy.io import fits
 from astropy.cosmology import WMAP9
@@ -146,8 +147,71 @@ def color_mag_ratio(mgs,s82,decal,savefig=False):
 
     return None
 
+def feature_comparison():
+
+    # Plot the difference in vote fractions for the matched galaxies
+
+    filename = '{0}/fits/decals_gz2_union.fits'.format(decals_path)
+
+    data = fits.getdata(filename,1)
+
+    # Map the columns
+    columns = [{'gz2':"gz2_t01_smooth_or_features_a01_smooth_fraction",  "decals":"decals_t00_smooth_or_features_a0_smooth_frac"},
+                {'gz2':"gz2_t01_smooth_or_features_a02_features_or_disk_fraction",   "decals":"decals_t00_smooth_or_features_a1_features_frac"},
+                {'gz2':"gz2_t01_smooth_or_features_a03_star_or_artifact_fraction",   "decals":"decals_t00_smooth_or_features_a2_artifact_frac"},
+                {'gz2':"gz2_t02_edgeon_a04_yes_fraction",                            "decals":"decals_t01_disk_edge_on_a0_yes_frac"},
+                {'gz2':"gz2_t02_edgeon_a05_no_fraction",                             "decals":"decals_t01_disk_edge_on_a1_no_frac"},
+                {'gz2':"gz2_t03_bar_a06_bar_fraction",                               "decals":"decals_t02_bar_a0_bar_frac"},
+                {'gz2':"gz2_t03_bar_a07_no_bar_fraction",                            "decals":"decals_t02_bar_a1_no_bar_frac"},
+                {'gz2':"gz2_t04_spiral_a08_spiral_fraction",                         "decals":"decals_t03_spiral_a0_spiral_frac"},
+                {'gz2':"gz2_t04_spiral_a09_no_spiral_fraction",                      "decals":"decals_t03_spiral_a1_no_spiral_frac"},
+                {'gz2':"gz2_t05_bulge_prominence_a10_no_bulge_fraction",             "decals":"decals_t04_bulge_prominence_a0_no_bulge_frac"},
+                {'gz2':"gz2_t05_bulge_prominence_a11_just_noticeable_fraction",      "decals":"decals_t04_bulge_prominence_a1_obvious_frac"},
+                {'gz2':"gz2_t05_bulge_prominence_a12_obvious_fraction",              "decals":"decals_t04_bulge_prominence_a2_dominant_frac"},
+                {'gz2':"gz2_t07_rounded_a16_completely_round_fraction",              "decals":"decals_t08_rounded_a0_completely_round_frac"},
+                {'gz2':"gz2_t07_rounded_a17_in_between_fraction",                    "decals":"decals_t08_rounded_a1_in_between_frac"},
+                {'gz2':"gz2_t07_rounded_a18_cigar_shaped_fraction",                  "decals":"decals_t08_rounded_a2_cigar_shaped_frac"},
+                {'gz2':"gz2_t08_odd_feature_a19_ring_fraction",                      "decals":"decals_t10_odd_feature_x1_ring_frac"},
+                {'gz2':"gz2_t08_odd_feature_a20_lens_or_arc_fraction",               "decals":"decals_t10_odd_feature_x2_lens_frac"},
+                {'gz2':"gz2_t08_odd_feature_a22_irregular_fraction",                 "decals":"decals_t10_odd_feature_x4_irregular_frac"},
+                {'gz2':"gz2_t08_odd_feature_a23_other_fraction",                     "decals":"decals_t10_odd_feature_x5_other_frac"},
+                {'gz2':"gz2_t08_odd_feature_a38_dust_lane_fraction",                 "decals":"decals_t10_odd_feature_x3_dustlane_frac"},
+                {'gz2':"gz2_t09_bulge_shape_a25_rounded_fraction",                   "decals":"decals_t07_bulge_shape_a0_rounded_frac"},
+                {'gz2':"gz2_t09_bulge_shape_a26_boxy_fraction",                      "decals":"decals_t07_bulge_shape_a1_boxy_frac"},
+                {'gz2':"gz2_t09_bulge_shape_a27_no_bulge_fraction",                  "decals":"decals_t07_bulge_shape_a2_no_bulge_frac"},
+                {'gz2':"gz2_t10_arms_winding_a28_tight_fraction",                    "decals":"decals_t05_arms_winding_a0_tight_frac"},
+                {'gz2':"gz2_t10_arms_winding_a29_medium_fraction",                   "decals":"decals_t05_arms_winding_a1_medium_frac"},
+                {'gz2':"gz2_t10_arms_winding_a30_loose_fraction",                    "decals":"decals_t05_arms_winding_a2_loose_frac"},
+                {'gz2':"gz2_t11_arms_number_a31_1_fraction",                         "decals":"decals_t06_arms_number_a0_1_frac"},
+                {'gz2':"gz2_t11_arms_number_a32_2_fraction",                         "decals":"decals_t06_arms_number_a1_2_frac"},
+                {'gz2':"gz2_t11_arms_number_a33_3_fraction",                         "decals":"decals_t06_arms_number_a2_3_frac"},
+                {'gz2':"gz2_t11_arms_number_a34_4_fraction",                         "decals":"decals_t06_arms_number_a3_4_frac"},
+                {'gz2':"gz2_t11_arms_number_a36_more_than_4_fraction",               "decals":"decals_t06_arms_number_a4_more_than_4_frac"}]
+
+    # Working, but still needs to sort for questions that are ACTUALLY ANSWERED. Lots of pileup at 0,0.
+
+    fig,axarr = plt.subplots(num=1,nrows=4,ncols=8,figsize=(12,8))
+
+    for i,ax in enumerate(axarr.ravel()):
+        try:
+            col = columns[i]
+            ax.hist2d(data[col['gz2']],data[col['decals']],bins=(20,20),range=[[0,1],[0,1]],normed=True,cmap = cm.hot)
+            #ax.set_xlabel(r"$f_{GZ2}$",fontsize=20)
+            #ax.set_ylabel(r"$f_{DECaLS}$",fontsize=20)
+        except IndexError:
+            break
+
+                
+    fig.tight_layout()
+
+    plt.show()
+
+    return None
+
+
 if __name__ == "__main__":
 
-    mgs,s82,decals = load_data()
-    color_mag_plots(mgs,s82,decals,savefig=True)
-    color_mag_ratio(mgs,s82,decals,savefig=True)
+    #mgs,s82,decals = load_data()
+    #color_mag_plots(mgs,s82,decals,savefig=True)
+    #color_mag_ratio(mgs,s82,decals,savefig=True)
+    feature_comparison()
