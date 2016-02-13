@@ -2,9 +2,12 @@
 
 from matplotlib import pyplot as plt
 from matplotlib import cm
+from matplotlib.colors import LogNorm
 import numpy as np
 from astropy.io import fits
 from astropy.cosmology import WMAP9
+
+from gz_class import plurality
 
 decals_path = '/Users/willettk/Astronomy/Research/GalaxyZoo/decals'
 plot_path = '{0}/plots'.format(decals_path)
@@ -147,7 +150,7 @@ def color_mag_ratio(mgs,s82,decal,savefig=False):
 
     return None
 
-def feature_comparison():
+def feature_comparison(savefig=False):
 
     # Plot the difference in vote fractions for the matched galaxies
 
@@ -156,62 +159,123 @@ def feature_comparison():
     data = fits.getdata(filename,1)
 
     # Map the columns
-    columns = [{'gz2':"gz2_t01_smooth_or_features_a01_smooth_fraction",  "decals":"decals_t00_smooth_or_features_a0_smooth_frac"},
-                {'gz2':"gz2_t01_smooth_or_features_a02_features_or_disk_fraction",   "decals":"decals_t00_smooth_or_features_a1_features_frac"},
-                {'gz2':"gz2_t01_smooth_or_features_a03_star_or_artifact_fraction",   "decals":"decals_t00_smooth_or_features_a2_artifact_frac"},
-                {'gz2':"gz2_t02_edgeon_a04_yes_fraction",                            "decals":"decals_t01_disk_edge_on_a0_yes_frac"},
-                {'gz2':"gz2_t02_edgeon_a05_no_fraction",                             "decals":"decals_t01_disk_edge_on_a1_no_frac"},
-                {'gz2':"gz2_t03_bar_a06_bar_fraction",                               "decals":"decals_t02_bar_a0_bar_frac"},
-                {'gz2':"gz2_t03_bar_a07_no_bar_fraction",                            "decals":"decals_t02_bar_a1_no_bar_frac"},
-                {'gz2':"gz2_t04_spiral_a08_spiral_fraction",                         "decals":"decals_t03_spiral_a0_spiral_frac"},
-                {'gz2':"gz2_t04_spiral_a09_no_spiral_fraction",                      "decals":"decals_t03_spiral_a1_no_spiral_frac"},
-                {'gz2':"gz2_t05_bulge_prominence_a10_no_bulge_fraction",             "decals":"decals_t04_bulge_prominence_a0_no_bulge_frac"},
-                {'gz2':"gz2_t05_bulge_prominence_a11_just_noticeable_fraction",      "decals":"decals_t04_bulge_prominence_a1_obvious_frac"},
-                {'gz2':"gz2_t05_bulge_prominence_a12_obvious_fraction",              "decals":"decals_t04_bulge_prominence_a2_dominant_frac"},
-                {'gz2':"gz2_t07_rounded_a16_completely_round_fraction",              "decals":"decals_t08_rounded_a0_completely_round_frac"},
-                {'gz2':"gz2_t07_rounded_a17_in_between_fraction",                    "decals":"decals_t08_rounded_a1_in_between_frac"},
-                {'gz2':"gz2_t07_rounded_a18_cigar_shaped_fraction",                  "decals":"decals_t08_rounded_a2_cigar_shaped_frac"},
-                {'gz2':"gz2_t08_odd_feature_a19_ring_fraction",                      "decals":"decals_t10_odd_feature_x1_ring_frac"},
-                {'gz2':"gz2_t08_odd_feature_a20_lens_or_arc_fraction",               "decals":"decals_t10_odd_feature_x2_lens_frac"},
-                {'gz2':"gz2_t08_odd_feature_a22_irregular_fraction",                 "decals":"decals_t10_odd_feature_x4_irregular_frac"},
-                {'gz2':"gz2_t08_odd_feature_a23_other_fraction",                     "decals":"decals_t10_odd_feature_x5_other_frac"},
-                {'gz2':"gz2_t08_odd_feature_a38_dust_lane_fraction",                 "decals":"decals_t10_odd_feature_x3_dustlane_frac"},
-                {'gz2':"gz2_t09_bulge_shape_a25_rounded_fraction",                   "decals":"decals_t07_bulge_shape_a0_rounded_frac"},
-                {'gz2':"gz2_t09_bulge_shape_a26_boxy_fraction",                      "decals":"decals_t07_bulge_shape_a1_boxy_frac"},
-                {'gz2':"gz2_t09_bulge_shape_a27_no_bulge_fraction",                  "decals":"decals_t07_bulge_shape_a2_no_bulge_frac"},
-                {'gz2':"gz2_t10_arms_winding_a28_tight_fraction",                    "decals":"decals_t05_arms_winding_a0_tight_frac"},
-                {'gz2':"gz2_t10_arms_winding_a29_medium_fraction",                   "decals":"decals_t05_arms_winding_a1_medium_frac"},
-                {'gz2':"gz2_t10_arms_winding_a30_loose_fraction",                    "decals":"decals_t05_arms_winding_a2_loose_frac"},
-                {'gz2':"gz2_t11_arms_number_a31_1_fraction",                         "decals":"decals_t06_arms_number_a0_1_frac"},
-                {'gz2':"gz2_t11_arms_number_a32_2_fraction",                         "decals":"decals_t06_arms_number_a1_2_frac"},
-                {'gz2':"gz2_t11_arms_number_a33_3_fraction",                         "decals":"decals_t06_arms_number_a2_3_frac"},
-                {'gz2':"gz2_t11_arms_number_a34_4_fraction",                         "decals":"decals_t06_arms_number_a3_4_frac"},
-                {'gz2':"gz2_t11_arms_number_a36_more_than_4_fraction",               "decals":"decals_t06_arms_number_a4_more_than_4_frac"}]
+    matched_cols = [{'title':'smooth',                   'gz2':"gz2_t01_smooth_or_features_a01_smooth_fraction",             "decals":"decals_t00_smooth_or_features_a0_smooth_frac"},
+                    {'title':'features/disk',            'gz2':"gz2_t01_smooth_or_features_a02_features_or_disk_fraction",   "decals":"decals_t00_smooth_or_features_a1_features_frac"},
+                    {'title':'star',                     'gz2':"gz2_t01_smooth_or_features_a03_star_or_artifact_fraction",   "decals":"decals_t00_smooth_or_features_a2_artifact_frac"},
+                    {'title':'edge-on',                  'gz2':"gz2_t02_edgeon_a04_yes_fraction",                            "decals":"decals_t01_disk_edge_on_a0_yes_frac"},
+                    {'title':'not edge-on',              'gz2':"gz2_t02_edgeon_a05_no_fraction",                             "decals":"decals_t01_disk_edge_on_a1_no_frac"},
+                    {'title':'bar',                      'gz2':"gz2_t03_bar_a06_bar_fraction",                               "decals":"decals_t02_bar_a0_bar_frac"},
+                    {'title':'no bar',                   'gz2':"gz2_t03_bar_a07_no_bar_fraction",                            "decals":"decals_t02_bar_a1_no_bar_frac"},
+                    {'title':'spiral',                   'gz2':"gz2_t04_spiral_a08_spiral_fraction",                         "decals":"decals_t03_spiral_a0_spiral_frac"},
+                    {'title':'no spiral',                'gz2':"gz2_t04_spiral_a09_no_spiral_fraction",                      "decals":"decals_t03_spiral_a1_no_spiral_frac"},
+                    {'title':'no bulge',                 'gz2':"gz2_t05_bulge_prominence_a10_no_bulge_fraction",             "decals":"decals_t04_bulge_prominence_a0_no_bulge_frac"},
+                    {'title':'medium bulge',             'gz2':"gz2_t05_bulge_prominence_a11_just_noticeable_fraction",      "decals":"decals_t04_bulge_prominence_a1_obvious_frac"},
+                    {'title':'obvious bulge',            'gz2':"gz2_t05_bulge_prominence_a12_obvious_fraction",              "decals":"decals_t04_bulge_prominence_a2_dominant_frac"},
+                    {'title':'completely round',         'gz2':"gz2_t07_rounded_a16_completely_round_fraction",              "decals":"decals_t08_rounded_a0_completely_round_frac"},
+                    {'title':'in between',               'gz2':"gz2_t07_rounded_a17_in_between_fraction",                    "decals":"decals_t08_rounded_a1_in_between_frac"},
+                    {'title':'cigar shaped',             'gz2':"gz2_t07_rounded_a18_cigar_shaped_fraction",                  "decals":"decals_t08_rounded_a2_cigar_shaped_frac"},
+                    {'title':'ring',                     'gz2':"gz2_t08_odd_feature_a19_ring_fraction",                      "decals":"decals_t10_odd_feature_x1_ring_frac"},
+                    {'title':'lens/arc',                 'gz2':"gz2_t08_odd_feature_a20_lens_or_arc_fraction",               "decals":"decals_t10_odd_feature_x2_lens_frac"},
+                    {'title':'irregular',                'gz2':"gz2_t08_odd_feature_a22_irregular_fraction",                 "decals":"decals_t10_odd_feature_x4_irregular_frac"},
+                    {'title':'other',                    'gz2':"gz2_t08_odd_feature_a23_other_fraction",                     "decals":"decals_t10_odd_feature_x5_other_frac"},
+                    {'title':'dust lane',                'gz2':"gz2_t08_odd_feature_a38_dust_lane_fraction",                 "decals":"decals_t10_odd_feature_x3_dustlane_frac"},
+                    {'title':'rounded bulge',            'gz2':"gz2_t09_bulge_shape_a25_rounded_fraction",                   "decals":"decals_t07_bulge_shape_a0_rounded_frac"},
+                    {'title':'boxy bulge',               'gz2':"gz2_t09_bulge_shape_a26_boxy_fraction",                      "decals":"decals_t07_bulge_shape_a1_boxy_frac"},
+                    {'title':'no bulge',                 'gz2':"gz2_t09_bulge_shape_a27_no_bulge_fraction",                  "decals":"decals_t07_bulge_shape_a2_no_bulge_frac"},
+                    {'title':'tight arms',               'gz2':"gz2_t10_arms_winding_a28_tight_fraction",                    "decals":"decals_t05_arms_winding_a0_tight_frac"},
+                    {'title':'medium arms',              'gz2':"gz2_t10_arms_winding_a29_medium_fraction",                   "decals":"decals_t05_arms_winding_a1_medium_frac"},
+                    {'title':'loose arms',               'gz2':"gz2_t10_arms_winding_a30_loose_fraction",                    "decals":"decals_t05_arms_winding_a2_loose_frac"},
+                    {'title':'1 arm',                    'gz2':"gz2_t11_arms_number_a31_1_fraction",                         "decals":"decals_t06_arms_number_a0_1_frac"},
+                    {'title':'2 arms',                   'gz2':"gz2_t11_arms_number_a32_2_fraction",                         "decals":"decals_t06_arms_number_a1_2_frac"},
+                    {'title':'3 arms',                   'gz2':"gz2_t11_arms_number_a33_3_fraction",                         "decals":"decals_t06_arms_number_a2_3_frac"},
+                    {'title':'4 arms',                   'gz2':"gz2_t11_arms_number_a34_4_fraction",                         "decals":"decals_t06_arms_number_a3_4_frac"},
+                    {'title':'5+ arms',                  'gz2':"gz2_t11_arms_number_a36_more_than_4_fraction",               "decals":"decals_t06_arms_number_a4_more_than_4_frac"}]
 
     # Working, but still needs to sort for questions that are ACTUALLY ANSWERED. Lots of pileup at 0,0.
+    columns = data.columns
 
-    fig,axarr = plt.subplots(num=1,nrows=4,ncols=8,figsize=(12,8))
+    decals_fraccols,gz2_fraccols = [],[]
+    for c in columns:
+        colname = c.name
+        if len(colname) > 6:
+            if colname[-4:] == 'frac' and colname[:6] == 'decals':
+                decals_fraccols.append(c)
+        if len(colname) > 17:
+            if colname[-8:] == 'fraction' and colname[-17:] != "weighted_fraction" and colname[:3] == 'gz2':
+                gz2_fraccols.append(c)
 
-    for i,ax in enumerate(axarr.ravel()):
-        try:
-            col = columns[i]
-            ax.hist2d(data[col['gz2']],data[col['decals']],bins=(20,20),range=[[0,1],[0,1]],normed=True,cmap = cm.hot)
-            #ax.set_xlabel(r"$f_{GZ2}$",fontsize=20)
-            #ax.set_ylabel(r"$f_{DECaLS}$",fontsize=20)
-        except IndexError:
-            break
+    decals_votearr = data.from_columns(decals_fraccols)
+    gz2_votearr = data.from_columns(gz2_fraccols)
 
-                
+    decals_tasks,gz2_tasks = [],[]
+    for v in decals_votearr:
+        e_decals,a_decals = plurality(np.array(list(v)),'decals') 
+        decals_tasks.append(e_decals)
+    for v in gz2_votearr:
+        e_gz2,a_gz2 = plurality(np.array(list(v)),'gz2') 
+        gz2_tasks.append(e_gz2)
+
+
+    fig,axarr = plt.subplots(num=1,nrows=4,ncols=8,figsize=(16,10))
+    nrows = axarr.shape[0]
+    ncols = axarr.shape[1]
+
+    def plot_features(ax,taskno,indices):
+        plotind = indices.flatten()
+        ax.hist2d(data[matched_cols[taskno]['gz2']][plotind],data[matched_cols[taskno]['decals']][plotind],bins=(20,20),range=[[0,1],[0,1]],norm=LogNorm(),cmap = cm.viridis)
+        ax.plot([0,1],[0,1],linestyle='--',color='red',lw=2)
+        ax.set_title(matched_cols[taskno]['title'],fontsize=8)
+        ax.get_xaxis().set_ticks([])
+        ax.get_yaxis().set_ticks([])
+        ax.set_xlabel(r'$f_{GZ2}$',fontsize=10)
+        ax.set_ylabel(r'$f_{DECaLS}$',fontsize=10)
+        ax.set_aspect('equal')
+
+    # Smooth/features
+    answers_per_task = [3,2,2,2,3,3,5,3,3,5]
+    match_tasks = [[ 0, 0],
+                   [ 1, 1],
+                   [ 2, 2],
+                   [ 3, 3],
+                   [ 4, 4],
+                   [ 6, 8],
+                   [ 7,10],
+                   [ 8, 7],
+                   [ 9, 5],
+                   [10, 6]]
+
+    n = 0
+    for a,m in zip(answers_per_task,match_tasks):
+        inds = np.array(([np.array(decals_tasks)[:,m[1]] == True])) & np.array(([np.array(gz2_tasks)[:,m[0]] == True]))
+        for i in range(a):
+            plot_features(axarr.ravel()[n],n,inds)
+            n += 1
+
+    '''
+    for i in range(nrows):
+        ax = axarr.ravel()[i*ncols]
+        ax.set_ylabel(r'$f_{GZ2}$',fontsize=10)
+
+    for i in range(ncols):
+        ax = axarr.ravel()[(nrows - 1)*ncols + i]
+        ax.set_xlabel(r'$f_{DECaLS}$',fontsize=10)
+    '''
+
+    for di in range((nrows*ncols)-n):
+        fig.delaxes(axarr.ravel()[(nrows*ncols)-(di+1)])
+
     fig.tight_layout()
-
-    plt.show()
+    if savefig:
+        plt.savefig('{0}/decals_gz2_feature_comparison.pdf'.format(plot_path))
+    else:
+        plt.show()
 
     return None
 
 
 if __name__ == "__main__":
 
-    #mgs,s82,decals = load_data()
+    mgs,s82,decals = load_data()
     #color_mag_plots(mgs,s82,decals,savefig=True)
-    #color_mag_ratio(mgs,s82,decals,savefig=True)
-    feature_comparison()
+    color_mag_ratio(mgs,s82,decals,savefig=True)
+    #feature_comparison(savefig=True)

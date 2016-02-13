@@ -47,13 +47,13 @@ def is_number(s):
     except ValueError:
         return False
 
-def morphology_distribution(survey='candels'):
+def morphology_distribution(survey='decals'):
 
     # What's the plurality distribution of morphologies?
 
     # Get weights
     try:
-        collation_file = "../gz_reduction_sandbox/data/candels_weighted_seeded_collated_05_wdup_nobots.csv"
+        collation_file = "{0}/gz_reduction_sandbox/data/decals_unweighted_classifications_00.csv".format(gzpath)
         collated = pd.read_csv(collation_file)
     except IOError:
         print "Collation file for {0:} does not exist. Aborting.".format(survey)
@@ -63,7 +63,7 @@ def morphology_distribution(survey='candels'):
 
     fraccols,colnames = [],[]
     for c in columns:
-        if c[-13:] == 'weighted_frac':
+        if c[-4:] == 'frac':
             fraccols.append(c)
         if c[0] == 't' and is_number(c[1:3]):
             colnames.append(c[:3])
@@ -85,8 +85,8 @@ def morphology_distribution(survey='candels'):
         seen_add = seen.add
         return [x for x in seq if not (x in seen or seen_add(x))] 
 
-    tasklabels = f7([re.split("[ax][0-9]",f)[0][4:-1] for f in fraccols])
-    labels = [re.split("[ax][0-9]",f[4:-14])[-1][1:] for f in fraccols]
+    tasklabels = f7([re.split("[ax][0-9]",f)[0][11:-1] for f in fraccols])
+    labels = [re.split("[ax][0-9]",f)[-1][1:-5] for f in fraccols]
 
     # Make pie charts of the plurality votes
 
@@ -124,7 +124,7 @@ def morphology_distribution(survey='candels'):
             ax.set_axis_off()
 
     fig.set_tight_layout(True)
-    plt.savefig('pie_{0:}.eps'.format(survey))
+    plt.savefig('{1}/decals/plots/pie_{0:}.eps'.format(survey,gzpath))
     plt.close()
 
     return None
@@ -251,5 +251,5 @@ def morph_table_gz2():
 
 if __name__ == "__main__":
 
-    morph_table_gz2()
-    #morphology_distribution()
+    #morph_table_gz2()
+    morphology_distribution()
