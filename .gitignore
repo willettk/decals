@@ -63,3 +63,4 @@ target/
 
 #Tex
 *.aux
+*.blg
