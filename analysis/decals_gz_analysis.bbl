@@ -2,6 +2,12 @@
 \providecommand\natexlab[1]{#1}
 \providecommand\JournalTitle[1]{#1}
 
+\bibitem[{{Aguerri} {et~al.}(2009){Aguerri}, {M{\'e}ndez-Abreu}, \&
+  {Corsini}}]{agu09}
+{Aguerri}, J.~A.~L., {M{\'e}ndez-Abreu}, J., \& {Corsini}, E.~M. 2009,
+  \href{http://dx.doi.org/10.1051/0004-6361:200810931}{\JournalTitle{\aap},
+  495, 491}
+
 \bibitem[{{Annis} {et~al.}(2014){Annis}, {Soares-Santos}, {Strauss}, {Becker},
   {Dodelson}, {Fan}, {Gunn}, {Hao}, {Ivezi{\'c}}, {Jester}, {Jiang},
   {Johnston}, {Kubo}, {Lampeitl}, {Lin}, {Lupton}, {Miknaitis}, {Seo}, {Simet},
@@ -17,6 +23,10 @@
   \href{http://dx.doi.org/10.1111/j.1365-2966.2008.14252.x}{\JournalTitle{\mnras},
   393, 1324}
 
+\bibitem[{{Barazza} {et~al.}(2008){Barazza}, {Jogee}, \& {Marinova}}]{bar08}
+{Barazza}, F.~D., {Jogee}, S., \& {Marinova}, I. 2008,
+  \href{http://dx.doi.org/10.1086/526510}{\JournalTitle{\apj}, 675, 1194}
+
 \bibitem[{{Cardamone} {et~al.}(2009){Cardamone}, {Schawinski}, {Sarzi},
   {Bamford}, {Bennert}, {Urry}, {Lintott}, {Keel}, {Parejko}, {Nichol},
   {Thomas}, {Andreescu}, {Murray}, {Raddick}, {Slosar}, {Szalay}, \&
@@ -31,6 +41,12 @@
 {Galloway}, M.~A., {Willett}, K.~W., {Fortson}, L.~F., {et~al.} 2015,
   \href{http://dx.doi.org/10.1093/mnras/stv235}{\JournalTitle{\mnras}, 448,
   3442}
+
+\bibitem[{{Hoyle} {et~al.}(2011){Hoyle}, {Masters}, {Nichol}, {Edmondson},
+  {Smith}, {Lintott}, {Scranton}, {Bamford}, {Schawinski}, \& {Thomas}}]{hoy11}
+{Hoyle}, B., {Masters}, K.~L., {Nichol}, R.~C., {et~al.} 2011,
+  \href{http://dx.doi.org/10.1111/j.1365-2966.2011.18979.x}{\JournalTitle{\mnras},
+  415, 3627}
 
 \bibitem[{{Kaviraj}(2014)}]{kav14a}
 {Kaviraj}, S. 2014,
@@ -57,6 +73,16 @@
   \href{http://dx.doi.org/10.1093/mnras/stu1507}{\JournalTitle{\mnras}, 444,
   1647}
 
+\bibitem[{{Lackner} \& {Gunn}(2012)}]{lac12}
+{Lackner}, C.~N., \& {Gunn}, J.~E. 2012,
+  \href{http://dx.doi.org/10.1111/j.1365-2966.2012.20450.x}{\JournalTitle{\mnras},
+  421, 2277}
+
+\bibitem[{{Lee} {et~al.}(2012){Lee}, {Park}, {Lee}, \& {Choi}}]{lee12}
+{Lee}, G.-H., {Park}, C., {Lee}, M.~G., \& {Choi}, Y.-Y. 2012,
+  \href{http://dx.doi.org/10.1088/0004-637X/745/2/125}{\JournalTitle{\apj},
+  745, 125}
+
 \bibitem[{{Levi} {et~al.}(2013){Levi}, {Bebek}, {Beers}, {Blum}, {Cahn},
   {Eisenstein}, {Flaugher}, {Honscheid}, {Kron}, {Lahav}, {McDonald}, {Roe},
   {Schlegel}, \& {representing the DESI collaboration}}]{lev13a}
@@ -79,6 +105,14 @@
   \href{http://dx.doi.org/10.1111/j.1365-2966.2009.15299.x}{\JournalTitle{\mnras},
   399, 129}
 
+\bibitem[{{Marshall} {et~al.}(2016){Marshall}, {Verma}, {More}, {Davis},
+  {More}, {Kapadia}, {Parrish}, {Snyder}, {Wilcox}, {Baeten}, {Macmillan},
+  {Cornen}, {Baumer}, {Simpson}, {Lintott}, {Miller}, {Paget}, {Simpson},
+  {Smith}, {K{\"u}ng}, {Saha}, \& {Collett}}]{mar16}
+{Marshall}, P.~J., {Verma}, A., {More}, A., {et~al.} 2016,
+  \href{http://dx.doi.org/10.1093/mnras/stv2009}{\JournalTitle{\mnras}, 455,
+  1171}
+
 \bibitem[{{Masters} {et~al.}(2010){Masters}, {Mosleh}, {Romer}, {Nichol},
   {Bamford}, {Schawinski}, {Lintott}, {Andreescu}, {Campbell}, {Crowcroft},
   {Doyle}, {Edmondson}, {Murray}, {Raddick}, {Slosar}, {Szalay}, \&
@@ -100,6 +134,11 @@
 {Masters}, K.~L., {Nichol}, R.~C., {Haynes}, M.~P., {et~al.} 2012,
   \href{http://dx.doi.org/10.1111/j.1365-2966.2012.21377.x}{\JournalTitle{\mnras},
   424, 2180}
+
+\bibitem[{{Nair} \& {Abraham}(2010)}]{nai10}
+{Nair}, P.~B., \& {Abraham}, R.~G. 2010,
+  \href{http://dx.doi.org/10.1088/0067-0049/186/2/427}{\JournalTitle{\apjs},
+  186, 427}
 
 \bibitem[{{Schawinski} {et~al.}(2009){Schawinski}, {Lintott}, {Thomas},
   {Sarzi}, {Andreescu}, {Bamford}, {Kaviraj}, {Khochfar}, {Land}, {Murray},
