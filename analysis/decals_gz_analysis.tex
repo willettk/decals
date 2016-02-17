@@ -81,26 +81,37 @@ Dark Energy Camera Legacy Survey (DECaLS)
 \begin{itemize}
     \item Galaxies in NASA-Sloan (Extended) Atlas
     \item Good-quality measurements in $g$, $r$, $z$ bands as of Jun 2015
-    \item NSA: $\texttt{brick\_primary} = 1$
-    \item NSA: $\texttt{decam\_anymask} = 0$
-    \item NSA: $\texttt{decam\_nobs} \geq 1$
-    \item $\theta_r > 10^{\prime\prime}$
-    \item no magnitude cutoff
+    \item Note: attempted to do size cutoffs using the Tractor catalog data for $\theta > 10^{\prime\prime}$, but couldn't find robust matches for galaxies despite searching in multiple bricks.
+    %\item NSA: $\texttt{brick\_primary} = 1$
+    %\item NSA: $\texttt{decam\_anymask} = 0$
+    %\item NSA: $\texttt{decam\_nobs} \geq 1$
+    %\item $\theta_r > 10^{\prime\prime}$
+    %\item no magnitude cutoff
 \end{itemize}
 
 So the Sloan and DECaLS samples definitely were not selected in the same manner. However, all the relevant parameters are stored in the NASA-Sloan Atlas if we wanted to cut on that. More specifically, we can do a simple match (ideally through previously matched catalogs, but if necessary through a tight positional match) to directly compare morphological measurements for \emph{the same galaxies} (Table \ref{tbl:overlaps}).
 
-There are 32,429~images of galaxies in GZ-DECaLS.
+DECaLS images are selected from the extended NASA-Sloan Atlas (v1.0.0; M.~Blanton, priv. comm.). The JPG images are sized at $424\times424$ pixels; the pixel scale is set using both the 50\% $R_{50}$ and 90\% $R_{90}$ $r$-band Petrosian radii in the NSA catalog. The pixel scale used is the smaller of $(R_{50}*0.04)$ or $(R_{90}*0.02)$ arcsec/pixel; an absolute minimum of 0.10~arcsec/pixel is imposed to prevent images from being zoomed-in to the point where obvious pixellation is an issue.
+
+The GZ-DECaLS images are created using the $g$-, $r$-, and $z$-band exposures. RGB images are created using a modified arcsinh stretch \citep{lup04} for each band:
+
+\begin{equation}
+f[x|\text{band}]=\frac{\text{asinh}(x Q/s_\text{band})}{\sqrt{Q}},
+\end{equation}
+
+\noindent where $x$ is the raw pixel value in each band. We adopt a value of $Q=1.0$ and scaling factors of $[s_g = 0.0066$, $s_r = 0.01385$, $s_z = 0.025]$. The resulting RGB values are then clipped at extremes and mildly smoothed in order to ``desaturate'' outlier pixels which can strongly skew the color gradient of the entire image. Scaling values were chosen by visually examining images made with a range of $Q,s$ and choosing those which emphasized low-surface brightness features while balancing contrast of brighter regions and color balance. The same stretch is applied to every image in the sample. 
+
+There are a total of 32,429~images in GZ-DECaLS.
 
 \begin{figure*}
 \centering
-\includegraphics[width=160mm]{../plots/decals_allimages_nsa_map.pdf}
-\caption{Overlap between galaxies in the NASA-Sloan Atlas (red) and selected targets for Galaxy Zoo from DECaLS DR1 (blue).\label{fig:overlap_map}}
+\includegraphics[width=160mm]{../plots/decals_dr1_nsa_map.pdf}
+\caption{Overlap between galaxies in the NASA-Sloan Atlas (red) and selected targets for Galaxy Zoo from DECaLS DR1 (blue).\label{fig:dr1_map}}
 \end{figure*}
 
 \section{Data}
 
-There is some overlap between the existing morphological classifications from Galaxy Zoo 2 \citep{wil13}. Most of the difference comes from the fact that SDSS was located at Apache Point Observatory in the Northern Hemisphere (latitude~$32.780278^\circ$), while the DECaLS camera is mounted on the Blanco 4-m telescope at CTIO in the Southern Hemisphere ($-30.169661^\circ$). They can cover a significant fraction of the same portion of the sky, but DECaLS will be limited at high northerly latitudes. Figure~\ref{fig:overlap_map} shows the overlap between the NASA-Sloan ATLAS\footnote{\url{http://www.nsatlas.org/}} (derived from SDSS) and DECaLS DR1. 
+There is some overlap between the existing morphological classifications from Galaxy Zoo 2 \citep{wil13}. Most of the difference comes from the fact that SDSS was located at Apache Point Observatory in the Northern Hemisphere (latitude~$32.780278^\circ$), while the DECaLS camera is mounted on the Blanco 4-m telescope at CTIO in the Southern Hemisphere ($-30.169661^\circ$). They can cover a significant fraction of the same portion of the sky, but DECaLS will be limited at high northerly latitudes. Figure~\ref{fig:dr1_map} shows the overlap between the NASA-Sloan ATLAS\footnote{\url{http://www.nsatlas.org/}} (derived from SDSS) and DECaLS DR1. 
 
 Morphologies for this analysis are taken from the published GZ2 tables in \citet{wil13} for SDSS. The DECaLS morphologies have been collated, but not systematically debiased to account for changes in morphological fraction as a function of apparent size and brightness. Therefore, we only compare the \emph{weighted vote fractions} ($f_{w,morph}$) from GZ2 to the \emph{raw vote fractions} ($f_{r,morph}$) from DECaLS.
 
