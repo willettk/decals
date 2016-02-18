@@ -93,6 +93,13 @@ So the Sloan and DECaLS samples definitely were not selected in the same manner.
 
 DECaLS images are selected from the extended NASA-Sloan Atlas (v1.0.0; M.~Blanton, priv. comm.). The JPG images are sized at $424\times424$ pixels; the pixel scale is set using both the 50\% $R_{50}$ and 90\% $R_{90}$ $r$-band Petrosian radii in the NSA catalog. The pixel scale used is the smaller of $(R_{50}*0.04)$ or $(R_{90}*0.02)$ arcsec/pixel; an absolute minimum of 0.10~arcsec/pixel is imposed to prevent images from being zoomed-in to the point where obvious pixellation is an issue.
 
+% Note: sizes and magnitudes do not precisely match between the NSA and DECaLS catalogs (they are different measurements). 
+% Converting from nanomagggies to AB magnitudes, the difference is usually less than 0.10 mag between NMJY[4] and DECAM_FLUX[2].
+% For disk-dominated galaxies (fracdev < 0.5), SHAPEEXP_R is closely matched with SERSICTH_50. Have not tested yet for bulge-dominated galaxies.
+
+% I don't know if there's a shorter way to this aside from downloading all of the Tractor data and doing a positional match. 
+% May leave that to Coleman at this point.
+
 The GZ-DECaLS images are created using the $g$-, $r$-, and $z$-band exposures. RGB images are created using a modified arcsinh stretch \citep{lup04} for each band:
 
 \begin{equation}
@@ -101,15 +108,21 @@ f[x|\text{band}]=\frac{\text{asinh}(x Q/s_\text{band})}{\sqrt{Q}},
 
 \noindent where $x$ is the raw pixel value in each band. We adopt a value of $Q=1.0$ and scaling factors of $[s_g = 0.0066$, $s_r = 0.01385$, $s_z = 0.025]$. The resulting RGB values are then clipped at extremes and mildly smoothed in order to ``desaturate'' outlier pixels which can strongly skew the color gradient of the entire image. Scaling values were chosen by visually examining images made with a range of $Q,s$ and choosing those which emphasized low-surface brightness features while balancing contrast of brighter regions and color balance. The same stretch is applied to every image in the sample. 
 
-There are a total of 32,429~images in GZ-DECaLS.
-
 \begin{figure*}
 \centering
 \includegraphics[width=160mm]{../plots/decals_dr1_nsa_map.pdf}
 \caption{Overlap between galaxies in the NASA-Sloan Atlas (red) and selected targets for Galaxy Zoo from DECaLS DR1 (blue).\label{fig:dr1_map}}
 \end{figure*}
 
-\section{Data}
+\section{Results}
+
+There were a total of 32,429~images classified in DR1 of GZ-DECaLS. The final data set consists of 1,290,465~classifications by 15,990~registered users. The most prolific single user classified 20,272 galaxies (63\% of the sample).
+
+The main period of classifications for GZ-DECaLS ran from 21 Sep 2015 to 15 Feb 2016; images were retired once they had been classified 40 times apiece. After reaching this limit for the full sample, the retirement threshold was raised to 60 in order to improve statistics on disk/featured galaxies and provide a bridge to the DR2 phase.
+
+Vote fractions for GZ-DECaLS were collated and combined using equal weighting for each users. A more advanced weighting scheme based on group agreement is intended before the final data release.
+
+\section{Matching DECaLS and SDSS}
 
 There is some overlap between the existing morphological classifications from Galaxy Zoo 2 \citep{wil13}. Most of the difference comes from the fact that SDSS was located at Apache Point Observatory in the Northern Hemisphere (latitude~$32.780278^\circ$), while the DECaLS camera is mounted on the Blanco 4-m telescope at CTIO in the Southern Hemisphere ($-30.169661^\circ$). They can cover a significant fraction of the same portion of the sky, but DECaLS will be limited at high northerly latitudes. Figure~\ref{fig:dr1_map} shows the overlap between the NASA-Sloan ATLAS\footnote{\url{http://www.nsatlas.org/}} (derived from SDSS) and DECaLS DR1. 
 
@@ -282,17 +295,37 @@ However, there are many DECaLS galaxies in the imaging area covered by the main 
 
 \section{Analysis}
 
+Describe overall demographics in Figure~\ref{fig:pie}.
+
 \begin{figure*}
 \centering
 \includegraphics[width=160mm]{../plots/pie_decals_abs.png}
 \caption{Distribution of the plurality morphological category for each task in GZ:DECaLS. Labels show the count of the number of galaxies with each morphology, including only those for which the question was reached in the hierarchical tree.\label{fig:pie}}
 \end{figure*}
 
+Figure~\ref{fig:feature_ratio} shows the change in average elliptical-spiral ratio. What does that mean?
+
 \begin{figure*}
 \centering
 \includegraphics[width=160mm]{../plots/feature_ratio.pdf}
 \caption{Average spiral-elliptical ratio for various galaxy samples as a function of optical $(u-r)$ color. From left to right, curves are for the GZ2 main spectroscopic sample, the deeper Stripe~82 coadded images, and the DECaLS images. Colors/linestyles show different volume/absolute magnitude limits for each sample.\label{fig:feature_ratio}}
 \end{figure*}
+
+\subsection{Science cases}
+
+\begin{enumerate}
+
+\item Statistical studies of galaxy evolution with morphology
+
+\item Discovery of rare objects
+
+\item Galaxy morphology at low luminosities
+
+\item Exploring the role of minor mergers
+
+\end{enumerate}
+
+\subsection{DECaLS --- SDSS comparison}
 
 \begin{figure*}
 \centering
