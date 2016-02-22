@@ -89,7 +89,7 @@ Dark Energy Camera Legacy Survey (DECaLS)
     %\item no magnitude cutoff
 \end{itemize}
 
-So the Sloan and DECaLS samples definitely were not selected in the same manner. However, all the relevant parameters are stored in the NASA-Sloan Atlas if we wanted to cut on that. More specifically, we can do a simple match (ideally through previously matched catalogs, but if necessary through a tight positional match) to directly compare morphological measurements for \emph{the same galaxies} (Table \ref{tbl:overlaps}).
+So the Sloan and DECaLS samples definitely were not selected in the same manner. However, all the relevant parameters are stored in the NASA-Sloan Atlas if we wanted to cut on that. More specifically, we can do a simple match (ideally through previously matched catalogs, but if necessary through a tight positional match) to directly compare morphological measurements for \emph{the same galaxies} (Table~\ref{tbl:overlaps}).
 
 DECaLS images are selected from the extended NASA-Sloan Atlas (v1.0.0; M.~Blanton, priv. comm.). The JPG images are sized at $424\times424$ pixels; the pixel scale is set using both the 50\% $R_{50}$ and 90\% $R_{90}$ $r$-band Petrosian radii in the NSA catalog. The pixel scale used is the smaller of $(R_{50}*0.04)$ or $(R_{90}*0.02)$ arcsec/pixel; an absolute minimum of 0.10~arcsec/pixel is imposed to prevent images from being zoomed-in to the point where obvious pixellation is an issue.
 
@@ -125,11 +125,31 @@ f[x|\text{band}]=\frac{\text{asinh}(x Q/s_\text{band})}{\sqrt{Q}},
 
 \section{Results}
 
-There were a total of 32,429~images classified in DR1 of . The final data set consists of 1,290,465~classifications by 15,990~registered users. The most prolific single user classified 20,272 galaxies (63\% of the sample).
+\subsection{Project design}\label{project}
 
-The main period of classifications for  ran from 21 Sep 2015 to 15 Feb 2016; images were retired once they had been classified 40 times apiece. After reaching this limit for the full sample, the retirement threshold was raised to 60 in order to improve statistics on disk/featured galaxies and provide a bridge to the DR2 phase.
+GZ-DECaLS uses a hierarchical decision tree (Figure~\ref{fig:decision_tree}) to assign morphological classifications, similar to all previous iterations of Galaxy Zoo. The design of the tree and morphological categories are similar to those in Galaxy Zoo 2 \citep{wil13}, but with several key differences. GZ-DECaLS reduces the options for the task measuring bulge prominence in disk galaxies from four to three, eliminating the ``just noticeable'' option. This is justified based on GZ2 data showing that the ``dominant'' option in the original GZ2 tree was almost never selected; only eight galaxies in the entire main spectroscopic sample ($<0.0003\%$) met the \texttt{clean} threshold 80\% for this question. An odd number of responses also eliminates the requirement for users to implicitly decide whether the bulge strength is objectively weak or strong \citep{cla95}, increasing the discriminating power of the lowest and highest responses.
 
-Vote fractions for  were collated and combined using equal weighting for each users. A more advanced weighting scheme based on group agreement is intended before the final data release.
+GZ-DECaLS also eliminated the ``can't tell'' option for the number of spiral arms, requiring users instead to give their best estimate on the arm multiplicity. Hart et al. (in prep) show that requiring users to select a discrete arm multiplicity increased the overall confidence without adding to the noise. 
+
+For the task listing any ``odd features'' that users see in the image, GZ-DECaLS allows users to select more than one question (since, for example, a galaxy might have both a dust lane and a merger). GZ2 required users to select only a single option, leading to much lower levels of consensus for answers that are not necessarily mutually exclusive. GZ-DECaLS eliminated the options for ``disturbed'' \citep[dominated by pixel trails in GZ2;][]{wil13} and added on option to explicitly identify galaxies with line-of-sight overlaps that are not physically merging. Such overlapping galaxies were annotated and separately collected by users in the project Forum for \citet{kee13,kee14}, but are now an explicit part of the interface.
+
+Finally, GZ-DECaLS adds a question for explicitly identifying the effect of mergers and tidal debris. This question is answered for all images not labeled as ``star or artifact''; users are instructed to use separate labels for merging galaxies (where the nuclei are still physically distinct) and galaxies with tidal debris, the effects of which can range from spectacular tails hundreds of kpc in length to very faint irregularities or extensions of the galaxy's light profile \citep{kav10,kav12}. A similar question was first introduced for the GZ:CANDELS project, but this is the first case in Galaxy Zoo where it is applied to low-redshift galaxies. 
+
+
+\begin{figure*}
+\centering
+\includegraphics[width=160mm]{../plots/gz4_d_tree_crop.pdf}
+\caption{Hierarchical decision tree for the morphology annotations in GZ-DECaLS. A comparison of all Galaxy Zoo morphological schemes is available at \url{http://data.galaxyzoo.org/gz_trees/gz_trees.html}.\label{fig:decision_tree}}
+\end{figure*}
+
+
+\subsection{Statistics}
+
+There were a total of 32,429~images classified in DR1 of DECaLS. The final data set consists of 1,290,465~classifications by 15,990~registered users. The most prolific single user classified 20,272 galaxies (63\% of the sample).
+
+The main period of classifications for DR1 ran from 21 Sep 2015 to 15 Feb 2016; images were retired once they had been classified 40 times apiece. After reaching this limit for the full sample, the retirement threshold was raised to 60 in order to improve statistics on disk/featured galaxies and provide a bridge to the DR2 phase.
+
+Vote fractions were collated and combined using equal weighting for each users. A more advanced weighting scheme based on group agreement is intended before the final data release.
 
 \section{Matching DECaLS and SDSS}
 
@@ -139,13 +159,14 @@ Morphologies for this analysis are taken from the published GZ2 tables in \citet
 
 In the GZ2 main spectroscopic sample (243,500~galaxies), we matched galaxies within a $3^{\prime\prime}.0$ radius and find 9,281 subjects appearing in both catalogs. We match a further 5,800~subjects using the same radius for the Stripe~82 data. There is overlap of 2,814 bright Stripe~82 galaxies that are included in both. The unique total of 12,267~subjects is only 38\% of the  catalog, despite the fact that the original SDSS~Legacy sky coverage \citep{str02} overlaps with all of the current DECaLS bricks. 
 
-Part of the mismatch comes from the limited spatial coverage of the Stripe 82 region in SDSS, which only covered a declination range of $-1.26^\circ<\delta<+1.26^\circ$ \citep{ann14}. The DECaLS imaging bricks have NSA targets in a larger area, extending between roughly $-2.5^\circ<\delta<+2.5^\circ$ (Figure~\ref{fig:mismatch_map}). These are presumbly targets imaged in SDSS DR8 or later, since otherwise they would have been included in the original GZ2 selection. 
+Part of the mismatch comes from the limited spatial coverage of the Stripe 82 region in SDSS, which only covered a declination range of $-1.26^\circ<\delta<+1.26^\circ$ \citep{ann14}. The DECaLS imaging bricks have NSA targets in a larger area, extending between roughly $-2.5^\circ<\delta<+2.5^\circ$% (Figure~\ref{fig:mismatch_map})
+. These are presumbly targets imaged in SDSS DR8 or later, since otherwise they would have been included in the original GZ2 selection. 
 
-\begin{figure}
-\centering
-\includegraphics[width=80mm]{../plots/stripe82_mismatch.pdf}
-\caption{Galaxies in the Stripe~82 region. Galaxies with a match in the main GZ2 sample are shown the filled yellow symbols. Galaxies without a GZ2 match (open blue symbols) are due to a combination of lying outside the SDSS DR7 footprint and/or being fainter than the $m_r=17.0$ magnitude limit for GZ2.\label{fig:mismatch_map}}
-\end{figure}
+%\begin{figure}
+%\centering
+%\includegraphics[width=80mm]{../plots/stripe82_mismatch.pdf}
+%\caption{Galaxies in the Stripe~82 region. Galaxies with a match in the main GZ2 sample are shown the filled yellow symbols. Galaxies without a GZ2 match (open blue symbols) are due to a combination of lying outside the SDSS DR7 footprint and/or being fainter than the $m_r=17.0$ magnitude limit for GZ2.\label{fig:mismatch_map}}
+%\end{figure}
 
 However, there are many DECaLS galaxies in the imaging area covered by the main Legacy survey. Galaxies in DECaLS but \emph{not} GZ2 have $\langle m_r\rangle = 17.27$~mag, $\langle r_{petro}\rangle = 6^{\prime\prime}.64$, $\langle z\rangle = 0.093$. Galaxies in \emph{both} DECaLS and GZ2 are on average brighter ($\langle m_r\rangle = 16.29$~mag), larger ($\langle r_{petro}\rangle = 7^{\prime\prime}.99$), and lower-redshift ($\langle z\rangle = 0.080$). The vast majority of the DECaLS images with no GZ2 counterpart are galaxies with $17.0 < m_r < 17.77$ --- the fainter magnitude limit is that set by the GZ2 main sample, and the brighter was the spectroscopic targeting limit for SDSS (required for a redshift and inclusion in the NSA; Figure~\ref{fig:mismatch_hist}). The few remaining galaxies brighter than 17.0~mag but not in GZ2 may be the result of positional matching errors, very low-redshift ($z<0.0005$) galaxies or targets with a large angular size that were shredded in the initial SDSS pipeline. 
 
@@ -158,6 +179,67 @@ However, there are many DECaLS galaxies in the imaging area covered by the main 
 \emph{Summary: roughly 40\% of the DECaLS galaxies have morphological measurements from GZ2, and can be used for direct comparison. We believe we understand the reasons for the remainder of DECaLS images that are not matched to GZ2; these will be valuable scientific additions as new targets, and can serve as independent checks on the accuracy of the classifications.}
 
 
+
+
+\section{Analysis}
+
+\subsection{Science cases}
+
+\begin{enumerate}
+
+\item Statistical studies of galaxy evolution with morphology
+
+\textit{Nothing yet.}
+
+\item Discovery of rare objects
+
+The majority of rare objects discovered in previous phases of Galaxy Zoo took place through interactions on the Galaxy Zoo Forum, a bulletin-board style website where users could tag individual objects and discuss them with other users and scientists. The replacement for the now-retired forum is Talk\footnote{\url{http://talk.galaxyzoo.org}}. Talk has two features that are designed to aid in identifying unusual and interesting objects: hashtags and collections. 
+
+Hashtags are discrete labels applied to an image by a user, and are not specified by any aspect of the interface. The most common hashtags applied to DECaLS subjects were identical or nearly identical to the morphological categories in the interface, including ``spiral'' (1,381), ``merger'' (1,013), ``disturbed'' (790), and ``ring'' (637). Common hashtags \emph{not} associated with categories in the decision tree include ``starforming'' (535), ``agn'' (309), and ``oiii'' (168). The latter two hashtags specifically refer most often to cases where users examine the associated spectrum of the galaxy (typically from SDSS, which has a direct link from the GZ Examine page) and posting additional information, since neither AGN nor [OIII] emission can be reliably identified from visual morphology alone in these bands \citep[but see][for an example of emission-line galaxies using different bands]{car09}. 
+
+Collections are discrete sets of objects assembled by volunteers; they often (although are not required to) revolve around a theme, such as mergers or galaxies with a particular visual color. One indication of unusual objects could be the tendency of users to place it in a collection. Among the 10 most-commonly collected galaxies in GZ-DECaLS (each selected by between 19 and 23~users), three were merging systems (including one multi-merger), three were spectacular examples of grand-design spirals, two visually striking overlaps, one a distorted edge-on disk, and one ring galaxy (Figure~\ref{fig:collected}). One of the spirals (\texttt{AGZ000be3p}) had an imaging artifact in one of the DECaLS bands that may have caused additional interest. 
+
+\begin{figure}
+\centering
+\includegraphics[width=80mm]{../plots/collected.pdf}
+\caption{The most commonly collected images from GZ-DECaLS in the Talk interface. Images are arranged in order of the number of their collections they appear in, from 23 (upper left) to 19 (lower right). \label{fig:collected}}
+\end{figure}
+
+Discussions on Talk can also take place that are not associated with any particular object, although they can be referenced. Only seven galaxies in GZ-DECaLS are mentioned in more than two discussion threads; these constitute a variety of mergers, artifacts, and grand design spirals. One potentially interesting set are galaxies with a visible point source that could be detections of supernovae \citep[such as \texttt{AGZ000atnd; see}][]{fri08}.
+
+Identifying the most common tags and collections, however, will not necessarily identify truly unusual galaxies (and in many ways will select directly \emph{against} that). For scientists with particular interests, the searchable Talk archives offer a rich database for particular features or combinations. Objects worthy of further study need some mechanism to filter up to scientists who can offer context and the means to follow-up observations, if necessary. 
+
+\item Galaxy morphology at low luminosities
+
+\textit{Nothing yet.}
+
+\item Exploring the role of minor mergers
+
+Both mergers and tidal debris are explicitly identified as Task~09 of the decision tree (Figure~\ref{fig:decision_tree}), which is answered for every image not designated as a star or artifact. While major mergers (with mass ratios of $\sim3:1$ or less) with tidal tails are relatively easy to identify \citep{dar10a}, the tidal debris from either a minor or significantly relaxed merger can have a very low surface brightness. GZ-DECaLS increased the number of example images for this particular question, including annotations pointing out faint features and a longer blog post\footnote{\url{http://blog.galaxyzoo.org/2015/11/05/searching-for-tidal-debris-in-decals-images/}} demonstrating the various types of tidal debris that were expected to be seen in DECaLS. 
+
+The challenging role for minor mergers and tidal debris is establishing a reliable threshold on vote fraction for which feature identification is considered reliable. Figure~\ref{fig:minor_mergers} shows the number of potential merger candidates as a function of the total number of people who answered Task~09. This is $N_\textrm{T09} = 40 - N_\textrm{star/artifact}$, where the mean value of unweighted $f_\textrm{star/artifact}$ is 0.18 for the entire GZ-DECaLS sample. This is significantly higher than GZ2, which had an average $f_\textrm{star/artifact}$ of only 0.04. Among the GZ-DECaLS images, the number of candidates decreases sharply as the number of people who answered the question with a positive answer (either ``merger'', ``tidal~debris'', or ``both'') is increased. 
+
+At the canonical ``clean'' threshold of 80\% adopted in the original Galaxy~Zoo by \citet{lin08}, there are 782~potential merger/tidal~debris candidates, or $0.02\%$ of the sample. Of those, 574 were identified (from the plurality vote) as mergers, 111 as tidal debris, and 97 as having both a merger and tidal debris. This is a small enough sample to permit expert scientists to do individual follow-up of the images. Note that there is no reason that a specific prior of 80\% should apply to this task, necessarily, and examination of the purity vs. completeness for a lower threshold is critical for science results. 
+
+Figure~\ref{fig:minor_mergers} also shows that the relative fraction of galaxies identified as merger vs. tidal debris has a strong dependence on the overall number of votes for the task. As the number of total positive votes for the question increases, the likelihood of ``tidal~debris'' being the plurality answer drops from roughly 50\% to 15\%, with the likelihood of ``merger'' correspondingly increasing. The likelihood of identifying \emph{both} tidal~debris and a merger, on the other hand, is relatively constant at $\sim10-15\%$ over the entire range of votes.
+
+\begin{figure}
+\centering
+\includegraphics[width=80mm]{../plots/minor_mergers.pdf}
+\caption{\textit{Left}: Number of candidate minor mergers in GZ-DECaLS as a function of the number of people who gave a positive identification to Task~09 (Figure~\ref{fig:decision_tree}). \textit{Right}: Minor merger candidates split by their type according to plurality vote.\label{fig:minor_mergers}}
+\end{figure}
+
+\end{enumerate}
+
+\subsection{DECaLS --- SDSS comparison}
+
+\begin{figure*}
+\centering
+\includegraphics[width=160mm]{../plots/color_hist.pdf}
+\caption{Histograms of the optical $(u-r)$ color distribution for various volume-limited and sample choices, separated by highly-confident $(p >= 0.8)$ morphological classifications into spiral and ellipticals. Galaxies with intermediate morphologies $(0.2 < p < 0.8)$ are not shown. \textbf{Top row}: GZ2 main spectroscopic sample. \textbf{Middle row}: Stripe~82 coadded. \textbf{Bottom row}: DECaLS. \label{fig:color_hist}}
+\end{figure*}
+
+Figure~\ref{fig:feature_comparison} shows the comparison between the GZ2 SDSS morphological classifications and those in the deeper DECaLS imaging. Direct comparison between tasks is possible for almost all morphological categories in Tables~\ref{tbl:allgals} and \ref{tbl:overlaps}, since the DECaLS tree was designed to closely mimic the GZ2 tree. The exceptions are for the task measuring bulge prominence in disk galaxies; DECaLS had only three options for ranking the bulge prominence (compared to four in GZ2), eliminating the ``just noticeable'' option. We justify this by noting that the ``dominant'' option in the original GZ2 tree was almost never selected; only eight galaxies in the entire main spectroscopic sample ($<0.0003\%$) met the \texttt{clean} threshold 80\% for this question. For Figure~\ref{fig:feature_comparison}, we map bulge prominence for GZ2$\rightarrow$DECaLS as `no\_bulge' $\rightarrow$ `no\_bulge',`just\_noticeable' $\rightarrow$ `obvious', and `obvious' $\rightarrow$ `dominant'. The other exceptions are the elimination of the ``can't tell'' option for the number of spiral arms, and the difference in options and ability to select multiple categories in the ``odd features'' question. Given the very small numbers of galaxies for the latter option, we suggest that any potential targets be individually inspected. 
 
 \begin{table*}
 \centering
@@ -301,66 +383,6 @@ However, there are many DECaLS galaxies in the imaging area covered by the main 
 \tablecomments{A value of $0.00$ is rounded down, indicating that the fraction of galaxies in this category was $f<0.01$.}
 \end{table*}
                                            
-
-\section{Analysis}
-
-Describe overall demographics in Figure~\ref{fig:pie}.
-
-\begin{figure*}
-\centering
-\includegraphics[width=160mm]{../plots/pie_decals_abs.png}
-\caption{Distribution of the plurality morphological category for each task in GZ:DECaLS. Labels show the count of the number of galaxies with each morphology, including only those for which the question was reached in the hierarchical tree.\label{fig:pie}}
-\end{figure*}
-
-Figure~\ref{fig:feature_ratio} shows the change in average elliptical-spiral ratio. What does that mean?
-
-\begin{figure*}
-\centering
-\includegraphics[width=160mm]{../plots/feature_ratio.pdf}
-\caption{Average spiral-elliptical ratio for various galaxy samples as a function of optical $(u-r)$ color. From left to right, curves are for the GZ2 main spectroscopic sample, the deeper Stripe~82 coadded images, and the DECaLS images. Colors/linestyles show different volume/absolute magnitude limits for each sample.\label{fig:feature_ratio}}
-\end{figure*}
-
-\subsection{Science cases}
-
-\begin{enumerate}
-
-\item Statistical studies of galaxy evolution with morphology
-
-\item Discovery of rare objects
-
-The majority of rare objects discovered in previous phases of Galaxy Zoo took place through interactions on the Galaxy Zoo Forum, a bulletin-board style website where users could tag individual objects and discuss them with other users and scientists. The replacement for the now-retired forum is Talk\footnote{\url{http://talk.galaxyzoo.org}}. Talk has two features that are designed to aid in identifying unusual and interesting objects: hashtags and collections. 
-
-Hashtags are discrete labels applied to an image by a user, and are not specified by any aspect of the interface. The most common hashtags applied to DECaLS subjects were identical or nearly identical to the morphological categories in the interface, including ``spiral'' (1,381), ``merger'' (1,013), ``disturbed'' (790), and ``ring'' (637). Common hashtags \emph{not} associated with categories in the decision tree include ``starforming'' (535), ``agn'' (309), and ``oiii'' (168). The latter two hashtags specifically refer most often to cases where users examine the associated spectrum of the galaxy (typically from SDSS, which has a direct link from the GZ Examine page) and posting additional information, since neither AGN nor [OIII] emission can be reliably identified from visual morphology alone in these bands \citep[but see][for an example of emission-line galaxies using different bands]{car09}. 
-
-Collections are discrete sets of objects assembled by volunteers; they often (although are not required to) revolve around a theme, such as mergers or galaxies with a particular visual color. One indication of unusual objects could be the tendency of users to place it in a collection. Among the 10 most-commonly collected galaxies in GZ-DECaLS (each selected by between 19 and 23~users), three were merging systems (including one multi-merger), three were spectacular examples of grand-design spirals, two visually striking overlaps, one a distorted edge-on disk, and one ring galaxy (Figure~\ref{fig:collected}). One of the spirals (\texttt{AGZ000be3p}) had an imaging artifact in one of the DECaLS bands that may have caused additional interest. 
-
-\begin{figure}
-\centering
-\includegraphics[width=80mm]{../plots/collected.pdf}
-\caption{The most commonly collected images from GZ-DECaLS in the Talk interface. Images are arranged in order of the number of their collections they appear in, from 23 (upper left) to 19 (lower right). \label{fig:collected}}
-\end{figure}
-
-Discussions on Talk can also take place that are not associated with any particular object, although they can be referenced. Only seven galaxies in GZ-DECaLS are mentioned in more than two discussion threads; these constitute a variety of mergers, artifacts, and grand design spirals. One potentially interesting set are galaxies with a visible point source that could be detections of supernovae \citep[such as \texttt{AGZ000atnd; see}][]{fri08}.
-
-Identifying the most common tags and collections, however, will not necessarily identify truly unusual galaxies (and in many ways will select directly \emph{against} that). For scientists with particular interests, the searchable Talk archives offer a rich database for particular features or combinations. Objects worthy of further study need some mechanism to filter up to scientists who can offer context and the means to follow-up observations, if necessary. 
-
-
-\item Galaxy morphology at low luminosities
-
-\item Exploring the role of minor mergers
-
-\end{enumerate}
-
-\subsection{DECaLS --- SDSS comparison}
-
-\begin{figure*}
-\centering
-\includegraphics[width=160mm]{../plots/color_hist.pdf}
-\caption{Histograms of the optical $(u-r)$ color distribution for various volume-limited and sample choices, separated by highly-confident $(p >= 0.8)$ morphological classifications into spiral and ellipticals. Galaxies with intermediate morphologies $(0.2 < p < 0.8)$ are not shown. \textbf{Top row}: GZ2 main spectroscopic sample. \textbf{Middle row}: Stripe~82 coadded. \textbf{Bottom row}: DECaLS. \label{fig:color_hist}}
-\end{figure*}
-
-Figure~\ref{fig:feature_comparison} shows the comparison between the GZ2 SDSS morphological classifications and those in the deeper DECaLS imaging. Direct comparison between tasks is possible for almost all morphological categories in Tables~\ref{tbl:allgals} and \ref{tbl:overlaps}, since the DECaLS tree was designed to closely mimic the GZ2 tree. The exceptions are for the task measuring bulge prominence in disk galaxies; DECaLS had only three options for ranking the bulge prominence (compared to four in GZ2), eliminating the ``just noticeable'' option. We justify this by noting that the ``dominant'' option in the original GZ2 tree was almost never selected; only eight galaxies in the entire main spectroscopic sample ($<0.0003\%$) met the \texttt{clean} threshold 80\% for this question. For Figure~\ref{fig:feature_comparison}, we map bulge prominence for GZ2$\rightarrow$DECaLS as `no\_bulge' $\rightarrow$ `no\_bulge',`just\_noticeable' $\rightarrow$ `obvious', and `obvious' $\rightarrow$ `dominant'. The other exceptions are the elimination of the ``can't tell'' option for the number of spiral arms, and the difference in options and ability to select multiple categories in the ``odd features'' question. Given the very small numbers of galaxies for the latter option, we suggest that any potential targets be individually inspected. 
-
 \begin{figure*}
 \centering
 \includegraphics[width=190mm]{../plots/decals_gz2_feature_comparison.pdf}
@@ -381,6 +403,30 @@ Bulge prominence does show a significant difference between the GZ2 and DECaLS d
 
 There are few galaxies with robust classifications in the catch-all ``odd'' categories. Ring galaxies are the only category with confident classifications by the user (eg, examples at both ends with few vote fractions at intermediate values). Users were slightly more confident in identifying rings in GZ2. There were no robust identifications of lens- or arc-shaped features in any GZ2/DECaLS pair of images. This is unsurprising, given the very low likelihood of detecting a true strong gravitational lens \citep[$\sim2\times10^{-4}$;][]{mar16} and the fact that the stretch and SDSS band selection does not optimize the color contrast for detecting lensed objects. Irregular objects are present, although with only a handful at high confidence in either survey. There are a large number of galaxies with high GZ2 vote fractions for ``other'', but this was not a commonly-selected option in DECaLS. The opposite effect is seen in the galaxies with a dust lane, for which many galaxies had essentially zero votes in GZ2 but a range of high confidences in DECaLS. It will be intriguing to investigate whether this seems to be driven by the improved DECaLS imaging, or whether it is a reflection of a more experienced user base with several years of identifying galaxies with dust lanes, and thus are moving away from the relatively vague ``other'' option in the decision tree.
 
+\subsection{Other}
+Describe overall demographics in Figure~\ref{fig:pie}.
+
+\begin{figure*}
+\centering
+\includegraphics[width=160mm]{../plots/pie_decals_abs.png}
+\caption{Distribution of the plurality morphological category for each task in GZ:DECaLS. Labels show the count of the number of galaxies with each morphology, including only those for which the question was reached in the hierarchical tree.\label{fig:pie}}
+\end{figure*}
+
+Figure~\ref{fig:feature_ratio} shows the change in average elliptical-spiral ratio. What does that mean?
+
+\begin{figure*}
+\centering
+\includegraphics[width=160mm]{../plots/feature_ratio.pdf}
+\caption{Average spiral-elliptical ratio for various galaxy samples as a function of optical $(u-r)$ color. From left to right, curves are for the GZ2 main spectroscopic sample, the deeper Stripe~82 coadded images, and the DECaLS images. Colors/linestyles show different volume/absolute magnitude limits for each sample.\label{fig:feature_ratio}}
+\end{figure*}
+
+Correlation between the various morphological tasks (Figure~\ref{fig:heatmap}).
+
+\begin{figure*}
+\centering
+\includegraphics[width=160mm]{../plots/heatmap.pdf}
+\caption{Correlation matrix between the various tasks in the GZ-DECaLS decision tree. Lower left and upper right corners show the same (mirrored) sets of data.\label{fig:heatmap}}
+\end{figure*}
 
 \acknowledgments{
 }

@@ -41,6 +41,18 @@
   \href{http://dx.doi.org/10.1093/mnras/sts391}{\JournalTitle{\mnras}, 429,
   1051}
 
+\bibitem[{{Clark} \& Watson(1995)}]{cla95}
+{Clark}, L.~A., \& Watson, D. 1995,
+  \href{http://dx.doi.org/http://dx.doi.org/10.1037/1040-3590.7.3.309}{\JournalTitle{Psychological
+  Assessment}, 7, 309}
+
+\bibitem[{{Darg} {et~al.}(2010){Darg}, {Kaviraj}, {Lintott}, {Schawinski},
+  {Sarzi}, {Bamford}, {Silk}, {Proctor}, {Andreescu}, {Murray}, {Nichol},
+  {Raddick}, {Slosar}, {Szalay}, {Thomas}, \& {Vandenberg}}]{dar10a}
+{Darg}, D.~W., {Kaviraj}, S., {Lintott}, C.~J., {et~al.} 2010,
+  \href{http://dx.doi.org/10.1111/j.1365-2966.2009.15686.x}{\JournalTitle{\mnras},
+  401, 1043}
+
 \bibitem[{{Frieman} {et~al.}(2008){Frieman}, {Bassett}, {Becker}, {Choi},
   {Cinabro}, {DeJongh}, {Depoy}, {Dilday}, {Doi}, {Garnavich}, {Hogan},
   {Holtzman}, {Im}, {Jha}, {Kessler}, {Konishi}, {Lampeitl}, {Marriner},
@@ -74,10 +86,28 @@
   \href{http://dx.doi.org/10.1111/j.1365-2966.2011.18979.x}{\JournalTitle{\mnras},
   415, 3627}
 
+\bibitem[{{Kaviraj}(2010)}]{kav10}
+{Kaviraj}, S. 2010,
+  \href{http://dx.doi.org/10.1111/j.1365-2966.2010.16714.x}{\JournalTitle{\mnras},
+  406, 382}
+
 \bibitem[{{Kaviraj}(2014)}]{kav14a}
-{Kaviraj}, S. 2014,
+---. 2014,
   \href{http://dx.doi.org/10.1093/mnrasl/slt136}{\JournalTitle{\mnras}, 437,
   L41}
+
+\bibitem[{{Kaviraj} {et~al.}(2012){Kaviraj}, {Darg}, {Lintott}, {Schawinski},
+  \& {Silk}}]{kav12}
+{Kaviraj}, S., {Darg}, D., {Lintott}, C., {Schawinski}, K., \& {Silk}, J. 2012,
+  \href{http://dx.doi.org/10.1111/j.1365-2966.2011.19673.x}{\JournalTitle{\mnras},
+  419, 70}
+
+\bibitem[{{Keel} {et~al.}(2014){Keel}, {Manning}, {Holwerda}, {Lintott}, \&
+  {Schawinski}}]{kee14}
+{Keel}, W.~C., {Manning}, A.~M., {Holwerda}, B.~W., {Lintott}, C.~J., \&
+  {Schawinski}, K. 2014,
+  \href{http://dx.doi.org/10.1088/0004-6256/147/2/44}{\JournalTitle{\aj}, 147,
+  44}
 
 \bibitem[{{Keel} {et~al.}(2013){Keel}, {Manning}, {Holwerda}, {Mezzoprete},
   {Lintott}, {Schawinski}, {Gay}, \& {Masters}}]{kee13}
@@ -122,6 +152,13 @@
 {Lintott}, C., {Schawinski}, K., {Bamford}, S., {et~al.} 2011,
   \href{http://dx.doi.org/10.1111/j.1365-2966.2010.17432.x}{\JournalTitle{\mnras},
   410, 166}
+
+\bibitem[{{Lintott} {et~al.}(2008){Lintott}, {Schawinski}, {Slosar}, {Land},
+  {Bamford}, {Thomas}, {Raddick}, {Nichol}, {Szalay}, {Andreescu}, {Murray}, \&
+  {Vandenberg}}]{lin08}
+{Lintott}, C.~J., {Schawinski}, K., {Slosar}, A., {et~al.} 2008,
+  \href{http://dx.doi.org/10.1111/j.1365-2966.2008.13689.x}{\JournalTitle{\mnras},
+  389, 1179}
 
 \bibitem[{{Lintott} {et~al.}(2009){Lintott}, {Schawinski}, {Keel}, {van Arkel},
   {Bennert}, {Edmondson}, {Thomas}, {Smith}, {Herbert}, {Jarvis}, {Virani},
