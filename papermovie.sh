@@ -48,14 +48,13 @@ for f in `ls -1 movie/*.png | grep -v "movie\-1.png" | sort -nr`; do
     let x+=1
 done
 
-ffmpeg -r 5 -i movie/%03d.png -vcodec mpeg4 -pix_fmt yuv420p -b 8000k movie/movie.mov
+arr=$(echo $filename | tr ";" "\n")
+IFS='/' read -a fnameonly <<< "$filename"
+x=${fnameonly[${#fnameonly[@]}-1]}
+IFS='.' read -a stub <<< "$x"
+
+ffmpeg -r 5 -i movie/%03d.png -vcodec mpeg4 -pix_fmt yuv420p -b 8000k movie/$stub.mov
 
 rm -f movie/*.pdf
-rm -f movie/%03d.png
+rm -f movie/*.png
 rm -f movie/commits.txt
-
-# Checkout the most recent version again
-
-#git pull
-#git checkout master
-
