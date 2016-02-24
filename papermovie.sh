@@ -10,11 +10,12 @@
 
 filename=$1
 
-#git pull
-#git checkout papermovie
+git pull origin pm2
+git checkout pm2
 
 git log -- $filename  > pdflog
 grep "commit" pdflog | awk '{print $2}' > commits.txt
+mv commits.txt movie/commits.txt
 rm -Rf pdflog
 
 rev=1
@@ -30,11 +31,11 @@ while read p; do
 
     let rev+=1
 
-done < commits.txt
+done < movie/commits.txt
 
 # Checkout the most recent version again
-git pull
-git checkout master
+git pull origin pm2
+git checkout pm2
 
 # Renumber, crop, and reverse order of the frames
 
@@ -51,6 +52,7 @@ ffmpeg -r 5 -i movie/%03d.png -vcodec mpeg4 -pix_fmt yuv420p -b 8000k movie/movi
 
 rm -f movie/*.pdf
 rm -f movie/%03d.png
+rm -f movie/commits.txt
 
 # Checkout the most recent version again
 
