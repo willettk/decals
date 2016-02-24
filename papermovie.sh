@@ -33,10 +33,6 @@ while read p; do
 
 done < movie/commits.txt
 
-# Checkout the most recent version again
-git pull origin pm2
-git checkout pm2
-
 # Renumber, crop, and reverse order of the frames
 
 x=0
@@ -58,3 +54,8 @@ ffmpeg -r 5 -i movie/%03d.png -vcodec mpeg4 -pix_fmt yuv420p -b 8000k movie/$stu
 rm -f movie/*.pdf
 rm -f movie/*.png
 rm -f movie/commits.txt
+
+# Checkout the most recent version again
+git pull origin pm2
+git checkout pm2
+
