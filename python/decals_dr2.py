@@ -12,15 +12,13 @@ import datetime
 import os,urllib
 import errno
 
-#gzpath = '/Users/willettk/Astronomy/Research/GalaxyZoo'
-gzpath = '/data/extragal/willett/gz4/DECaLS'
 min_pixelscale = 0.10
 
 def get_nsa_images(nsa_version):
 
     # Load FITS file with the NASA-Sloan Atlas data
 
-    nsa = fits.getdata('{0}/decals/fits/nsa_v{1}.fits'.format(gzpath,nsa_version),1)
+    nsa = fits.getdata('../fits/nsa_v{0}.fits'.format(nsa_version),1)
 
     return nsa
 
@@ -33,7 +31,7 @@ def get_decals_bricks(dr='1'):
     No constraints on catalog entry for DR2, oddly.
     '''
 
-    bricks_all = fits.getdata('{0}/decals/fits/decals-bricks-dr{1}.fits'.format(gzpath,dr),1)
+    bricks_all = fits.getdata('../fits/decals-bricks-dr{0}.fits'.format(dr),1)
 
     if dr == '1':
         has_g = bricks_all['has_image_g']
@@ -149,16 +147,14 @@ def run_all_bricks(nsa,bricks,dr,nsa_version,run_to=-1):
     # Write to file
     # Check what version of the NSA is being used and set string variable below
 
-    outfilename = '{0}/decals/fits/nsa_v{1}_decals_dr{2}.fits'.format(gzpath,nsa_version,dr)
+    outfilename = '../fits/nsa_v{0}_decals_dr{1}.fits'.format(nsa_version,dr)
     nsa_decals.write(outfilename,overwrite=True)
 
     return nsa_decals
 
-def get_skyserver_fits(gal,dr='1',remove_multi_fits=True):
+def get_skyserver_fits(gal,fitspath,dr='1',remove_multi_fits=True):
 
     # Download a multi-plane FITS image from the DECaLS skyserver
-
-    fitspath = '{0}/decals/fits/nsa'.format(gzpath)
 
     # Get FITS
 
@@ -301,15 +297,14 @@ def run_nsa(nsa_decals,dr='2',nsa_version = '1_0_0',random_samp=True,force_fits=
     good_images = np.zeros(len(galaxies),dtype=bool)
 
     # Set paths for the FITS and JPG files
-    volpath = "{0}/decals".format(gzpath)
 
-    fitspath = '{0}/fits/nsa'.format(volpath)
+    fitspath = '../fits/nsa'
     make_sure_path_exists(fitspath)
 
-    jpegpath = '{0}/jpeg/dr2'.format(volpath)
+    jpegpath = '../jpeg/dr2'
     make_sure_path_exists(jpegpath)
 
-    logfile = "{0}/decals/failed_fits_downloads.log".format(gzpath)
+    logfile = "../failed_fits_downloads.log"
     flog = open(logfile,'w')
     timed_out = np.zeros(len(galaxies),dtype=bool)
 
@@ -320,7 +315,7 @@ def run_nsa(nsa_decals,dr='2',nsa_version = '1_0_0',random_samp=True,force_fits=
         fits_filename = '{0}/{1}.fits'.format(fitspath,gal['IAUNAME'])
         if os.path.exists(fits_filename) == False or force_fits:
             try:
-                get_skyserver_fits(gal,dr,remove_multi_fits=False)
+                get_skyserver_fits(gal,fitspath,dr,remove_multi_fits=False)
             except IOError:
                 print "IOError downloading {0}".format(gal['IAUNAME'])
                 timed_out[i] = True
@@ -355,10 +350,10 @@ def run_nsa(nsa_decals,dr='2',nsa_version = '1_0_0',random_samp=True,force_fits=
 
     # Close logging file for timed-out errors from server
     flog.close()
-    galaxies[timed_out].write('{0}/decals/fits/nsa_v{1}_decals_dr{2}_timedout.fits'.format(gzpath,nsa_version,dr),overwrite=True)
+    galaxies[timed_out].write('../fits/nsa_v{0}_decals_dr{1}_timedout.fits'.format(nsa_version,dr),overwrite=True)
 
     # Write good images to file
-    galaxies[good_images].write('{0}/decals/fits/nsa_v{1}_decals_dr{2}_goodimgs.fits'.format(gzpath,nsa_version,dr),overwrite=True)
+    galaxies[good_images].write('../fits/nsa_v{0}_decals_dr{1}_goodimgs.fits'.format(nsa_version,dr),overwrite=True)
 
     # Print summary to screen
 
