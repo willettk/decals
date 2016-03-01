@@ -5,6 +5,7 @@ from astropy.io import fits
 from astropy.table import Table
 import numpy as np
 from matplotlib import pyplot as plt
+import progressbar as pb
 
 import requests
 import random
@@ -62,7 +63,7 @@ def find_matching_brick(gal,bricks):
     ra1,dec1 = lower right corner of brick
     ra2,dec2 = upper left corner of brick
     '''
-    
+
     # Find only bricks that could match in RA,dec
     ragal,decgal = gal['RA'],gal['DEC']
 
@@ -110,7 +111,7 @@ def run_all_bricks(nsa,bricks,dr,nsa_version,run_to=-1):
 
     # Rough limits of DR2 in RA
 
-    ralim = ((nsa['RA'] > 7/24. * 360) & (nsa['RA'] < 18/24. * 360)) | (nsa['RA'] < 3/24. * 360) | (nsa['RA'] > 21/24. * 360) 
+    ralim = ((nsa['RA'] > 7/24. * 360) & (nsa['RA'] < 18/24. * 360)) | (nsa['RA'] < 3/24. * 360) | (nsa['RA'] > 21/24. * 360)
     declim = (nsa['DEC'] >= brick_mindec) & (nsa['DEC'] <= brick_maxdec)
 
     total_matches = 0
@@ -118,6 +119,9 @@ def run_all_bricks(nsa,bricks,dr,nsa_version,run_to=-1):
     decals_indices = np.zeros(len(nsa),dtype=bool)
     bricks_indices = []
 
+    widgets = ['Matching: ', pb.Percentage(), ' ', pb.Bar(marker='0',left='[',right=']'), ' ', pb.ETA()]
+    pbar = pb.ProgressBar(widgets=widgets, maxval=len(nsa[:run_to]))
+    pbar.start()
     for idx,gal in enumerate(nsa[:run_to]):
         if (declim & ralim)[idx]:
             nm,coomatch = find_matching_brick(gal,bricks)
@@ -127,8 +131,10 @@ def run_all_bricks(nsa,bricks,dr,nsa_version,run_to=-1):
                 bricks_indices.append(coomatch.argmax())
             if nm > 1:
                 multi_matches += 1
-        if idx % 100 == 0 and idx > 0:
-            print '{0:6d} galaxies searched, {1:6d} matches so far'.format(idx,total_matches)
+        pbar.update(idx + 1)
+        #if idx % 100 == 0 and idx > 0:
+        #    print '{0:6d} galaxies searched, {1:6d} matches so far'.format(idx,total_matches)
+    pbar.finish()
 
     print '{0:6d} total matches between NASA-Sloan Atlas and DECaLS DR1'.format(total_matches)
     print '{0:6d} galaxies had matches in more than one brick'.format(multi_matches)
@@ -223,7 +229,7 @@ def dstn_rgb(imgs, bands, mnmx=None, arcsinh=None, scales=None, desaturate=False
                           )
         else:
             scales = grzscales
-        
+
     h,w = imgs[0].shape
     rgb = np.zeros((h,w,3), np.float32)
     # Convert to ~ sigmas
@@ -268,7 +274,7 @@ def dstn_rgb(imgs, bands, mnmx=None, arcsinh=None, scales=None, desaturate=False
     clipped = np.clip(rgb, 0., 1.)
 
     return clipped
- 
+
 def make_sure_path_exists(path):
 
     # Check if a local path exists; if not, create it.
@@ -285,9 +291,9 @@ def run_nsa(nsa_decals,dr='2',nsa_version = '1_0_0',random_samp=True,force_fits=
 
     if random_samp:
         N = 101
-        galaxies = random.sample(nsa_decals,N)
+        galaxies = np.array(random.sample(nsa_decals,N))
     else:
-        galaxies = nsa_decals
+        galaxies = np.array(nsa_decals)
 
     # Set new parameters
 
@@ -308,6 +314,9 @@ def run_nsa(nsa_decals,dr='2',nsa_version = '1_0_0',random_samp=True,force_fits=
     flog = open(logfile,'w')
     timed_out = np.zeros(len(galaxies),dtype=bool)
 
+    widgets = ['Downloads: ', pb.Percentage(), ' ', pb.Bar(marker='0',left='[',right=']'), ' ', pb.ETA()]
+    pbar = pb.ProgressBar(widgets=widgets, maxval=len(galaxies))
+    pbar.start()
     for i,gal in enumerate(galaxies):
 
         # Check if FITS image already exists
@@ -344,9 +353,10 @@ def run_nsa(nsa_decals,dr='2',nsa_version = '1_0_0',random_samp=True,force_fits=
         else:
             # JPEG file already exists, so it's assumed to be a good image
             good_images[i] = True
-
-        if not i % 10 and i > 0:
-            print '{0:5d}/{1:5d} galaxies completed; {2}'.format(i,len(galaxies),datetime.datetime.now().strftime("%H:%M:%S"))
+        pbar.update(i + 1)
+        #if not i % 10 and i > 0:
+        #    print '{0:5d}/{1:5d} galaxies completed; {2}'.format(i,len(galaxies),datetime.datetime.now().strftime("%H:%M:%S"))
+    pbar.finish()
 
     # Close logging file for timed-out errors from server
     flog.close()
