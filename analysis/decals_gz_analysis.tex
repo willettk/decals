@@ -9,7 +9,7 @@
 \renewcommand*{\subsectionautorefname}{Section} %for \autoref
 
 \shorttitle{Galaxy Zoo: DECaLS}
-\shortauthors{Willett et al.}
+\shortauthors{GZ-DECaLS team}
 
 \begin{document}
 
@@ -92,6 +92,10 @@ Dark Energy Camera Legacy Survey (DECaLS)
 So the Sloan and DECaLS samples definitely were not selected in the same manner. However, all the relevant parameters are stored in the NASA-Sloan Atlas if we wanted to cut on that. More specifically, we can do a simple match (ideally through previously matched catalogs, but if necessary through a tight positional match) to directly compare morphological measurements for \emph{the same galaxies} (Table~\ref{tbl:overlaps}).
 
 DECaLS images are selected from the extended NASA-Sloan Atlas (v1.0.0; M.~Blanton, priv. comm.). The JPG images are sized at $424\times424$ pixels; the pixel scale is set using both the 50\% $R_{50}$ and 90\% $R_{90}$ $r$-band Petrosian radii in the NSA catalog. The pixel scale used is the smaller of $(R_{50}*0.04)$ or $(R_{90}*0.02)$ arcsec/pixel; an absolute minimum of 0.10~arcsec/pixel is imposed to prevent images from being zoomed-in to the point where obvious pixellation is an issue.
+
+{\it Note: while we had originally planned to select only galaxies of $r>10^{\prime\prime}$, the Tractor measurements weren't reliable and KWW ultimately didn't apply the cuts to the NSA catalog. As a result, there is no minumum angular size for the GZ-DECaLS DR1 sample. This means that a few galaxies down to $r_\textrm{Petro}=0.$ (in the catalog) are included, and a significant number with $r_\textrm{Petro}<2^{\prime\prime}$. The original limit on GZ2 with SDSS imaging was $r_\textrm{Petro}>3^{\prime\prime}$; the seeing at CTIO should be an improvement, but there's still no real reason to visually classifiy galaxies that aren't at least several resolution elements across. Visual inspection of the DR1 images show that the majority of stellar artifacts in the sample have $r_\textrm{Petro}=1^{\prime\prime}.02072$ (this apparently gives the DECaLS PSF, and these images should clearly be removed). Very few galaxies with $r_\textrm{Petro}>3^{\prime\prime}$ have visible disc features. There is also a strong correlation for the overall classification as a function of angular size. By plurality vote, 56\% of galaxies with $r_\textrm{Petro}>10^{\prime\prime}$ are feature/disk, while only 33\% of galaxies with $5^{\prime\prime}<r_\textrm{Petro}<10^{\prime\prime}$ and 7\% of galaxies with $r_\textrm{Petro}<5^{\prime\prime}$ are feature/disk. 
+
+This means: a) analysis of DECaLS galaxies should put a lower limit on Petrosian radius for reliable sample selection, likely at least $3^{\prime\prime}$, and b) the same limit should be applied to sample selection for GZ-DECaLS DR2 and beyond. We really don't want to waste users' time by putting in galaxies too small for reliable classification.  }
 
 % Note: sizes and magnitudes do not precisely match between the NSA and DECaLS catalogs (they are different measurements). 
 % Converting from nanomagggies to AB magnitudes, the difference is usually less than 0.10 mag between NMJY[4] and DECAM_FLUX[2].
