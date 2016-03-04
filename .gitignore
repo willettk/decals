@@ -71,4 +71,4 @@ target/
 
 jpeg/dr2/*jpeg
 fits/nsa/*fits
-fits/nsa_v*fits
+fits/nsa_*fits

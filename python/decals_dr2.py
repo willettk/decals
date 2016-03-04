@@ -12,6 +12,7 @@ import random
 import datetime
 import os,urllib
 import errno
+import subprocess
 
 min_pixelscale = 0.10
 
@@ -136,7 +137,7 @@ def run_all_bricks(nsa,bricks,dr,nsa_version,run_to=-1):
         #    print '{0:6d} galaxies searched, {1:6d} matches so far'.format(idx,total_matches)
     pbar.finish()
 
-    print '{0:6d} total matches between NASA-Sloan Atlas and DECaLS DR1'.format(total_matches)
+    print '{0:6d} total matches between NASA-Sloan Atlas and DECaLS DR{1}'.format(total_matches, dr)
     print '{0:6d} galaxies had matches in more than one brick'.format(multi_matches)
 
     nsa_table = Table(nsa)
@@ -170,6 +171,8 @@ def get_skyserver_fits(gal,fitspath,dr='1',remove_multi_fits=True):
         url = "http://imagine.legacysurvey.org/fits-cutout-decals-dr1?{0}".format(params)
     elif dr == '2':
         url = "http://legacysurvey.org/viewer/fits-cutout-decals-dr2?{0}".format(params)
+    #sp = subprocess.call(['curl', '-o', '{0}/{1}.fits'.format(fitspath, galname), url])
+    #sp = subprocess.call(['wget', '-O', '{0}/{1}.fits'.format(fitspath, galname), url])
     urllib.urlretrieve(url, "{0}/{1}.fits".format(fitspath,galname))
 
     # Write multi-plane FITS images to separate files for each band
@@ -291,9 +294,9 @@ def run_nsa(nsa_decals,dr='2',nsa_version = '1_0_0',random_samp=True,force_fits=
 
     if random_samp:
         N = 101
-        galaxies = np.array(random.sample(nsa_decals,N))
+        galaxies = random.sample(nsa_decals,N)
     else:
-        galaxies = np.array(nsa_decals)
+        galaxies = nsa_decals
 
     # Set new parameters
 
@@ -335,19 +338,24 @@ def run_nsa(nsa_decals,dr='2',nsa_version = '1_0_0',random_samp=True,force_fits=
         jpeg_filename = '{0}/{1}.jpeg'.format(jpegpath,gal['IAUNAME'])
         if os.path.exists(jpeg_filename) == False:
             if os.path.exists(fits_filename):
-                img,hdr = fits.getdata(fits_filename,0,header=True)
+                try:
+                    img,hdr = fits.getdata(fits_filename,0,header=True)
 
-                badmax = 0.
-                for j in range(img.shape[0]):
-                    band = img[j,:,:]
-                    nbad = (band == 0.).sum() + np.isnan(band).sum()
-                    fracbad = nbad / np.prod(band.shape)
-                    badmax = max(badmax,fracbad)
+                    badmax = 0.
+                    for j in range(img.shape[0]):
+                        band = img[j,:,:]
+                        nbad = (band == 0.).sum() + np.isnan(band).sum()
+                        fracbad = nbad / np.prod(band.shape)
+                        badmax = max(badmax,fracbad)
 
-                if badmax < 0.2:
-                    rgbimg = dstn_rgb((img[0,:,:],img[1,:,:],img[2,:,:]), 'grz', mnmx=_mnmx, arcsinh=1., scales=_scales, desaturate=True)
-                    plt.imsave(jpeg_filename, rgbimg, origin='lower')
-                    good_images[i] = True
+                    if badmax < 0.2:
+                        rgbimg = dstn_rgb((img[0,:,:],img[1,:,:],img[2,:,:]), 'grz', mnmx=_mnmx, arcsinh=1., scales=_scales, desaturate=True)
+                        plt.imsave(jpeg_filename, rgbimg, origin='lower')
+                        good_images[i] = True
+                except:
+                    print "Other download error for {0}".format(gal['IAUNAME'])
+                    timed_out[i] = True
+                    print >> flog,gal['IAUNAME']
             else:
                 print "Could not find FITS file for {0}".format(fits_filename)
         else:
@@ -380,7 +388,8 @@ if __name__ == "__main__":
 
     dr = '2'
     nsa_version = '1_0_0'
-    nsa = get_nsa_images(nsa_version)
-    bricks = get_decals_bricks(dr)
-    nsa_decals = run_all_bricks(nsa,bricks,dr,nsa_version,run_to=-1)
+    #nsa = get_nsa_images(nsa_version)
+    #bricks = get_decals_bricks(dr)
+    #nsa_decals = run_all_bricks(nsa,bricks,dr,nsa_version,run_to=-1)
+    nsa_decals = Table(fits.getdata('../fits/nsa_v{0}_decals_dr{1}_after_cuts.fits'.format(nsa_version, dr), 1))
     run_nsa(nsa_decals,dr,random_samp=False,force_fits=False)
