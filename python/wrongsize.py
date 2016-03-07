@@ -3,34 +3,36 @@ from pymongo import MongoClient
 client = MongoClient('localhost', 27017)
 
 gz = client['galaxy_zoo'] 
-
 subjects = gz['galaxy_zoo_subjects']
-classifications = gz['galaxy_zoo_classifications']
-users = gz['galaxy_zoo_users']
 
 ouroboros = client['ouroboros']
 discussions = ouroboros['discussions']
 
 tags = ['wrongsize','wrong_size','imagesizewrong']
-tags = ['decals_red_artifact',]
 wstags = discussions.find({'comments.tags':{'$in':tags},'focus.type':'GalaxyZooSubject'})
 
-ids = []
+zids = []
 for tag in wstags:
-    ids.append(tag['focus']['_id'])
+    zids.append(tag['focus']['_id'])
 
 surveys = []
 
-for id in ids:
-    s = subjects.find_one({'zooniverse_id':id})
+# Check to see what survey groups these are attached to
+
+surveys = []
+for zid in zids:
+    s = subjects.find_one({'zooniverse_id':zid})
     survey = s['metadata']['survey']
+
+    if survey != 'decals':
+        zids.remove(zid)
     surveys.append(survey)
 
-    if survey == 'decals':
-        print 'http://talk.galaxyzoo.org/#/subjects/%s' % id
+# Print results to screen
 
 from collections import Counter
-
 print Counter(surveys)
 
-
+with open("../csv/wrong_size.csv",'w') as f:
+    for zid in zids:
+        print >> f,zid
