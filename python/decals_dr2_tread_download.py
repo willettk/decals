@@ -3,7 +3,6 @@ from astropy.io import fits
 from astropy.table import Table
 from matplotlib import pyplot as plt
 import numpy as np
-import progressbar as pb
 from decals_dr2 import dstn_rgb
 import progressbar as pb
 
