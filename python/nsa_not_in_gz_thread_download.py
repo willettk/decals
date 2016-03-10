@@ -46,7 +46,8 @@ def get_skyserver_jpeg(gal,jpegpath='../jpeg/nsa_not_gz'):
 
 if __name__ == "__main__":
     nsa_version = '0_1_2'
-    nsa_not_gz = Table(fits.getdata('../fits/nsa_v{0}_not_in_GZ.fits'.format(nsa_version), 1))
+    #nsa_not_gz = Table(fits.getdata('../fits/nsa_v{0}_not_in_GZ.fits'.format(nsa_version), 1))
+    nsa_not_gz = Table(fits.getdata('../fits/nsa_v{0}_not_in_GZ_decals_bad_pix.fits'.format(nsa_version), 1))
     cdx=Counter(0)
     pbar = pb.ProgressBar(widgets=widgets, maxval=len(nsa_not_gz))
     pool=ThreadPool(8)
