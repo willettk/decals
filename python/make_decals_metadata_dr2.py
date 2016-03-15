@@ -29,10 +29,11 @@ size[nsa_decals['Z']<0] = -99.*u.kpc
 
 absmag_r = nsa_decals['ABSMAG'][:,4].astype(float)
 mag = 22.5 - 2.5*np.log10(nsa_decals['NMGY']).astype(float)
+mag[~np.isfinite(mag)] = -99.
 
 fluxarr = nsa_decals['PETROFLUX'][:,4].astype(float)
 
-url_stub = "http://www.galaxyzoo.org.s3.amazonaws.com/subjects/decals_dr2/"
+url_stub = "http://www.galaxyzoo.org.s3.amazonaws.com/subjects/decals_dr2"
 
 for imgtype in ('standard','inverted','thumbnail'):
     lst = url_stub + '/{0}/'.format(imgtype) + nsa_decals['IAUNAME'] + '.jpeg'

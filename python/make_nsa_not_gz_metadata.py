@@ -29,10 +29,11 @@ size[nsa_not_gz['Z']<0] = -99.*u.kpc
 
 absmag_r = nsa_not_gz['ABSMAG'][:,4].astype(float)
 mag = 22.5 - 2.5*np.log10(nsa_not_gz['NMGY']).astype(float)
+mag[~np.isfinite(mag)] = -99.
 
 fluxarr = nsa_not_gz['PETROFLUX'][:,4].astype(float)
 
-url_stub = "http://www.galaxyzoo.org.s3.amazonaws.com/subjects/sdss_lost_set/"
+url_stub = "http://www.galaxyzoo.org.s3.amazonaws.com/subjects/sdss_lost_set"
 
 for imgtype in ('standard','inverted','thumbnail'):
     lst = url_stub + '/{0}/'.format(imgtype) + nsa_not_gz['IAUNAME'] + '.jpeg'
