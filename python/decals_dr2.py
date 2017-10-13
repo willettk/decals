@@ -5,22 +5,22 @@ from astropy.io import fits
 from astropy.table import Table
 import numpy as np
 from matplotlib import pyplot as plt
+import progressbar as pb
 
 import requests
 import random
 import datetime
 import os,urllib
 import errno
+import subprocess
 
-#gzpath = '/Users/willettk/Astronomy/Research/GalaxyZoo'
-gzpath = '/data/extragal/willett/gz4/DECaLS'
 min_pixelscale = 0.10
 
 def get_nsa_images(nsa_version):
 
     # Load FITS file with the NASA-Sloan Atlas data
 
-    nsa = fits.getdata('{0}/decals/fits/nsa_v{1}.fits'.format(gzpath,nsa_version),1)
+    nsa = fits.getdata('../fits/nsa_v{0}.fits'.format(nsa_version),1)
 
     return nsa
 
@@ -33,7 +33,7 @@ def get_decals_bricks(dr='1'):
     No constraints on catalog entry for DR2, oddly.
     '''
 
-    bricks_all = fits.getdata('{0}/decals/fits/decals-bricks-dr{1}.fits'.format(gzpath,dr),1)
+    bricks_all = fits.getdata('../fits/decals-bricks-dr{0}.fits'.format(dr),1)
 
     if dr == '1':
         has_g = bricks_all['has_image_g']
@@ -64,7 +64,7 @@ def find_matching_brick(gal,bricks):
     ra1,dec1 = lower right corner of brick
     ra2,dec2 = upper left corner of brick
     '''
-    
+
     # Find only bricks that could match in RA,dec
     ragal,decgal = gal['RA'],gal['DEC']
 
@@ -112,7 +112,7 @@ def run_all_bricks(nsa,bricks,dr,nsa_version,run_to=-1):
 
     # Rough limits of DR2 in RA
 
-    ralim = ((nsa['RA'] > 7/24. * 360) & (nsa['RA'] < 18/24. * 360)) | (nsa['RA'] < 3/24. * 360) | (nsa['RA'] > 21/24. * 360) 
+    ralim = ((nsa['RA'] > 7/24. * 360) & (nsa['RA'] < 18/24. * 360)) | (nsa['RA'] < 3/24. * 360) | (nsa['RA'] > 21/24. * 360)
     declim = (nsa['DEC'] >= brick_mindec) & (nsa['DEC'] <= brick_maxdec)
 
     total_matches = 0
@@ -120,6 +120,9 @@ def run_all_bricks(nsa,bricks,dr,nsa_version,run_to=-1):
     decals_indices = np.zeros(len(nsa),dtype=bool)
     bricks_indices = []
 
+    widgets = ['Matching: ', pb.Percentage(), ' ', pb.Bar(marker='0',left='[',right=']'), ' ', pb.ETA()]
+    pbar = pb.ProgressBar(widgets=widgets, maxval=len(nsa[:run_to]))
+    pbar.start()
     for idx,gal in enumerate(nsa[:run_to]):
         if (declim & ralim)[idx]:
             nm,coomatch = find_matching_brick(gal,bricks)
@@ -129,10 +132,12 @@ def run_all_bricks(nsa,bricks,dr,nsa_version,run_to=-1):
                 bricks_indices.append(coomatch.argmax())
             if nm > 1:
                 multi_matches += 1
-        if idx % 100 == 0 and idx > 0:
-            print '{0:6d} galaxies searched, {1:6d} matches so far'.format(idx,total_matches)
+        pbar.update(idx + 1)
+        #if idx % 100 == 0 and idx > 0:
+        #    print '{0:6d} galaxies searched, {1:6d} matches so far'.format(idx,total_matches)
+    pbar.finish()
 
-    print '{0:6d} total matches between NASA-Sloan Atlas and DECaLS DR1'.format(total_matches)
+    print '{0:6d} total matches between NASA-Sloan Atlas and DECaLS DR{1}'.format(total_matches, dr)
     print '{0:6d} galaxies had matches in more than one brick'.format(multi_matches)
 
     nsa_table = Table(nsa)
@@ -149,16 +154,14 @@ def run_all_bricks(nsa,bricks,dr,nsa_version,run_to=-1):
     # Write to file
     # Check what version of the NSA is being used and set string variable below
 
-    outfilename = '{0}/decals/fits/nsa_v{1}_decals_dr{2}.fits'.format(gzpath,nsa_version,dr)
+    outfilename = '../fits/nsa_v{0}_decals_dr{1}.fits'.format(nsa_version,dr)
     nsa_decals.write(outfilename,overwrite=True)
 
     return nsa_decals
 
-def get_skyserver_fits(gal,dr='1',remove_multi_fits=True):
+def get_skyserver_fits(gal,fitspath,dr='1',remove_multi_fits=True):
 
     # Download a multi-plane FITS image from the DECaLS skyserver
-
-    fitspath = '{0}/decals/fits/nsa'.format(gzpath)
 
     # Get FITS
 
@@ -168,6 +171,8 @@ def get_skyserver_fits(gal,dr='1',remove_multi_fits=True):
         url = "http://imagine.legacysurvey.org/fits-cutout-decals-dr1?{0}".format(params)
     elif dr == '2':
         url = "http://legacysurvey.org/viewer/fits-cutout-decals-dr2?{0}".format(params)
+    #sp = subprocess.call(['curl', '-o', '{0}/{1}.fits'.format(fitspath, galname), url])
+    #sp = subprocess.call(['wget', '-O', '{0}/{1}.fits'.format(fitspath, galname), url])
     urllib.urlretrieve(url, "{0}/{1}.fits".format(fitspath,galname))
 
     # Write multi-plane FITS images to separate files for each band
@@ -227,7 +232,7 @@ def dstn_rgb(imgs, bands, mnmx=None, arcsinh=None, scales=None, desaturate=False
                           )
         else:
             scales = grzscales
-        
+
     h,w = imgs[0].shape
     rgb = np.zeros((h,w,3), np.float32)
     # Convert to ~ sigmas
@@ -272,7 +277,7 @@ def dstn_rgb(imgs, bands, mnmx=None, arcsinh=None, scales=None, desaturate=False
     clipped = np.clip(rgb, 0., 1.)
 
     return clipped
- 
+
 def make_sure_path_exists(path):
 
     # Check if a local path exists; if not, create it.
@@ -301,18 +306,20 @@ def run_nsa(nsa_decals,dr='2',nsa_version = '1_0_0',random_samp=True,force_fits=
     good_images = np.zeros(len(galaxies),dtype=bool)
 
     # Set paths for the FITS and JPG files
-    volpath = "{0}/decals".format(gzpath)
 
-    fitspath = '{0}/fits/nsa'.format(volpath)
+    fitspath = '../fits/nsa'
     make_sure_path_exists(fitspath)
 
-    jpegpath = '{0}/jpeg/dr2'.format(volpath)
+    jpegpath = '../jpeg/dr2'
     make_sure_path_exists(jpegpath)
 
-    logfile = "{0}/decals/failed_fits_downloads.log".format(gzpath)
+    logfile = "../failed_fits_downloads.log"
     flog = open(logfile,'w')
     timed_out = np.zeros(len(galaxies),dtype=bool)
 
+    widgets = ['Downloads: ', pb.Percentage(), ' ', pb.Bar(marker='0',left='[',right=']'), ' ', pb.ETA()]
+    pbar = pb.ProgressBar(widgets=widgets, maxval=len(galaxies))
+    pbar.start()
     for i,gal in enumerate(galaxies):
 
         # Check if FITS image already exists
@@ -320,7 +327,7 @@ def run_nsa(nsa_decals,dr='2',nsa_version = '1_0_0',random_samp=True,force_fits=
         fits_filename = '{0}/{1}.fits'.format(fitspath,gal['IAUNAME'])
         if os.path.exists(fits_filename) == False or force_fits:
             try:
-                get_skyserver_fits(gal,dr,remove_multi_fits=False)
+                get_skyserver_fits(gal,fitspath,dr,remove_multi_fits=False)
             except IOError:
                 print "IOError downloading {0}".format(gal['IAUNAME'])
                 timed_out[i] = True
@@ -331,34 +338,40 @@ def run_nsa(nsa_decals,dr='2',nsa_version = '1_0_0',random_samp=True,force_fits=
         jpeg_filename = '{0}/{1}.jpeg'.format(jpegpath,gal['IAUNAME'])
         if os.path.exists(jpeg_filename) == False:
             if os.path.exists(fits_filename):
-                img,hdr = fits.getdata(fits_filename,0,header=True)
+                try:
+                    img,hdr = fits.getdata(fits_filename,0,header=True)
 
-                badmax = 0.
-                for j in range(img.shape[0]):
-                    band = img[j,:,:]
-                    nbad = (band == 0.).sum() + np.isnan(band).sum()
-                    fracbad = nbad / np.prod(band.shape)
-                    badmax = max(badmax,fracbad)
+                    badmax = 0.
+                    for j in range(img.shape[0]):
+                        band = img[j,:,:]
+                        nbad = (band == 0.).sum() + np.isnan(band).sum()
+                        fracbad = nbad / np.prod(band.shape)
+                        badmax = max(badmax,fracbad)
 
-                if badmax < 0.2:
-                    rgbimg = dstn_rgb((img[0,:,:],img[1,:,:],img[2,:,:]), 'grz', mnmx=_mnmx, arcsinh=1., scales=_scales, desaturate=True)
-                    plt.imsave(jpeg_filename, rgbimg, origin='lower')
-                    good_images[i] = True
+                    if badmax < 0.2:
+                        rgbimg = dstn_rgb((img[0,:,:],img[1,:,:],img[2,:,:]), 'grz', mnmx=_mnmx, arcsinh=1., scales=_scales, desaturate=True)
+                        plt.imsave(jpeg_filename, rgbimg, origin='lower')
+                        good_images[i] = True
+                except:
+                    print "Other download error for {0}".format(gal['IAUNAME'])
+                    timed_out[i] = True
+                    print >> flog,gal['IAUNAME']
             else:
                 print "Could not find FITS file for {0}".format(fits_filename)
         else:
             # JPEG file already exists, so it's assumed to be a good image
             good_images[i] = True
-
-        if not i % 10 and i > 0:
-            print '{0:5d}/{1:5d} galaxies completed; {2}'.format(i,len(galaxies),datetime.datetime.now().strftime("%H:%M:%S"))
+        pbar.update(i + 1)
+        #if not i % 10 and i > 0:
+        #    print '{0:5d}/{1:5d} galaxies completed; {2}'.format(i,len(galaxies),datetime.datetime.now().strftime("%H:%M:%S"))
+    pbar.finish()
 
     # Close logging file for timed-out errors from server
     flog.close()
-    galaxies[timed_out].write('{0}/decals/fits/nsa_v{1}_decals_dr{2}_timedout.fits'.format(gzpath,nsa_version,dr),overwrite=True)
+    galaxies[timed_out].write('../fits/nsa_v{0}_decals_dr{1}_timedout.fits'.format(nsa_version,dr),overwrite=True)
 
     # Write good images to file
-    galaxies[good_images].write('{0}/decals/fits/nsa_v{1}_decals_dr{2}_goodimgs.fits'.format(gzpath,nsa_version,dr),overwrite=True)
+    galaxies[good_images].write('../fits/nsa_v{0}_decals_dr{1}_goodimgs.fits'.format(nsa_version,dr),overwrite=True)
 
     # Print summary to screen
 
@@ -375,7 +388,8 @@ if __name__ == "__main__":
 
     dr = '2'
     nsa_version = '1_0_0'
-    nsa = get_nsa_images(nsa_version)
-    bricks = get_decals_bricks(dr)
-    nsa_decals = run_all_bricks(nsa,bricks,dr,nsa_version,run_to=-1)
+    #nsa = get_nsa_images(nsa_version)
+    #bricks = get_decals_bricks(dr)
+    #nsa_decals = run_all_bricks(nsa,bricks,dr,nsa_version,run_to=-1)
+    nsa_decals = Table(fits.getdata('../fits/nsa_v{0}_decals_dr{1}_after_cuts.fits'.format(nsa_version, dr), 1))
     run_nsa(nsa_decals,dr,random_samp=False,force_fits=False)

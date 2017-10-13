@@ -68,3 +68,13 @@ target/
 
 # Swap files
 *.sw[op]
+
+jpeg/dr2/*jpeg
+jpeg/dr2_inverted/*jpeg
+jpeg/nsa_not_gz/*jpeg
+jpeg/nsa_not_gz_inverted/*jpeg
+fits/nsa/*fits
+fits/nsa_not_gz/*fits
+fits/nsa_not_gz/*fits.gz
+fits/nsa_*fits
+fits/*.csv
