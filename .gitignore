@@ -71,6 +71,7 @@ target/
 
 jpeg/dr2/*jpeg
 jpeg/dr2_inverted/*jpeg
+jpeg/nsa/*jpeg
 jpeg/nsa_not_gz/*jpeg
 jpeg/nsa_not_gz_inverted/*jpeg
 fits/nsa/*fits
