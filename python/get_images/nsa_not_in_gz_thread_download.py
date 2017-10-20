@@ -1,12 +1,14 @@
 from __future__ import division
-from astropy.io import fits
-from astropy.table import Table
+
+import os
+import urllib
+from multiprocessing import Value, Lock
+from multiprocessing.dummy import Pool as ThreadPool
+
 import numpy as np
 import progressbar as pb
-
-import os,urllib
-from multiprocessing.dummy import Pool as ThreadPool
-from multiprocessing import Value, Lock
+from astropy.io import fits
+from astropy.table import Table
 
 widgets = ['Downloads: ', pb.Percentage(), ' ', pb.Bar(marker='0',left='[',right=']'), ' ', pb.ETA()]
 cdx = 0

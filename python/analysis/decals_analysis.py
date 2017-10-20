@@ -1,18 +1,16 @@
 # Do some preliminary analysis on the results of the DECaLS-Galaxy Zoo data. 
 
-from astropy.io import fits
-from astropy.cosmology import WMAP9
-
-from matplotlib import pyplot as plt
-from matplotlib import cm
-from matplotlib.colors import LogNorm
-
-from collections import Counter
-import numpy as np
 import re
-import pandas as pd
+from collections import Counter
 
+import numpy as np
+import pandas as pd
+from astropy.cosmology import WMAP9
+from astropy.io import fits
 from gz_class import plurality
+from matplotlib import cm
+from matplotlib import pyplot as plt
+from matplotlib.colors import LogNorm
 
 gzpath = '/Users/willettk/Astronomy/Research/GalaxyZoo'
 decals_path = '{0}/decals'.format(gzpath)

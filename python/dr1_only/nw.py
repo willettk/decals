@@ -1,3 +1,5 @@
+# Another method to create RGB images. Possibly used in DR1, def. not in DR2
+
 import numpy as np
 
 #+

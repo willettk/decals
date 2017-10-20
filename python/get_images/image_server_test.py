@@ -3,7 +3,7 @@ import pytest
 from PIL import Image
 from astropy.io import fits as fits
 
-from python.image_server import download_image
+from python.get_images.image_server import download_image
 
 
 class TestImageServer():

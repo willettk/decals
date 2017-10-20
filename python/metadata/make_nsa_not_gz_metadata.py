@@ -1,14 +1,15 @@
 # Make metadata table for DECaLS images
 
-from astropy.io import fits
-from astropy.table import Table,Column
-from astropy.cosmology import WMAP9
-from astropy import units as u
-import numpy as np
-import warnings
 import os
+import warnings
 
-warnings.simplefilter("ignore",RuntimeWarning)
+import numpy as np
+from astropy import units as u
+from astropy.cosmology import WMAP9
+from astropy.io import fits
+from astropy.table import Table
+
+warnings.simplefilter("ignore", RuntimeWarning)
 
 version = '0_1_2'
 nsa_not_gz = fits.getdata('../fits/nsa_v{0}_not_in_GZ_all_in_one.fits'.format(version),1)

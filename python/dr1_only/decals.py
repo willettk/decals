@@ -1,22 +1,23 @@
 # Find entries in the NASA-Sloan Atlas (NSA) that have a brick with images in Dark Energy Camera Legacy Survey (DECaLS)
 
 from __future__ import division
-from astropy.io import fits
-from astropy.table import Table
-import numpy as np
-from matplotlib import pyplot as plt
 
-import requests
-import random
 import datetime
-import os,urllib
+import os
+import random
 import shutil
+import urllib
+from copy import deepcopy
+
+import numpy as np
+import nw
+import requests
+import trilogy
 from PIL import Image
 from StringIO import StringIO
-
-import nw
-import trilogy
-from copy import deepcopy
+from astropy.io import fits
+from astropy.table import Table
+from matplotlib import pyplot as plt
 
 gzpath = '/Users/willettk/Astronomy/Research/GalaxyZoo'
 min_pixelscale = 0.10

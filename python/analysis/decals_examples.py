@@ -1,9 +1,11 @@
 path = '/Users/willettk/Astronomy/Research/GalaxyZoo/decals'
 volpath = '/Volumes/3TB/gz4/DECaLS/jpeg/standard'
 
-from astropy.io import fits
+import os
 import random
-import os,shutil
+import shutil
+
+from astropy.io import fits
 
 # Various task recipes for getting the morphological categories in the new DECaLS tree
 

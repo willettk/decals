@@ -1,9 +1,9 @@
 # Adapted from https://stanford.edu/~mwaskom/software/seaborn/examples/network_correlations.html
 
-import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
+import seaborn as sns
+
 sns.set(context="paper", font="monospace")
 
 # Load the datset of correlations between cortical brain networks

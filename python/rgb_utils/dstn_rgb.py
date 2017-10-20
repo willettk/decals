@@ -1,10 +1,12 @@
 gzpath = '/Users/willettk/Astronomy/Research/GalaxyZoo'
 
-from astropy.io import fits
 import os
-import numpy as np 
+
 import decals
+import numpy as np
+from astropy.io import fits
 from matplotlib import pyplot as plt
+
 
 def get_rgb(imgs, bands, mnmx=None, arcsinh=None, scales=None, imgname='test',desaturate=False):
     '''

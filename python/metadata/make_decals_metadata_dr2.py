@@ -1,12 +1,13 @@
 # Make metadata table for DECaLS images
 
-from astropy.io import fits
-from astropy.table import Table,Column
-from astropy.cosmology import WMAP9
-from astropy import units as u
-import numpy as np
-import warnings
 import os
+import warnings
+
+import numpy as np
+from astropy import units as u
+from astropy.cosmology import WMAP9
+from astropy.io import fits
+from astropy.table import Table
 
 warnings.simplefilter("ignore",RuntimeWarning)
 

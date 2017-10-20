@@ -1,3 +1,5 @@
+# only used to make DR1 color images - DR2 uses Dustin's function
+
 ##############################################################
 # Trilogy - Color / grayscale image maker (from FITS input)
 # Dan Coe
@@ -167,14 +169,15 @@ try:
     import pyfits
 except ImportError:
     from astropy.io import fits as pyfits
+import os
 import string
-from numpy import *
-#import Image
-from PIL import Image, ImageDraw
-import os, sys
-from scipy.optimize import golden
-from os.path import exists, join
+import sys
 from glob import glob
+from os.path import exists, join
+
+from PIL import Image, ImageDraw
+from numpy import *
+from scipy.optimize import golden
 
 defaultvalues = {
     'indir':'',

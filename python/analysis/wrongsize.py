@@ -1,5 +1,7 @@
 from pymongo import MongoClient
 
+# Find galaxies which are tagged in the mongodb output as 'wrong size'
+
 client = MongoClient('localhost', 27017)
 
 gz = client['galaxy_zoo'] 

@@ -1,19 +1,20 @@
 # Make metadata table for DECaLS images
 
-from astropy.io import fits
-from astropy.table import Table,Column
-from astropy.cosmology import WMAP9
-from astropy import units as u
-import numpy as np
-import warnings
 import os
+import warnings
 
-warnings.simplefilter("ignore",RuntimeWarning)
+import numpy as np
+from astropy import units as u
+from astropy.cosmology import WMAP9
+from astropy.io import fits
+from astropy.table import Table
+
+warnings.simplefilter("ignore", RuntimeWarning)
 
 gzpath = '/Users/willettk/Astronomy/Research/GalaxyZoo'
 
 version = '1_0_0'
-nsa_decals = fits.getdata('%s/decals/nsa_decals_v%s_goodimgs.fits' % (gzpath,version),1)
+nsa_decals = fits.getdata('%s/decals/nsa_decals_v%s_goodimgs.fits' % (gzpath, version), 1)
 
 N = len(nsa_decals)
 
@@ -43,8 +44,8 @@ fluxarr = [x[4] for x in nsa_decals['PETROFLUX']]
 
 url_stub = "http://www.galaxyzoo.org.s3.amazonaws.com/subjects/decals"
 
-for imgtype in ('standard','inverted','thumbnail'):
-    lst = ['%s/%s/%s_%s.jpg' % (url_stub,imgtype,s,imgtype) for s in nsa_decals['IAUNAME']]
+for imgtype in ('standard', 'inverted', 'thumbnail'):
+    lst = ['%s/%s/%s_%s.jpg' % (url_stub, imgtype, s, imgtype) for s in nsa_decals['IAUNAME']]
     t['location.%s' % imgtype] = lst
 
 t['nsa_id'] = ['NSA_%i' % x for x in nsa_decals['NSAID']]
@@ -84,4 +85,3 @@ for ft in ftypes:
     if os.path.isfile(fname):
         os.remove(fname)
     t.write(fname)
-

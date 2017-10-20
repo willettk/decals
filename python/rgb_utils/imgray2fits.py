@@ -1,3 +1,6 @@
+# imgray2fits CL0024.png -over -header det.fits
+# Converts a grayscale image to a FITS file
+
 # im2rgbfits CL0024.png -over -header det.fits
 # WILL HONOR WCS FROM headerfile
 
@@ -6,12 +9,14 @@
 # ALSO SEE pyfits.pdf (Pyfits manual)
 
 #from coetools import *
-from PIL import Image
+import sys
+from glob import glob
+from os.path import exists
+
 import pyfits
-import sys, os
-import string
-from os.path import exists, join
+from PIL import Image
 from numpy import *
+
 
 #################################
 
@@ -23,14 +28,14 @@ def str2num(str, rf=0):
         format = 'd'
     except:
         try:
-            num = string.atof(str)
+            num = str.atof()
             format = 'f'
         except:
-            if not string.strip(str):
+            if not str.strip():
                 num = None
                 format = ''
             else:
-                words = string.split(str)
+                words = str.split()
                 if len(words) > 1:
                     num = map(str2num, tuple(words))
                     format = 'l'
@@ -41,6 +46,15 @@ def str2num(str, rf=0):
         return (num, format)
     else:
         return num
+
+def loadgray(infile):
+    """Load grayscale image"""
+    im = Image.open(infile)
+    im = im.transpose(Image.FLIP_TOP_BOTTOM)
+    data = asarray(im)  # numpy
+    data.flags.writeable = True  # DEFAULT IS CAN'T EDIT IT!
+    return data
+
 
 def params_cl(converttonumbers=True):
     """RETURNS PARAMETERS FROM COMMAND LINE ('cl') AS DICTIONARY:
@@ -91,9 +105,6 @@ def striskey(str):
                 iskey = str[1] not in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.']
     return iskey
 
-def strend(str, phr):
-    return str[-len(phr):] == phr
-
 def decapfile(name, ext=''):
     """REMOVE EXTENSION FROM FILENAME IF PRESENT
     IF ext LEFT BLANK, THEN ANY EXTENSION WILL BE REMOVED"""
@@ -111,45 +122,30 @@ def decapfile(name, ext=''):
             name = name[:i]
     return name
 
-def loadrgb(infile):
-    im = Image.open(infile)
-    im = im.transpose(Image.FLIP_TOP_BOTTOM)
-    # rgb = array(im.getdata())
-    rgb = asarray(im)  # numpy
-    print rgb.shape
-    #nx, ny = im.size
-    #rgb.shape = (ny,nx,3)
-    rgb = transpose(rgb, (2,0,1))
-    rgb = rgb[:3]  # in case there's an alpha channel on the end
-    rgb.flags.writeable = True  # DEFAULT IS CAN'T EDIT IT!
-    return rgb
+def strend(str, phr):
+    return str[-len(phr):] == phr
+
 
 #################################
 
-def im2rgbfits(infile, rgbfile='', overwrite=False, headerfile=None, flip=False):
-    if rgbfile == '':
-        rgbfile = decapfile(infile) + '_RGB.fits'
-        
-    if exists(rgbfile):
+def imgray2fits(infile, fitsfile='', overwrite=False, headerfile=None, flip=False):
+    if fitsfile == '':
+        fitsfile = decapfile(infile) + '.fits'
+
+    if exists(fitsfile):
         if overwrite:
-            delfile(rgbfile)
+            delfile(fitsfile)
         else:
-            print rgbfile, 'EXISTS'
+            print fitsfile, 'EXISTS'
             sys.exit(1)
     
-    #im = Image.open(infile)
-    #print 'Loading data...'
-    #data = array(im.getdata())
-    #nxc, nyc = im.size
-    #data.shape = (nyc,nxc,3)
-    #data = transpose(data, (2,0,1))
-    data = loadrgb(infile)
+    data = loadgray(infile)  # coeim.py
     
     #hdu = pyfits.PrimaryHDU()
     header = headerfile and pyfits.getheader(headerfile)
     hdu = pyfits.PrimaryHDU(None, header)
     hdulist = pyfits.HDUList([hdu])
-    hdulist.writeto(rgbfile)
+    hdulist.writeto(fitsfile)
 
     try:  # If there's a 'SCI' extension, then that's where the WCS is
         header = pyfits.getheader(headerfile, 'SCI')
@@ -160,14 +156,13 @@ def im2rgbfits(infile, rgbfile='', overwrite=False, headerfile=None, flip=False)
         if 'EXTNAME' in header.keys():
             del(header['EXTNAME'])
     
-    for i in range(3):
-        print 'RGB'[i]
-        data1 = data[i]
-        if flip:
-            data1 = flipud(data1)
-        pyfits.append(rgbfile, data1, header)
-        
-    print rgbfile, 'NOW READY FOR "Open RGB Fits Image" in ds9'
+    if flip:
+        data = flipud(data)
+    
+    pyfits.append(fitsfile, data, header)
+    
+    print fitsfile, 'PRODUCED'
+    #print fitsfile, 'NOW READY FOR "Open RGB Fits Image" in ds9'
 
 
 if __name__ == '__main__':
@@ -183,8 +178,15 @@ if __name__ == '__main__':
     overwrite = 'over' in params.keys()
     headerfile = params.get('header', None)
     
-    im2rgbfits(infile, outfile, overwrite=overwrite, headerfile=headerfile)
+    if ('*' in infile) or ('?' in infile):
+        infiles = glob(infile)
+        outfile = ''
+    else:
+        infiles = [infile]
+
+    for infile in infiles:
+        imgray2fits(infile, outfile, overwrite=overwrite, headerfile=headerfile)
 
 
-#hdulist = pyfits.open(rgbfile)
+#hdulist = pyfits.open(fitsfile)
 #hdulist.info()

@@ -1,14 +1,18 @@
-from __future__ import division
+import os
+import urllib
+from multiprocessing import Value, Lock
+from multiprocessing.dummy import Pool as ThreadPool
+
+import numpy as np
+import progressbar2 as pb
 from astropy.io import fits
 from astropy.table import Table
 from matplotlib import pyplot as plt
-import numpy as np
-from decals_dr2 import dstn_rgb
-import progressbar as pb
 
-import os,urllib
-from multiprocessing.dummy import Pool as ThreadPool
-from multiprocessing import Value, Lock
+from python.decals_dr2 import dstn_rgb
+
+# analagous to the middle part of decals_dr2.py: given a catalog, download FITS and make JPEG
+# Not exactly identical though
 
 widgets = ['Downloads: ', pb.Percentage(), ' ', pb.Bar(marker='0',left='[',right=']'), ' ', pb.ETA()]
 cdx = 0
@@ -110,7 +114,7 @@ if __name__ == "__main__":
     pool=ThreadPool(8)
     pbar.start()
     results = pool.map(get_skyserver_fits, nsa_decals)
-    #results = map(get_skyserver_fits, nsa_decals)
+    # results = map(get_skyserver_fits, nsa_decals)
     pbar.finish()
     pool.close()
     pool.join()
@@ -119,16 +123,16 @@ if __name__ == "__main__":
     good_images = results[:,1]
 
     logfile = "../failed_fits_downloads.log"
-    flog = open(logfile,'w')
-    print >> flog, "\n".join(nsa_decals['IAUNAME'][timed_out])
+    flog = open(logfile, 'w')
+    print(flog, "\n".join(nsa_decals['IAUNAME'][timed_out]))
     flog.close()
 
     logfile = "../bad_pix_images.log"
-    ilog = open(logfile,'w')
-    print >> ilog, "\n".join(nsa_decals['IAUNAME'][~good_images])
+    ilog = open(logfile, 'w')
+    print(ilog, "\n".join(nsa_decals['IAUNAME'][~good_images]))
     ilog.close()
 
-    print "\n{0} total galaxies processed".format(len(nsa_decals))
-    print "{0} good images".format(sum(good_images))
-    print "{0} galaxies with bad pixels".format(len(nsa_decals) - sum(good_images))
-    print "{0} galaxies timed out downloading data from Legacy Skyserver".format(sum(timed_out))
+    print("\n{0} total galaxies processed".format(len(nsa_decals)))
+    print("{0} good images".format(sum(good_images)))
+    print("{0} galaxies with bad pixels".format(len(nsa_decals) - sum(good_images)))
+    print("{0} galaxies timed out downloading data from Legacy Skyserver".format(sum(timed_out)))

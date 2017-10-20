@@ -1,10 +1,10 @@
-from PIL import Image
+import os
+from multiprocessing import Value, Lock
+from multiprocessing.dummy import Pool as ThreadPool
+
 import PIL.ImageOps
 import progressbar as pb
-import os
-
-from multiprocessing.dummy import Pool as ThreadPool
-from multiprocessing import Value, Lock
+from PIL import Image
 
 widgets = ['Inverting: ', pb.Percentage(), ' ', pb.Bar(marker='0',left='[',right=']'), ' ', pb.ETA()]
 cdx = 0
