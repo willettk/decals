@@ -26,13 +26,18 @@ def merge_bricks_catalogs():
         coordinate_catalog.rename_column(colname, colname.lower())
 
     # merge on brickname, ra, dec by default
-    bricks_catalog = astropy.table.join(coordinate_catalog, exposure_catalog, join_type='inner')
+    bricks_catalog = astropy.table.join(
+        coordinate_catalog,
+        exposure_catalog,
+        keys=['brickname', 'ra', 'dec'],
+        join_type='inner')
 
     # check that all exposed bricks were 1-1 matched
     assert len(bricks_catalog) == len(exposure_catalog)
 
-    bricks_catalog.write(catalog_dir + 'survey-bricks-dr3-with-coordinates.fits')
-
+    bricks_catalog.write(catalog_dir + 'survey-bricks-dr3-with-coordinates.fits', overwrite=True)
+    bricks = bricks_catalog[bricks_catalog['brickname'] == '1929p180']
+    print(bricks)
 
 if __name__ == '__main__':
     merge_bricks_catalogs()

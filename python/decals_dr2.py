@@ -8,6 +8,7 @@ import urllib
 import numpy as np
 import progressbar as pb
 from astropy.io import fits
+import astropy.table
 from astropy.table import Table
 from matplotlib import pyplot as plt
 
@@ -62,14 +63,16 @@ def get_decals_bricks(bricks_loc, dr):
         bricks = bricks_all[has_g & has_r & has_z]
 
     elif dr == '3':
-        has_g = bricks_all['nexp_g']
-        has_r = bricks_all['nexp_r']
-        has_z = bricks_all['nexp_z']
+        has_g = bricks_all['nexp_g'] > 0
+        has_r = bricks_all['nexp_r'] > 0
+        has_z = bricks_all['nexp_z'] > 0
 
         bricks = bricks_all[has_g & has_r & has_z]
 
     else:
         raise Exception('Data release "{}" not recognised'.format(dr))
+
+    assert len(bricks) > len(bricks_all) * 0.1
 
     return bricks
 
@@ -177,11 +180,13 @@ def run_all_bricks(nsa, bricks, dr, nsa_version, run_to=-1):
     assert len(nsa_decals) == len(bricks_indices), \
         "Length of nsa_decals ({0}) and bricks_indices ({1}) must match".format(len(nsa_decals), len(bricks_indices))
 
-    for bc in bricks.columns:
-        # add the bricks data into the nsa_decals table (manual merge!)
-        nsa_decals[bc.name] = np.array(len(nsa_decals), dtype=bricks[bc.name].dtype)
-        for ii in range(len(nsa_decals)):
-            nsa_decals[ii][bc.name] = bricks[bricks_indices[ii]][bc.name]
+    matched_bricks = Table(bricks[bricks_indices])
+
+    assert len(nsa_decals) == len(matched_bricks)
+
+    # add the bricks data into the nsa_decals table (manual merge!)
+    nsa_decals_bricks = astropy.table.hstack([nsa_decals, matched_bricks])
+    assert len(nsa_decals_bricks) == len(matched_bricks)
 
     # Write to file
     # Check what version of the NSA is being used and set string variable below
@@ -467,7 +472,7 @@ if __name__ == "__main__":
     dr = '3'
     if dr == '3':
         # http: // legacysurvey.org / dr3 / files /
-        bricks_filename = 'survey-bricks-dr3.fits'
+        bricks_filename = 'survey-bricks-dr3-with-coordinates.fits'
     elif dr == '2':
         # http: // legacysurvey.org / dr2 / files /
         bricks_filename = 'decals-bricks-dr2.fits'
@@ -475,9 +480,9 @@ if __name__ == "__main__":
 
     nsa = get_nsa_catalog(nsa_catalog_loc)
     bricks = get_decals_bricks(bricks_loc, dr)
-    nsa_decals = run_all_bricks(nsa, bricks, dr, nsa_version, run_to=100)
+    nsa_decals = run_all_bricks(nsa, bricks, dr, nsa_version, run_to=300)
 
     # nsa_decals = Table(fits.getdata('../fits/nsa_v{0}_decals_dr{1}_after_cuts.fits'.format(nsa_version, dr), 1))
-    # TODO still need to apply cuts - happens here?
+    # TODO still need to apply cuts - happened externally via Topcat
     # nsa_decals = Table(fits.getdata('../fits/nsa_v{0}_decals_dr{1}.fits'.format(nsa_version, dr), 1))
     # run_nsa(nsa_decals, dr, random_samp=False, force_fits=False)

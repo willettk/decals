@@ -56,9 +56,9 @@ for imgtype in ('standard', 'inverted', 'thumbnail'):
 t['nsa_id'] = ['NSA_%i' % x for x in nsa_decals['NSAID']]
 
 t['metadata.absolute_size'] = sizearr
-t['metadata.counters.feature'] = np.zeros(N,dtype=int)
-t['metadata.counters.smooth'] = np.zeros(N,dtype=int)
-t['metadata.counters.star'] = np.zeros(N,dtype=int)
+t['metadata.counters.feature'] = np.zeros(N, dtype=int)
+t['metadata.counters.smooth'] = np.zeros(N, dtype=int)
+t['metadata.counters.star'] = np.zeros(N, dtype=int)
 
 t['metadata.mag.faruv'] = mag_faruv
 t['metadata.mag.nearuv'] = mag_nearuv

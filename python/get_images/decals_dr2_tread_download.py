@@ -42,7 +42,7 @@ class Counter(object):
 min_pixelscale = 0.10
 
 
-def get_skyserver_fits(gal, fitspath='../../fits/nsa', dr='2', remove_multi_fits=False):
+def get_skyserver_fits(gal, fitspath='../../fits/nsa/dr3/', dr='3', remove_multi_fits=False):
     '''
     Download a multi-plane FITS image from the DECaLS skyserver
     Write multi-plane FITS images to separate files for each band
@@ -73,6 +73,8 @@ def get_skyserver_fits(gal, fitspath='../../fits/nsa', dr='2', remove_multi_fits
             url = "http://imagine.legacysurvey.org/fits-cutout-decals-dr1?{0}".format(params)
         elif dr == '2':
             url = "http://legacysurvey.org/viewer/fits-cutout-decals-dr2?{0}".format(params)
+        elif dr == '3':
+            url = 'http://legacysurvey.org/viewer/fits-cutout-decals-dr3?{0}'.format(params)
         try:
             # Download multi-band images
             urllib.request.urlretrieve(url, fits_filename)
@@ -85,7 +87,7 @@ def get_skyserver_fits(gal, fitspath='../../fits/nsa', dr='2', remove_multi_fits
                 hdr_copy['FILTER'] = '{0}       '.format(plane)
                 for badfield in ('BANDS', 'BAND0', 'BAND1', 'BAND2', 'NAXIS3'):
                     hdr_copy.remove(badfield)
-                fits.writeto("{0}_{1}.fits".format(fits_filename, plane), data[idx, :, :], hdr_copy, clobber=True)
+                fits.writeto("{0}_{1}.fits".format(fits_filename, plane), data[idx, :, :], hdr_copy, overwrite=True)
 
             if remove_multi_fits:
                 os.remove(fits_filename)
@@ -103,7 +105,7 @@ def get_skyserver_fits(gal, fitspath='../../fits/nsa', dr='2', remove_multi_fits
     return [timed_out, good_images]
 
 
-def makejpeg(gal, fits_filename, jpegpath="../jpeg/dr2"):
+def makejpeg(gal, fits_filename, jpegpath="../jpeg/dr3"):
     '''
     Create artistically-scaled JPG from multi-band FITS using Dustin Lang's method
 
@@ -157,7 +159,7 @@ def makejpeg(gal, fits_filename, jpegpath="../jpeg/dr2"):
 
 if __name__ == "__main__":
     # Multi-threaded analogy to decals_dr2.py downloads
-    dr = '2'
+    dr = '3'
     # nsa_version = '1_0_0'
     nsa_version = '0_1_2'
     # Starts after cuts made, but concurrent with metadata
