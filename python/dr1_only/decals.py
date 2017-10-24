@@ -188,7 +188,8 @@ def get_tractor(brickname='0001m002'):
 
     return tractor
 
-def tractor_cut(tractor,verbose=False):
+
+def tractor_cut(tractor, verbose=False):
 
     '''
     Dustin Lang, 5 Jun 2015
@@ -223,20 +224,20 @@ def tractor_cut(tractor,verbose=False):
     cuts = brick_primary & np.array(anymask) & np.array(nobs) & sizemask & np.array(flux) & np.array(not_star)
     
     if verbose:
-        print "\nbrick_primary: %i galaxies" % sum(brick_primary)
-        print "anymask: %i galaxies" % sum(np.array(anymask))
-        print "nobs: %i galaxies" % sum(np.array(nobs))
-        print "sizemask: %i galaxies" % sum(brick_primary)
-        print "flux: %i galaxies" % sum(np.array(flux))
-        print "notstar: %i galaxies" % sum(np.array(not_star))
-    
-    print '\n%i objects in file; %i meet all cuts on image quality and size' % (len(tractor),cuts.sum())
+        print("\nbrick_primary: %i galaxies" % sum(brick_primary))
+        print("anymask: %i galaxies" % sum(np.array(anymask)))
+        print("nobs: %i galaxies" % sum(np.array(nobs)))
+        print("sizemask: %i galaxies" % sum(brick_primary))
+        print("flux: %i galaxies" % sum(np.array(flux)))
+        print("notstar: %i galaxies" % sum(np.array(not_star)))
+
+    print('\n%i objects in file; %i meet all cuts on image quality and size' % (len(tractor), cuts.sum()))
     
     # What's the average magnitude of these galaxies?
     
     rflux = [x[2] for x in tractor[cuts]['decam_flux']]
     rmag = 22.5 - 2.5*np.log10(np.array(rflux))
-    print "\nAverage r-band magnitude is %.1f +- %.1f" % (np.mean(rmag),np.std(rmag))
+    print("\nAverage r-band magnitude is %.1f +- %.1f" % (np.mean(rmag), np.std(rmag)))
     
     cutdata = tractor[cuts]
     

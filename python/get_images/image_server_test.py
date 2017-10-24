@@ -8,7 +8,7 @@ from python.get_images.image_server import download_image
 
 class TestImageServer():
     @pytest.fixture
-    def download_path(self, tmpdir, scope='session'):  # tmpdir is built-in fixture
+    def download_path(self, tmpdir):  # tmpdir is built-in fixture
         return tmpdir.mkdir('tmpdir').strpath  # create directory, get string path
 
     @pytest.fixture

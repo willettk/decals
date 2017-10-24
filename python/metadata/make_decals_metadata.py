@@ -1,4 +1,9 @@
 # Make metadata table for DECaLS images
+# Using NSA and DECALS catalogs (matched previously), derive
+# a) astrometrics e.g. absolute size, magnitude by band (expanded from catalog)
+# b) galaxy zoo metadata e.g. url location, 'retire_at'
+
+# Runs on the 'goodimgs' catalog output after matching catalogs and downloading/checking fits
 
 import os
 import warnings
@@ -24,11 +29,10 @@ t['coords.0'] = nsa_decals['RA']
 t['coords.1'] = nsa_decals['DEC']
 
 # Calculate absolute size in kpc
+size = [WMAP9.kpc_proper_per_arcmin(z).to(u.kpc / u.arcsec) * (r * u.arcsec)
+        if z > 0 else -99. * u.kpc for z, r in zip(nsa_decals['Z'], nsa_decals['PETROTHETA'])]
 
-size = [WMAP9.kpc_proper_per_arcmin(z).to(u.kpc/u.arcsec) * (r * u.arcsec) if z > 0 else -99. * u.kpc for z,r in zip(nsa_decals['Z'],nsa_decals['PETROTHETA'])]
-
-# Calculate absolute and apparent magnitude 
-
+# Calculate absolute and apparent magnitude
 absmag_r = [float(x[4]) for x in nsa_decals['ABSMAG']]
 mag_faruv = [22.5 - 2.5*np.log10(x[0]) for x in nsa_decals['NMGY']]
 mag_nearuv = [22.5 - 2.5*np.log10(x[1]) for x in nsa_decals['NMGY']]
@@ -42,6 +46,7 @@ sizearr = [s.value for s in size]
 
 fluxarr = [x[4] for x in nsa_decals['PETROFLUX']]
 
+# record url location in galaxy zoo
 url_stub = "http://www.galaxyzoo.org.s3.amazonaws.com/subjects/decals"
 
 for imgtype in ('standard', 'inverted', 'thumbnail'):
@@ -76,12 +81,12 @@ t['metadata.retire_at'] = [40] * N
 t['survey'] = ['decals'] * N
 
 # Check format and content
-#t.show_in_browser()
+# t.show_in_browser()
 
 # Write to table
-ftypes = ('csv','fits')
+ftypes = ('csv', 'fits')
 for ft in ftypes:
-    fname = '%s/decals/metadata/decals_metadata.%s' % (gzpath,ft)
+    fname = '%s/decals/metadata/decals_metadata.%s' % (gzpath, ft)
     if os.path.isfile(fname):
         os.remove(fname)
     t.write(fname)

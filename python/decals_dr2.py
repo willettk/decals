@@ -3,9 +3,10 @@
 import errno
 import os
 import random
-import urllib.request
+import urllib
 
 import numpy as np
+import progressbar as pb
 from astropy.io import fits
 from astropy.table import Table
 from matplotlib import pyplot as plt
@@ -14,7 +15,15 @@ min_pixelscale = 0.10
 
 
 def get_nsa_catalog(nsa_catalog_loc):
-    # Return the loaded NASA-Sloan Atlas catalog
+    '''
+    Return the loaded NASA-Sloan Atlas catalog
+
+    Args:
+        nsa_catalog_loc (str): absolute file path to NSA catalog e.g. [dir]/nsa_v_0_1_2.fits
+
+    Returns:
+
+    '''
 
     nsa = fits.getdata(nsa_catalog_loc, 1)
 
@@ -32,7 +41,7 @@ def get_decals_bricks(bricks_loc, dr):
         dr (str): load bricks from (dr) data release
 
     Returns:
-        (dict) catalog of RA, Dec edges of DECALS 'brick' tile images
+        (dict) catalog of RA, Dec edges of DECALS 'brick' tile images in rgz bands
     '''
 
     bricks_all = fits.getdata(bricks_loc, 1)
@@ -46,12 +55,21 @@ def get_decals_bricks(bricks_loc, dr):
         bricks = bricks_all[has_g & has_r & has_z & has_catalog]
 
     elif dr == '2':
-
         has_g = bricks_all['nobs_max_g'] > 0
         has_r = bricks_all['nobs_max_r'] > 0
         has_z = bricks_all['nobs_max_z'] > 0
 
         bricks = bricks_all[has_g & has_r & has_z]
+
+    elif dr == '3':
+        has_g = bricks_all['nexp_g']
+        has_r = bricks_all['nexp_r']
+        has_z = bricks_all['nexp_z']
+
+        bricks = bricks_all[has_g & has_r & has_z]
+
+    else:
+        raise Exception('Data release "{}" not recognised'.format(dr))
 
     return bricks
 
@@ -92,8 +110,22 @@ def find_matching_brick(gal, bricks):
 
 
 def run_all_bricks(nsa, bricks, dr, nsa_version, run_to=-1):
+    '''
+    Create a matched catalogue of all NSA sources that have grz imaging in DECaLS
 
-    # Create a matched catalogue of all NSA sources that have grz imaging in DECaLS and match the galaxy selection criteria
+    Galaxies must match the galaxy selection criteria (not yet implemented - 'with_cuts' or 'clean' catalog?)
+
+    Args:
+        nsa ():
+        bricks ():
+        dr (str): DECALS data release version e.g. '2'
+        nsa_version (str): NASA Sloan Atlas version e.g. TODO
+        run_to (int): nsa galaxies to match. If -1, matches all
+
+    Returns:
+        (astropy.Table) of format [{NSA galaxy, NSA details, DECALS brick with that galaxy}]
+
+    '''
 
     # nsa is dict of arrays of e.g. galaxy ra
 
@@ -122,7 +154,7 @@ def run_all_bricks(nsa, bricks, dr, nsa_version, run_to=-1):
     pbar.start()
 
     # For every galaxy in the NSA catalog, if it is in DECALS RA/DEC window, find which brick(s) it is in
-    for idx,gal in enumerate(nsa[:run_to]):
+    for idx, gal in enumerate(nsa[:run_to]):
         if (declim & ralim)[idx]:
             nm, coomatch = find_matching_brick(gal, bricks)
             #  record if one matching brick, or many
@@ -138,7 +170,7 @@ def run_all_bricks(nsa, bricks, dr, nsa_version, run_to=-1):
     print('{0:6d} total matches between NASA-Sloan Atlas and DECaLS DR{1}'.format(total_matches, dr))
     print('{0:6d} galaxies had matches in more than one brick'.format(multi_matches))
 
-    nsa_table = Table(nsa)  # load NSA catalog into Table (previously accessed as dict of arrays)
+    nsa_table = Table(nsa)  # load NSA catalog into Table (previously accessed as dict-like FitsRecord)
     nsa_decals = nsa_table[decals_indices]  # filter table to only galaxies which are matched to DECALS
 
     # ought to have that many coordinates in the 'bricks_indices' list
@@ -153,8 +185,8 @@ def run_all_bricks(nsa, bricks, dr, nsa_version, run_to=-1):
 
     # Write to file
     # Check what version of the NSA is being used and set string variable below
-    outfilename = '../fits/nsa_v{0}_decals_dr{1}.fits'.format(nsa_version,dr)
-    nsa_decals.write(outfilename,overwrite=True)
+    outfilename = '../fits/nsa_v{0}_decals_dr{1}.fits'.format(nsa_version, dr)
+    nsa_decals.write(outfilename, overwrite=True)
 
     return nsa_decals
 
@@ -293,7 +325,7 @@ def get_skyserver_fits(gal, fitspath, dr='1', remove_multi_fits=True):
 
     # Get FITS
     galname = gal['IAUNAME']
-    params = urllib.urlencode({'ra': gal['RA'], 'dec': gal['DEC'],
+    params = urllib.parse.urlencode({'ra': gal['RA'], 'dec': gal['DEC'],
                                'pixscale': max(min(gal['PETROTH50'] * 0.04, gal['PETROTH90'] * 0.02), min_pixelscale),
                                'size': 424})
     if dr == '1':
@@ -301,7 +333,7 @@ def get_skyserver_fits(gal, fitspath, dr='1', remove_multi_fits=True):
     elif dr == '2':
         url = "http://legacysurvey.org/viewer/fits-cutout-decals-dr2?{0}".format(params)
 
-    urllib.urlretrieve(url, "{0}/{1}.fits".format(fitspath, galname))
+    urllib.request.urlretrieve(url, "{0}/{1}.fits".format(fitspath, galname))
 
     # Write multi-plane FITS images to separate files for each band
     # Alternatively, could directly specify the desired band?
@@ -314,10 +346,10 @@ def get_skyserver_fits(gal, fitspath, dr='1', remove_multi_fits=True):
         hdr_copy['FILTER'] = '{0}       '.format(plane)
         for badfield in ('BANDS', 'BAND0', 'BAND1', 'BAND2', 'NAXIS3'):
             hdr_copy.remove(badfield)
-        fits.writeto("{0}/{1}_{2}.fits".format(fitspath, galname, plane), data[idx, :, :], hdr_copy, clobber=True)
+        fits.writeto("{0}/{1}_{2}.fits".format(fitspath, galname, plane), data[idx, :, :], hdr_copy, overwrite=True)
 
     if remove_multi_fits:
-        os.remove("{0}/{1}.fits".format(fitspath,galname))
+        os.remove("{0}/{1}.fits".format(fitspath, galname))
     del data, hdr
 
     return None
@@ -426,14 +458,26 @@ if __name__ == "__main__":
 
     # Run all steps to create the NSA-DECaLS-GZ catalog
 
-    dr = '2'
-    nsa_version = '0_1_2'
     catalog_dir = '/data/galaxy_zoo/decals/catalogs'
 
+    nsa_version = '0_1_2'
     nsa_catalog_loc = '{}/nsa_v{}.fits'.format(catalog_dir, nsa_version)
-    bricks_loc = '{}/survey-ccds-decals.fits'.format(catalog_dir)  # TODO check which DR this is, doesn't end DR3
+
+    # TODO should document which files are being used and then rename
+    dr = '3'
+    if dr == '3':
+        # http: // legacysurvey.org / dr3 / files /
+        bricks_filename = 'survey-bricks-dr3.fits'
+    elif dr == '2':
+        # http: // legacysurvey.org / dr2 / files /
+        bricks_filename = 'decals-bricks-dr2.fits'
+    bricks_loc = '{}/{}'.format(catalog_dir, bricks_filename)
+
     nsa = get_nsa_catalog(nsa_catalog_loc)
-    bricks = get_decals_bricks(bricks_loc, dr)  # http: // legacysurvey.org / dr3 / files /
-    # nsa_decals = run_all_bricks(nsa,bricks,dr,nsa_version,run_to=-1)
+    bricks = get_decals_bricks(bricks_loc, dr)
+    nsa_decals = run_all_bricks(nsa, bricks, dr, nsa_version, run_to=100)
+
     # nsa_decals = Table(fits.getdata('../fits/nsa_v{0}_decals_dr{1}_after_cuts.fits'.format(nsa_version, dr), 1))
+    # TODO still need to apply cuts - happens here?
+    # nsa_decals = Table(fits.getdata('../fits/nsa_v{0}_decals_dr{1}.fits'.format(nsa_version, dr), 1))
     # run_nsa(nsa_decals, dr, random_samp=False, force_fits=False)
