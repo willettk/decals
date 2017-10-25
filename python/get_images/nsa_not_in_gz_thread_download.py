@@ -55,7 +55,6 @@ if __name__ == "__main__":
     pool=ThreadPool(8)
     pbar.start()
     results = pool.map(get_skyserver_jpeg, nsa_not_gz)
-    #results = map(get_skyserver_fits, nsa_decals)
     pbar.finish()
     pool.close()
     pool.join()
