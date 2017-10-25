@@ -12,9 +12,6 @@ from matplotlib import pyplot as plt
 
 from python.decals_dr2 import dstn_rgb
 
-# analagous to the middle part of decals_dr2.py: given a catalog, download FITS and make JPEG
-# Not exactly identical though
-
 widgets = ['Downloads: ', pb.Percentage(), ' ', pb.Bar(marker='0', left='[', right=']'), ' ', pb.ETA()]
 cdx = 0
 pbar = 0
@@ -42,7 +39,7 @@ class Counter(object):
 min_pixelscale = 0.10
 
 
-def get_skyserver_fits(gal, fitspath='../../fits/nsa/dr3/', dr='3', remove_multi_fits=False):
+def get_skyserver_fits(gal, fitspath='../../fits/nsa/dr3/', dr='3', remove_multi_fits=False, overwrite=False):
     '''
     Download a multi-plane FITS image from the DECaLS skyserver
     Write multi-plane FITS images to separate files for each band
@@ -63,7 +60,8 @@ def get_skyserver_fits(gal, fitspath='../../fits/nsa/dr3/', dr='3', remove_multi
     # Get FITS
     galname = gal['IAUNAME']
     fits_filename = "{0}/{1}.fits".format(fitspath, galname)
-    if os.path.exists(fits_filename) is False:
+    print(galname)
+    if os.path.exists(fits_filename) is False or overwrite is True:
         params = urllib.parse.urlencode({
             'ra': gal['RA'],
             'dec': gal['DEC'],
@@ -75,29 +73,34 @@ def get_skyserver_fits(gal, fitspath='../../fits/nsa/dr3/', dr='3', remove_multi
             url = "http://legacysurvey.org/viewer/fits-cutout-decals-dr2?{0}".format(params)
         elif dr == '3':
             url = 'http://legacysurvey.org/viewer/fits-cutout-decals-dr3?{0}'.format(params)
+        else:
+            raise ValueError('Data release "{}" not recognised')
+
         try:
             # Download multi-band images
             urllib.request.urlretrieve(url, fits_filename)
 
+            # TODO deprecate splitting FITS images
             # Write multi-plane FITS images to separate files for each band
-            data, hdr = fits.getdata(fits_filename, 0, header=True)
-            for idx, plane in enumerate('grz'):
-                hdr_copy = hdr.copy()
-                hdr_copy['NAXIS'] = 2
-                hdr_copy['FILTER'] = '{0}       '.format(plane)
-                for badfield in ('BANDS', 'BAND0', 'BAND1', 'BAND2', 'NAXIS3'):
-                    hdr_copy.remove(badfield)
-                fits.writeto("{0}_{1}.fits".format(fits_filename, plane), data[idx, :, :], hdr_copy, overwrite=True)
+            # data, hdr = fits.getdata(fits_filename, 0, header=True)
+            # for idx, plane in enumerate('grz'):
+            #     hdr_copy = hdr.copy()
+            #     hdr_copy['NAXIS'] = 2
+            #     hdr_copy['FILTER'] = '{0}       '.format(plane)
+            #     for badfield in ('BANDS', 'BAND0', 'BAND1', 'BAND2', 'NAXIS3'):
+            #         hdr_copy.remove(badfield)
+            #     fits.writeto("{0}_{1}.fits".format(fits_filename, plane), data[idx, :, :], hdr_copy, overwrite=True)
 
-            if remove_multi_fits:
-                os.remove(fits_filename)
-            del data, hdr
-            timed_out, good_images = makejpeg(gal, fits_filename)
+            # TODO deprecate multi-fits removal
+            # if remove_multi_fits:
+            #     os.remove(fits_filename)
+            # del data, hdr
+            # timed_out, good_images = makejpeg(gal, fits_filename)
 
         except Exception as e:
             print(e)
-            exit(1)
-            timed_out = True
+            print('Assuming the above error is a time-out')
+            timed_out = True  # TODO confirm these are actually time-out errors
             cdx.increment()
             pbar.update(cdx.value())
     else:
@@ -105,7 +108,7 @@ def get_skyserver_fits(gal, fitspath='../../fits/nsa/dr3/', dr='3', remove_multi
     return [timed_out, good_images]
 
 
-def makejpeg(gal, fits_filename, jpegpath="../jpeg/dr3"):
+def makejpeg(gal, fits_filename, jpegpath="../../jpeg/dr3"):
     '''
     Create artistically-scaled JPG from multi-band FITS using Dustin Lang's method
 
@@ -123,6 +126,7 @@ def makejpeg(gal, fits_filename, jpegpath="../jpeg/dr3"):
     _mnmx = (-0.5, 300)
     jpeg_filename = '{0}/{1}.jpeg'.format(jpegpath, gal['IAUNAME'])
     if os.path.exists(jpeg_filename) is False:
+        print('jpeg should be made')
         if os.path.exists(fits_filename):
             try:
                 img, hdr = fits.getdata(fits_filename, 0, header=True)
@@ -169,8 +173,9 @@ if __name__ == "__main__":
     pbar = pb.ProgressBar(widgets=widgets, maxval=len(nsa_decals))
     pool = ThreadPool(8)
     pbar.start()
+
     results = pool.map(get_skyserver_fits, nsa_decals)
-    # results = map(get_skyserver_fits, nsa_decals)
+    # results = list(map(get_skyserver_fits, nsa_decals))
     pbar.finish()
     pool.close()
     pool.join()

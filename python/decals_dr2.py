@@ -480,7 +480,7 @@ if __name__ == "__main__":
 
     nsa = get_nsa_catalog(nsa_catalog_loc)
     bricks = get_decals_bricks(bricks_loc, dr)
-    nsa_decals = run_all_bricks(nsa, bricks, dr, nsa_version, run_to=300)
+    nsa_decals = run_all_bricks(nsa, bricks, dr, nsa_version, run_to=3)
 
     # nsa_decals = Table(fits.getdata('../fits/nsa_v{0}_decals_dr{1}_after_cuts.fits'.format(nsa_version, dr), 1))
     # TODO still need to apply cuts - happened externally via Topcat
