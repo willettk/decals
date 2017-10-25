@@ -1,18 +1,9 @@
-# Find entries in the NASA-Sloan Atlas (NSA) that have a brick with images in Dark Energy Camera Legacy Survey (DECaLS)
-
-import errno
-import os
-import random
 
 import numpy as np
 from astropy.io import fits
 import astropy.table
 from astropy.table import Table
 from tqdm import tqdm
-
-from python.get_images.download_images_threaded import download_images_multithreaded
-
-min_pixelscale = 0.10
 
 
 def get_nsa_catalog(nsa_catalog_loc):
@@ -39,7 +30,7 @@ def get_decals_bricks(bricks_loc, dr):
     No constraints on catalog entry for DR2, oddly.
 
     Args:
-        dr (str): load bricks from (dr) data release
+        dr (str): load bricks from (data_release) data release
 
     Returns:
         (dict) catalog of RA, Dec edges of DECALS 'brick' tile images in rgz bands
@@ -112,7 +103,7 @@ def find_matching_brick(gal, bricks):
     return nmatch, coomatch
 
 
-def run_all_bricks(nsa, bricks, dr, nsa_version, run_to=-1):
+def create_joint_catalog(nsa, bricks, dr, nsa_version, run_to=-1):
     '''
     Create a matched catalogue of all NSA sources that have grz imaging in DECaLS
 
@@ -173,79 +164,22 @@ def run_all_bricks(nsa, bricks, dr, nsa_version, run_to=-1):
 
     # ought to have that many coordinates in the 'bricks_indices' list
     assert len(nsa_decals) == len(bricks_indices), \
-        "Length of nsa_decals ({0}) and bricks_indices ({1}) must match".format(len(nsa_decals), len(bricks_indices))
+        "Length of joint_catalog ({0}) and bricks_indices ({1}) must match".format(len(nsa_decals), len(bricks_indices))
 
     matched_bricks = Table(bricks[bricks_indices])
 
     assert len(nsa_decals) == len(matched_bricks)
 
-    # add the bricks data into the nsa_decals table (manual merge!)
+    # add the bricks data into the joint_catalog table (manual merge!)
     nsa_decals_bricks = astropy.table.hstack([nsa_decals, matched_bricks])
     assert len(nsa_decals_bricks) == len(matched_bricks)
-
-    # Write to file
-    # Check what version of the NSA is being used and set string variable below
-    outfilename = '../fits/nsa_v{0}_decals_dr{1}.fits'.format(nsa_version, dr)
-    nsa_decals.write(outfilename, overwrite=True)
 
     return nsa_decals
 
 
-def run_nsa(nsa_decals, dr='2', nsa_version='1_0_0', random_samp=True, overwrite=False):
-    '''
-    For galaxies with coverage in the DECaLS bricks, download FITS images from cutout service and make JPGs
-
-    Args:
-        nsa_decals (astropy.Table): catalog of galaxies in both nsa and decals including RA, Dec, Petro.
-        dr (str): data release to download
-        nsa_version (str): version of NSA catalog being used. Defines output catalog filenames.
-        random_samp (bool): if True, restrict to a random sample of 101 galaxies only
-        overwrite (bool): if True, download FITS and remake JPEG even if identically-named file(s) already exist
-
-    Returns:
-        None
-    '''
-
-    if random_samp:
-        N = 101
-        galaxies = random.sample(nsa_decals, N)
-    else:
-        galaxies = nsa_decals
-
-    fits_dir = '../fits/nsa'
-    make_sure_directory_exists(fits_dir)
-
-    jpeg_dir = '../jpeg/dr2'
-    make_sure_directory_exists(jpeg_dir)
-
-    timed_out, good_images = download_images_multithreaded(nsa_decals, dr, fits_dir, jpeg_dir, overwrite=overwrite)
-
-    # Write catalogs of time-outs and good images to file
-    galaxies[timed_out].write('../fits/nsa_v{0}_decals_dr{1}_timedout.fits'.format(nsa_version, dr), overwrite=True)
-    galaxies[good_images].write('../fits/nsa_v{0}_decals_dr{1}_goodimgs.fits'.format(nsa_version, dr), overwrite=True)
-
-
-def make_sure_directory_exists(path):
-    """
-    Check if a local directory exists; if not, create it.
-    TODO remove? Dynamic paths are not a friend
-
-    Args:
-        path (str): directory to check/make
-
-    Returns:
-        None
-    """
-
-    try:
-        os.makedirs(path)
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            raise
-
-
 if __name__ == "__main__":
 
+    # The below will move to main routine
     # Run all steps to create the NSA-DECaLS-GZ catalog
 
     catalog_dir = '/data/galaxy_zoo/decals/catalogs'
@@ -253,21 +187,15 @@ if __name__ == "__main__":
     nsa_version = '0_1_2'
     nsa_catalog_loc = '{}/nsa_v{}.fits'.format(catalog_dir, nsa_version)
 
-    # TODO should document which files are being used and then rename
     dr = '3'
-    if dr == '3':
-        # http: // legacysurvey.org / dr3 / files /
-        bricks_filename = 'survey-bricks-dr3-with-coordinates.fits'
-    elif dr == '2':
-        # http: // legacysurvey.org / dr2 / files /
-        bricks_filename = 'decals-bricks-dr2.fits'
+    bricks_filename = 'survey-bricks-dr3-with-coordinates.fits'
     bricks_loc = '{}/{}'.format(catalog_dir, bricks_filename)
 
     nsa = get_nsa_catalog(nsa_catalog_loc)
     bricks = get_decals_bricks(bricks_loc, dr)
-    nsa_decals = run_all_bricks(nsa, bricks, dr, nsa_version, run_to=30)
 
-    # nsa_decals = Table(fits.getdata('../fits/nsa_v{0}_decals_dr{1}_after_cuts.fits'.format(nsa_version, dr), 1))
-    # TODO still need to apply cuts - happened externally via Topcat
-    # nsa_decals = Table(fits.getdata('../fits/nsa_v{0}_decals_dr{1}.fits'.format(nsa_version, dr), 1))
-    run_nsa(nsa_decals, dr, random_samp=False, overwrite=True)
+    nsa_decals = create_joint_catalog(nsa, bricks, dr, nsa_version, run_to=30)
+
+    # Write to file
+    joint_catalog_loc = '{0}/nsa_v{1}_decals_dr{2}.fits'.format(catalog_dir, nsa_version, dr)
+    nsa_decals.write(joint_catalog_loc, overwrite=True)

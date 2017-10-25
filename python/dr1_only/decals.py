@@ -119,7 +119,7 @@ def run_all_bricks(nsa,bricks):
     nsa_decals = nsa_table[decals_indices]
 
     assert len(nsa_decals) == len(bricks_indices), \
-        "Length of nsa_decals (%i) and bricks_indices (%i) must match" % (len(nsa_decals),len(bricks_indices))
+        "Length of joint_catalog (%i) and bricks_indices (%i) must match" % (len(nsa_decals),len(bricks_indices))
 
     for bc in bricks.columns:
         nsa_decals[bc.name] = np.array(len(nsa_decals),dtype=bricks[bc.name].dtype)

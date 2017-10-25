@@ -18,7 +18,7 @@ from astropy.table import Table
 warnings.simplefilter("ignore", RuntimeWarning)
 
 version = '1_0_0'
-# nsa_decals = fits.getdata('../fits/nsa_v{0}_decals_dr2_after_cuts_after_failed_removed.fits'.format(version),1)
+# joint_catalog = fits.getdata('../fits/nsa_v{0}_decals_dr2_after_cuts_after_failed_removed.fits'.format(version),1)
 
 # version = '0_1_2'
 nsa_decals = fits.getdata('../../fits/nsa_v{0}_decals_dr2_goodimgs.fits'.format(version), 1)

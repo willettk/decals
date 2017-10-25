@@ -62,8 +62,8 @@ if __name__ == "__main__":
 
     logfile = "../failed_jpeg_downloads.log"
     flog = open(logfile,'w')
-    print >> flog, "\n".join(nsa_not_gz['IAUNAME'][timed_out])
+    print(flog, "\n".join(nsa_not_gz['IAUNAME'][timed_out]))
     flog.close()
 
-    print "\n{0} total galaxies processed".format(len(nsa_not_gz))
-    print "{0} galaxies timed out downloading data from DR12 Skyserver".format(sum(timed_out))
+    print("\n{0} total galaxies processed".format(len(nsa_not_gz)))
+    print("{0} galaxies timed out downloading data from DR12 Skyserver".format(sum(timed_out)))

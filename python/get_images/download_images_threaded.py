@@ -18,7 +18,7 @@ min_pixelscale = 0.10
 
 def download_images_multithreaded(nsa_decals, data_release, fits_dir, jpeg_dir, overwrite=False):
     '''
-    Multi-threaded analogy to decals_dr2.py downloads
+    Multi-threaded analogy to get_decals_images_and_catalogs.py downloads
 
     Args:
         nsa_decals (astropy.Table): catalog of NSA galaxies and DECALS bricks
@@ -56,12 +56,12 @@ def download_images_multithreaded(nsa_decals, data_release, fits_dir, jpeg_dir, 
     # TODO fix logs
     # timed_out_log_loc = "../failed_fits_downloads.log"
     # timed_out_log = open(timed_out_log_loc, 'w')
-    # print(timed_out_log, "\n".join(nsa_decals['IAUNAME'][timed_out]))
+    # print(timed_out_log, "\n".join(joint_catalog['IAUNAME'][timed_out]))
     # timed_out_log.close()
     #
     # bad_pix_log_loc = "../bad_pix_images.log"
     # bad_pix_log = open(bad_pix_log_loc, 'w')
-    # print(bad_pix_log, "\n".join(nsa_decals['IAUNAME'][~good_images]))
+    # print(bad_pix_log, "\n".join(joint_catalog['IAUNAME'][~good_images]))
     # bad_pix_log.close()
 
     print("\n{0} total galaxies processed".format(len(nsa_decals)))
@@ -231,6 +231,6 @@ if __name__ == '__main__':
     nsa_version = '0_1_2'
     fits_dir = '../../fits/nsa/dr3'
     jpeg_dir = '../../jpeg/dr3'
-    # nsa_decals = Table(fits.getdata('../fits/nsa_v{0}_decals_dr{1}_after_cuts.fits'.format(nsa_version, dr), 1))
+    # joint_catalog = Table(fits.getdata('../fits/nsa_v{0}_decals_dr{1}_after_cuts.fits'.format(nsa_version, data_release), 1))
     nsa_decals = Table(fits.getdata('../../fits/nsa_v{0}_decals_dr{1}.fits'.format(nsa_version, data_release), 1))
     download_images_multithreaded(nsa_decals, data_release, fits_dir, jpeg_dir, overwrite=True)
