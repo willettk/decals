@@ -7,8 +7,8 @@ import random
 from astropy.table import Table
 from astropy.io import fits
 
-from python.get_catalogs.get_joint_nsa_decals_catalog import create_joint_catalog, get_nsa_catalog, get_decals_bricks
-from python.get_images.download_images_threaded import download_images_multithreaded
+from python.get_catalogs.get_joint_nsa_decals_catalog import create_joint_catalog, get_nsa_catalog, get_decals_bricks, apply_selection_cuts
+from python.get_images.download_images_threaded import download_images_multithreaded, get_fits_loc
 
 
 def download_joint_catalog_images(joint_catalog, dr, nsa_version, fits_dir, jpeg_dir, random_sample=False,
@@ -33,48 +33,62 @@ def download_joint_catalog_images(joint_catalog, dr, nsa_version, fits_dir, jpeg
     else:
         galaxies = joint_catalog
 
-    timed_out, good_images = download_images_multithreaded(joint_catalog, dr, fits_dir, jpeg_dir, overwrite=overwrite)
+        joint_catalog = download_images_multithreaded(galaxies, dr, fits_dir, jpeg_dir, overwrite=overwrite)
 
-    # Write catalogs of time-outs and good images to file
-    galaxies[timed_out].write('../fits/nsa_v{0}_decals_dr{1}_timedout.fits'.format(nsa_version, dr), overwrite=True)
-    galaxies[good_images].write('../fits/nsa_v{0}_decals_dr{1}_goodimgs.fits'.format(nsa_version, dr), overwrite=True)
+    return joint_catalog
 
 
 if __name__ == "__main__":
     # Run all steps to create the NSA-DECaLS-GZ catalog
 
+    data_release = '2'
+
     catalog_dir = '/data/galaxy_zoo/decals/catalogs'
-    # TODO move to decals folder once development complete
-    fits_dir = '../fits/nsa'
-    jpeg_dir = '../jpeg/dr2'
+
+    fits_dir = '/data/galaxy_zoo/decals/fits/dr{}'.format(data_release)
+    jpeg_dir = '/data/galaxy_zoo/decals/jpeg/dr{}'.format(data_release)
 
     nsa_version = '0_1_2'
+    # nsa_version = '1_0_0'
     nsa_catalog_loc = '{}/nsa_v{}.fits'.format(catalog_dir, nsa_version)
 
+    joint_catalog_loc = '{0}/nsa_v{1}_decals_dr{2}.fits'.format(catalog_dir, nsa_version, data_release)
+
     # TODO should document which files are being used and then rename
-    data_release = '3'
     if data_release == '3':
-        # http: // legacysurvey.org / dr3 / files /
         bricks_filename = 'survey-bricks-dr3-with-coordinates.fits'
     elif data_release == '2':
-        # http: // legacysurvey.org / dr2 / files /
         bricks_filename = 'decals-bricks-dr2.fits'
+    elif data_release == '1':
+        bricks_filename = 'decals-bricks-dr1.fits'
+    else:
+        raise ValueError('Data Release "{}" not recognised'.format(data_release))
     bricks_loc = '{}/{}'.format(catalog_dir, bricks_filename)
+
+    subject_dir = '/data/galaxy_zoo/decals/subjects'
+    previous_decals_subjects = '{}/decals_dr1_and_dr2.csv'.format(subject_dir)
 
     nsa = get_nsa_catalog(nsa_catalog_loc)
     bricks = get_decals_bricks(bricks_loc, data_release)
 
-    new_catalog = True
+    new_catalog = False
     if new_catalog:
         joint_catalog = create_joint_catalog(nsa, bricks, data_release, nsa_version, run_to=100)
+        joint_catalog.write(joint_catalog_loc, overwrite=True)
+        # TODO still need to apply broken PETRO check (small number of cases)
     else:
-        # TODO still need to apply cuts - happened externally via Topcat
-        joint_catalog = Table(fits.getdata('../fits/nsa_v{0}_decals_dr{1}.fits'.format(nsa_version, data_release), 1))
+        joint_catalog = Table(fits.getdata(joint_catalog_loc))
 
-    download_joint_catalog_images(joint_catalog,
-                                  data_release,
-                                  nsa_version,
-                                  fits_dir,
-                                  jpeg_dir,
-                                  random_sample=False,
-                                  overwrite=True)
+    selected_joint_catalog = apply_selection_cuts(joint_catalog)
+
+    new_images = True
+    if new_images:
+        joint_catalog_after_download = download_joint_catalog_images(
+            selected_joint_catalog,
+            data_release,
+            nsa_version,
+            fits_dir,
+            jpeg_dir,
+            random_sample=False,
+            overwrite=False)
+        joint_catalog_after_download.write(joint_catalog_loc, overwrite=True)

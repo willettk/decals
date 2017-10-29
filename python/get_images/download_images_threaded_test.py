@@ -1,6 +1,7 @@
 import pytest
 
 from python.get_images.download_images_threaded import *
+from astropy.table import Table
 
 
 @pytest.fixture
@@ -36,15 +37,26 @@ def fits_image_params(fits_download_loc):
 
 @pytest.fixture
 def nsa_decals():
-    # TODO create a short reference catalog here or in test_examples
-    # a = [1, 4, 5]
-    # b = [2.0, 5.0, 8.2]
-    # c = ['x', 'y', 'z']
-    # t = Table([a, b, c], names=('a', 'b', 'c'), meta={'name': 'first table'})
+    gal_a = {'IAUNAME': 'J094651.40-010228.5',
+             'RA': 146.714208787,
+             'DEC': -1.04128156958,
+             'PETROTH50': 3.46419,
+             'PETROTH90': 10.4538}
 
-    dr = '3'
-    nsa_version = '0_1_2'
-    return Table(fits.getdata('../../fits/nsa_v{0}_decals_dr{1}.fits'.format(nsa_version, dr), 1))[:3]
+    gal_b = {'IAUNAME': 'J094631.60-005917.7',
+             'RA': 146.631735209,
+             'DEC': -0.988354858412,
+             'PETROTH50': 2.28976,
+             'PETROTH90': 5.20297}
+
+    gal_c = {'IAUNAME': 'J094842.33-002114.4',
+             'RA': 147.176446949,
+             'DEC': -0.354030416643,
+             'PETROTH50': 7.16148,
+             'PETROTH90': 24.7535}
+
+    return Table([gal_a, gal_b, gal_c])
+
 
 
 def test_download_fits_cutout_retrieves_fits(fits_image_params):
