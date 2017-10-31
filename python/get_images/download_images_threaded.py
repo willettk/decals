@@ -40,40 +40,28 @@ def download_images_multithreaded(catalog, data_release, fits_dir, jpeg_dir, ove
 
     download_params = {
         'data_release': data_release,
-        'fits_dir': fits_dir,
-        'jpeg_dir': jpeg_dir,
         'overwrite': overwrite,
         'pbar': pbar
     }
     download_images_partial = functools.partial(download_images, **download_params)
 
     pool = ThreadPool(80)
-    results = pool.map(download_images_partial, catalog)
+    pool.map(download_images_partial, catalog)
     pbar.close()
     pool.close()
     pool.join()
 
-    results = np.array(results)
-    timed_out = results[:, 0]
-    good_images = results[:, 1]
+    catalog = check_images_are_downloaded(catalog)
 
-
-    catalog['good_image'] = good_images
-    catalog['timed_out'] = timed_out
-
-    catalog = verify_images_are_downloaded(catalog)
-
-    print("\n{} total galaxies processed".format(len(catalog)))
-    print("{} galaxies failed to download from Legacy Skyserver".format(sum(catalog['timed_out'])))
-    print("{} good images".format(np.sum(catalog['good_image'])))
-    print("{} galaxies with bad pixels".format(len(catalog) - np.sum(catalog['good_image'])))
-
-
+    print("\n{} total galaxies".format(len(catalog)))
+    print("{} fits are downloaded".format(np.sum(catalog['fits_exists'])))
+    print("{} jpeg generated".format(np.sum(catalog['jpeg_exists'])))
+    print("{} fits have many bad pixels".format(len(catalog) - np.sum(catalog['good_fits'])))
 
     return catalog
 
 
-def download_images(galaxy, fits_dir, jpeg_dir, data_release='3', overwrite=False, pbar=None, max_attempts=5):
+def download_images(galaxy, data_release, overwrite=False, pbar=None, max_attempts=5):
     '''
     Download a multi-plane FITS image from the DECaLS skyserver
     Write multi-plane FITS images to separate files for each band
@@ -89,57 +77,54 @@ def download_images(galaxy, fits_dir, jpeg_dir, data_release='3', overwrite=Fals
         (bool) Download timed out?
         (bool) Image has no bad pixels?
     '''
-    timed_out = False
-    good_image = False
 
-    # TODO
-    # pixscale = max(min(galaxy['petroth50'] * 0.04, galaxy['petroth50'] * 0.02), min_pixelscale)
-    pixscale = max(min(galaxy['PETROTH50'] * 0.04, galaxy['PETROTH50'] * 0.02), min_pixelscale)
+    pixscale = max(min(galaxy['petroth50'] * 0.04, galaxy['petroth50'] * 0.02), min_pixelscale)
+
+    # for convenience
+    fits_loc = galaxy['fits_loc']
+    jpeg_loc = galaxy['jpeg_loc']
 
     # Download multi-band fits images
-    # TODO refactor so timed-out -> downloaded
-    fits_loc = get_fits_loc(fits_dir, galaxy)
-    if os.path.exists(fits_loc) is False or overwrite is True:
+    if not fits_downloaded_correctly(fits_loc) or overwrite is True:
         attempt = 0
         downloaded = False
         while attempt < max_attempts:
             try:
                 download_fits_cutout(fits_loc, data_release, galaxy['ra'], galaxy['dec'], pixscale, 424)
+                assert fits_downloaded_correctly(fits_loc)
                 downloaded = True
                 break
             except Exception as err:
                 print(err, 'on galaxy {}, attempt {}'.format(galaxy['iauname'], attempt))
                 attempt += 1
 
-        if not downloaded:
-            warnings.warn('Failed to download {} after three attempts'.format(galaxy['iauname']))
-            timed_out = True
-            good_image = False
-            return timed_out, good_image
-
-    # Create artistic jpeg for Galaxy Zoo
-    jpeg_loc = get_jpeg_loc(jpeg_dir, galaxy)
-    if os.path.exists(jpeg_loc) is False or overwrite is True:
-        # first, check the FITS exists
-        if not os.path.exists(fits_loc):
-            # redownload if not
-            # TODO
-            attempt = 0
-            while attempt < max_attempts:
-                try:
-                    download_fits_cutout(fits_loc, data_release, galaxy['ra'], galaxy['dec'], pixscale, 424)
-                    print('successfully fixed {}'.format(galaxy['IAUNAME']))
-                    # then make the jpeg
-                    good_image = make_jpeg_from_fits(fits_loc, jpeg_loc)
-                    break
-                except Exception as err:
-                    print(err, 'on galaxy {}, attempt {}'.format(galaxy['iauname'], attempt))
-                    attempt += 1
+        if downloaded:
+            try:
+                # Create artistic jpeg for Galaxy Zoo from the new FITS
+                make_jpeg_from_fits(fits_loc, jpeg_loc)
+            except:
+                warnings.warn('Error creating jpeg from {}'.format(fits_loc))
+        else:
+            warnings.warn('Failed to download {} after three attempts. No FITS or JPEG'.format(galaxy['iauname']))
 
     if pbar:
         pbar.update()
 
-    return timed_out, good_image
+
+def fits_downloaded_correctly(fits_loc):
+    """
+
+    Args:
+        fits_loc ():
+
+    Returns:
+
+    """
+    try:
+        img, _ = fits.getdata(fits_loc, 0, header=True)
+        return True
+    except Exception as err:
+        return False
 
 
 def get_fits_loc(fits_dir, galaxy):
@@ -154,9 +139,7 @@ def get_fits_loc(fits_dir, galaxy):
     Returns:
         (str) full path of where galaxy fits should be saved
     '''
-    # TODO
-    # return '{0}/{1}.fits'.format(fits_dir, galaxy['iauname'])
-    return '{0}/{1}.fits'.format(fits_dir, galaxy['IAUNAME'])
+    return '{0}/{1}.fits'.format(fits_dir, galaxy['iauname'])
 
 
 def get_jpeg_loc(jpeg_dir, galaxy):
@@ -171,17 +154,15 @@ def get_jpeg_loc(jpeg_dir, galaxy):
     Returns:
         (str) full path of where galaxy jpeg should be saved
     '''
-    # TODO
-    # return '{0}/{1}.jpeg'.format(jpeg_dir, galaxy['iauname'])
-    return '{0}/{1}.jpeg'.format(jpeg_dir, galaxy['IAUNAME'])
+    return '{0}/{1}.jpeg'.format(jpeg_dir, galaxy['iauname'])
 
 
-def download_fits_cutout(download_loc, data_release, ra=114.5970, dec=21.5681, pixscale=0.262, size=424):
+def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixscale=0.262, size=424):
     '''
     Retrieve fits image from DECALS server and save to disk
 
     Args:
-        download_loc (str): location to save file, excluding type e.g. /data/fits/test_image.fits
+        fits_loc (str): location to save file, excluding type e.g. /data/fits/test_image.fits
         ra (float): right ascension (corner? center?)
         dec (float): declination (corner? center?)
         pixscale (float): proportional to decals pixels vs. image pixels. 0.262 for 1-1 map.
@@ -194,18 +175,16 @@ def download_fits_cutout(download_loc, data_release, ra=114.5970, dec=21.5681, p
         'ra': ra,
         'dec': dec,
         'pixscale': pixscale,
-        'size': size})
+        'size': size,
+        'layer': 'decals-dr{}'.format(data_release)})
     if data_release == '1':
-        url = "http://imagine.legacysurvey.org/fits-cutout-decals-dr1?{0}".format(params)
-    elif data_release == '2':
-        url = "http://legacysurvey.org/viewer/fits-cutout-decals-dr2?{0}".format(params)
-    elif data_release == '3':
-        url = 'http://legacysurvey.org/viewer/fits-cutout-decals-dr3?{0}'.format(params)
-    elif data_release == '5':
-        url = 'http://legacysurvey.org/viewer/fits-cutout-decals-dr5?{0}'.format(params)
+        url = "http://imagine.legacysurvey.org/fits-cutout?{}".format(params)
+    elif data_release == '2' or '3' or '5':
+        url = "http://legacysurvey.org/viewer/fits-cutout?{}".format(params)
     else:
         raise ValueError('Data release "{}" not recognised'.format(data_release))
-    urllib.request.urlretrieve(url, download_loc)
+
+    urllib.request.urlretrieve(url, fits_loc)
 
 
 def make_jpeg_from_fits(fits_loc, jpeg_loc):
@@ -255,30 +234,50 @@ def make_jpeg_from_fits(fits_loc, jpeg_loc):
         return False
 
 
-def verify_images_are_downloaded(catalog):
-    for row_index, galaxy in tqdm(enumerate(catalog), total=len(catalog)):
-        if not os.path.exists(galaxy['fits_loc']):
-            catalog['timed_out'][row_index] = True
-        else:
-            catalog['timed_out'][row_index] = False
-            try:
-                img, hdr = fits.getdata(galaxy['fits_loc'], 0, header=True)
-            except Exception as err:
-                print('Invalid fits: {}'.format(err))
-            else:
-                badmax = 0.
-                for j in range(img.shape[0]):
-                    band = img[j, :, :]
-                    nbad = (band == 0.).sum() + np.isnan(band).sum()  # count of bad pixels in band
-                    fracbad = nbad / np.prod(band.shape)  # fraction of bad pixels in band
-                    badmax = max(badmax, fracbad)  # update worst band fraction
+def fits_has_few_missing_pixels(fits_loc, badmax_limit=0.2):
+    img, _ = fits.getdata(fits_loc, 0, header=True)
 
-                if badmax < 0.2:  # if worst fraction of bad pixels is < 0.2, consider image as 'good'
-                    catalog['good_image'][row_index] = True
-                else:
-                    catalog['good_image'][row_index] = False
+    badmax = 0.
+    for j in range(img.shape[0]):
+        band = img[j, :, :]
+        nbad = (band == 0.).sum() + np.isnan(band).sum()  # count of bad pixels in band
+        fracbad = nbad / np.prod(band.shape)  # fraction of bad pixels in band
+        badmax = max(badmax, fracbad)  # update worst band fraction
+
+    # if worst fraction of bad pixels is < 0.2, consider image as 'good'
+    if badmax < badmax_limit:
+        return True
+    else:
+        return False
+
+
+def check_images_are_downloaded(catalog):
+    """
+
+
+    Args:
+        catalog (astropy.Table): joint NSA/decals catalog
+
+    Returns:
+
+    """
+
+    catalog['fits_exists'] = np.zeros(len(catalog), dtype=bool)
+    catalog['good_fits'] = np.zeros(len(catalog), dtype=bool)
+    catalog['jpeg_exists'] = np.zeros(len(catalog), dtype=bool)
+
+    for row_index, galaxy in tqdm(enumerate(catalog), total=len(catalog)):
+        if fits_downloaded_correctly(galaxy['fits_loc']):
+            catalog['fits_exists'][row_index] = True
+
+            if fits_has_few_missing_pixels(galaxy['fits_loc']):
+                catalog['good_fits'][row_index] = True
+
+            if os.path.exists(galaxy['jpeg_loc']):
+                catalog['jpeg_exists'] = True
 
     return catalog
+
 
 if __name__ == '__main__':
     data_release = '3'
