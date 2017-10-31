@@ -57,13 +57,18 @@ def download_images_multithreaded(catalog, data_release, fits_dir, jpeg_dir, ove
     timed_out = results[:, 0]
     good_images = results[:, 1]
 
-    print("\n{0} total galaxies processed".format(len(catalog)))
-    print("{0} good images".format(sum(good_images)))
-    print("{0} galaxies with bad pixels".format(len(catalog) - sum(good_images)))
-    print("{0} galaxies timed out downloading data from Legacy Skyserver".format(sum(timed_out)))
 
     catalog['good_image'] = good_images
     catalog['timed_out'] = timed_out
+
+    catalog = verify_images_are_downloaded(catalog)
+
+    print("\n{} total galaxies processed".format(len(catalog)))
+    print("{} galaxies failed to download from Legacy Skyserver".format(sum(catalog['timed_out'])))
+    print("{} good images".format(np.sum(catalog['good_image'])))
+    print("{} galaxies with bad pixels".format(len(catalog) - np.sum(catalog['good_image'])))
+
+
 
     return catalog
 
@@ -87,7 +92,9 @@ def download_images(galaxy, fits_dir, jpeg_dir, data_release='3', overwrite=Fals
     timed_out = False
     good_image = False
 
-    pixscale = max(min(galaxy['PETROTH50'] * 0.04, galaxy['PETROTH90'] * 0.02), min_pixelscale)
+    # TODO
+    # pixscale = max(min(galaxy['petroth50'] * 0.04, galaxy['petroth50'] * 0.02), min_pixelscale)
+    pixscale = max(min(galaxy['PETROTH50'] * 0.04, galaxy['PETROTH50'] * 0.02), min_pixelscale)
 
     # Download multi-band fits images
     # TODO refactor so timed-out -> downloaded
@@ -97,15 +104,15 @@ def download_images(galaxy, fits_dir, jpeg_dir, data_release='3', overwrite=Fals
         downloaded = False
         while attempt < max_attempts:
             try:
-                download_fits_cutout(fits_loc, data_release, galaxy['RA'], galaxy['DEC'], pixscale, 424)
+                download_fits_cutout(fits_loc, data_release, galaxy['ra'], galaxy['dec'], pixscale, 424)
                 downloaded = True
                 break
             except Exception as err:
-                print(err, 'on galaxy {}, attempt {}'.format(galaxy['IAUNAME'], attempt))
+                print(err, 'on galaxy {}, attempt {}'.format(galaxy['iauname'], attempt))
                 attempt += 1
 
         if not downloaded:
-            warnings.warn('Failed to download {} after three attempts'.format(galaxy['IAUNAME']))
+            warnings.warn('Failed to download {} after three attempts'.format(galaxy['iauname']))
             timed_out = True
             good_image = False
             return timed_out, good_image
@@ -113,7 +120,21 @@ def download_images(galaxy, fits_dir, jpeg_dir, data_release='3', overwrite=Fals
     # Create artistic jpeg for Galaxy Zoo
     jpeg_loc = get_jpeg_loc(jpeg_dir, galaxy)
     if os.path.exists(jpeg_loc) is False or overwrite is True:
-        good_image = make_jpeg_from_fits(fits_loc, jpeg_loc)
+        # first, check the FITS exists
+        if not os.path.exists(fits_loc):
+            # redownload if not
+            # TODO
+            attempt = 0
+            while attempt < max_attempts:
+                try:
+                    download_fits_cutout(fits_loc, data_release, galaxy['ra'], galaxy['dec'], pixscale, 424)
+                    print('successfully fixed {}'.format(galaxy['IAUNAME']))
+                    # then make the jpeg
+                    good_image = make_jpeg_from_fits(fits_loc, jpeg_loc)
+                    break
+                except Exception as err:
+                    print(err, 'on galaxy {}, attempt {}'.format(galaxy['iauname'], attempt))
+                    attempt += 1
 
     if pbar:
         pbar.update()
@@ -133,6 +154,8 @@ def get_fits_loc(fits_dir, galaxy):
     Returns:
         (str) full path of where galaxy fits should be saved
     '''
+    # TODO
+    # return '{0}/{1}.fits'.format(fits_dir, galaxy['iauname'])
     return '{0}/{1}.fits'.format(fits_dir, galaxy['IAUNAME'])
 
 
@@ -148,6 +171,8 @@ def get_jpeg_loc(jpeg_dir, galaxy):
     Returns:
         (str) full path of where galaxy jpeg should be saved
     '''
+    # TODO
+    # return '{0}/{1}.jpeg'.format(jpeg_dir, galaxy['iauname'])
     return '{0}/{1}.jpeg'.format(jpeg_dir, galaxy['IAUNAME'])
 
 
@@ -176,6 +201,8 @@ def download_fits_cutout(download_loc, data_release, ra=114.5970, dec=21.5681, p
         url = "http://legacysurvey.org/viewer/fits-cutout-decals-dr2?{0}".format(params)
     elif data_release == '3':
         url = 'http://legacysurvey.org/viewer/fits-cutout-decals-dr3?{0}'.format(params)
+    elif data_release == '5':
+        url = 'http://legacysurvey.org/viewer/fits-cutout-decals-dr5?{0}'.format(params)
     else:
         raise ValueError('Data release "{}" not recognised'.format(data_release))
     urllib.request.urlretrieve(url, download_loc)
@@ -227,6 +254,31 @@ def make_jpeg_from_fits(fits_loc, jpeg_loc):
     else:
         return False
 
+
+def verify_images_are_downloaded(catalog):
+    for row_index, galaxy in tqdm(enumerate(catalog), total=len(catalog)):
+        if not os.path.exists(galaxy['fits_loc']):
+            catalog['timed_out'][row_index] = True
+        else:
+            catalog['timed_out'][row_index] = False
+            try:
+                img, hdr = fits.getdata(galaxy['fits_loc'], 0, header=True)
+            except Exception as err:
+                print('Invalid fits: {}'.format(err))
+            else:
+                badmax = 0.
+                for j in range(img.shape[0]):
+                    band = img[j, :, :]
+                    nbad = (band == 0.).sum() + np.isnan(band).sum()  # count of bad pixels in band
+                    fracbad = nbad / np.prod(band.shape)  # fraction of bad pixels in band
+                    badmax = max(badmax, fracbad)  # update worst band fraction
+
+                if badmax < 0.2:  # if worst fraction of bad pixels is < 0.2, consider image as 'good'
+                    catalog['good_image'][row_index] = True
+                else:
+                    catalog['good_image'][row_index] = False
+
+    return catalog
 
 if __name__ == '__main__':
     data_release = '3'

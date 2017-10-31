@@ -41,12 +41,12 @@ def download_joint_catalog_images(joint_catalog, dr, nsa_version, fits_dir, jpeg
 if __name__ == "__main__":
     # Run all steps to create the NSA-DECaLS-GZ catalog
 
-    data_release = '2'
+    data_release = '3'
 
     catalog_dir = '/data/galaxy_zoo/decals/catalogs'
 
-    fits_dir = '/data/galaxy_zoo/decals/fits/dr{}'.format(data_release)
-    jpeg_dir = '/data/galaxy_zoo/decals/jpeg/dr{}'.format(data_release)
+    fits_dir = '/data/galaxy_zoo/decals/fits/data_release{}'.format(data_release)
+    jpeg_dir = '/data/galaxy_zoo/decals/jpeg/data_release{}'.format(data_release)
 
     nsa_version = '0_1_2'
     # nsa_version = '1_0_0'
@@ -54,9 +54,8 @@ if __name__ == "__main__":
 
     joint_catalog_loc = '{0}/nsa_v{1}_decals_dr{2}.fits'.format(catalog_dir, nsa_version, data_release)
 
-    # TODO should document which files are being used and then rename
-    if data_release == '3':
-        bricks_filename = 'survey-bricks-dr3-with-coordinates.fits'
+    if data_release == '5' or data_release == '3':
+        bricks_filename = 'survey-bricks-dr{}-with-coordinates.fits'.format(data_release)
     elif data_release == '2':
         bricks_filename = 'decals-bricks-dr2.fits'
     elif data_release == '1':
@@ -65,15 +64,15 @@ if __name__ == "__main__":
         raise ValueError('Data Release "{}" not recognised'.format(data_release))
     bricks_loc = '{}/{}'.format(catalog_dir, bricks_filename)
 
-    subject_dir = '/data/galaxy_zoo/decals/subjects'
-    previous_decals_subjects = '{}/decals_dr1_and_dr2.csv'.format(subject_dir)
+    # subject_dir = '/data/galaxy_zoo/decals/subjects'
+    # previous_decals_subjects = '{}/decals_dr1_and_dr2.csv'.format(subject_dir)
 
     nsa = get_nsa_catalog(nsa_catalog_loc)
     bricks = get_decals_bricks(bricks_loc, data_release)
 
     new_catalog = False
     if new_catalog:
-        joint_catalog = create_joint_catalog(nsa, bricks, data_release, nsa_version, run_to=100)
+        joint_catalog = create_joint_catalog(nsa, bricks, data_release, nsa_version, run_to=50)  # set None not -1
         joint_catalog.write(joint_catalog_loc, overwrite=True)
         # TODO still need to apply broken PETRO check (small number of cases)
     else:

@@ -37,26 +37,25 @@ def fits_image_params(fits_download_loc):
 
 @pytest.fixture
 def nsa_decals():
-    gal_a = {'IAUNAME': 'J094651.40-010228.5',
-             'RA': 146.714208787,
-             'DEC': -1.04128156958,
-             'PETROTH50': 3.46419,
-             'PETROTH90': 10.4538}
+    gal_a = {'iauname': 'J094651.40-010228.5',
+             'ra': 146.714208787,
+             'dec': -1.04128156958,
+             'petroth50': 3.46419,
+             'petroth90': 10.4538}
 
-    gal_b = {'IAUNAME': 'J094631.60-005917.7',
-             'RA': 146.631735209,
-             'DEC': -0.988354858412,
-             'PETROTH50': 2.28976,
-             'PETROTH90': 5.20297}
+    gal_b = {'iauname': 'J094631.60-005917.7',
+             'ra': 146.631735209,
+             'dec': -0.988354858412,
+             'petroth50': 2.28976,
+             'petroth90': 5.20297}
 
-    gal_c = {'IAUNAME': 'J094842.33-002114.4',
-             'RA': 147.176446949,
-             'DEC': -0.354030416643,
-             'PETROTH50': 7.16148,
-             'PETROTH90': 24.7535}
+    gal_c = {'iauname': 'J094842.33-002114.4',
+             'ra': 147.176446949,
+             'dec': -0.354030416643,
+             'petroth50': 7.16148,
+             'petroth90': 24.7535}
 
     return Table([gal_a, gal_b, gal_c])
-
 
 
 def test_download_fits_cutout_retrieves_fits(fits_image_params):
