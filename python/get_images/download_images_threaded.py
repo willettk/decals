@@ -54,9 +54,9 @@ def download_images_multithreaded(catalog, data_release, fits_dir, jpeg_dir, ove
     catalog = check_images_are_downloaded(catalog)
 
     print("\n{} total galaxies".format(len(catalog)))
-    print("{} fits are downloaded".format(np.sum(catalog['fits_exists'])))
-    print("{} jpeg generated".format(np.sum(catalog['jpeg_exists'])))
-    print("{} fits have many bad pixels".format(len(catalog) - np.sum(catalog['good_fits'])))
+    print("{} fits are downloaded".format(np.sum(catalog['fits_ready'])))
+    print("{} jpeg generated".format(np.sum(catalog['jpeg_ready'])))
+    print("{} fits have many bad pixels".format(len(catalog) - np.sum(catalog['fits_filled'])))
 
     return catalog
 
@@ -261,20 +261,20 @@ def check_images_are_downloaded(catalog):
     Returns:
 
     """
-
-    catalog['fits_exists'] = np.zeros(len(catalog), dtype=bool)
-    catalog['good_fits'] = np.zeros(len(catalog), dtype=bool)
-    catalog['jpeg_exists'] = np.zeros(len(catalog), dtype=bool)
+    catalog['fits_ready'] = np.zeros(len(catalog), dtype=bool)
+    catalog['fits_filled'] = np.zeros(len(catalog), dtype=bool)
+    catalog['jpeg_ready'] = np.zeros(len(catalog), dtype=bool)
 
     for row_index, galaxy in tqdm(enumerate(catalog), total=len(catalog)):
         if fits_downloaded_correctly(galaxy['fits_loc']):
-            catalog['fits_exists'][row_index] = True
+            catalog['fits_ready'][row_index] = True
 
             if fits_has_few_missing_pixels(galaxy['fits_loc']):
-                catalog['good_fits'][row_index] = True
+                catalog['fits_filled'][row_index] = True
 
+            # fits must be ready for jpeg to be ready
             if os.path.exists(galaxy['jpeg_loc']):
-                catalog['jpeg_exists'] = True
+                catalog['jpeg_ready'][row_index] = True
 
     return catalog
 

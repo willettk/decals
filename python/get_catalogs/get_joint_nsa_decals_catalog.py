@@ -147,13 +147,13 @@ def create_joint_catalog(nsa, bricks, data_release, nsa_version, run_to=None, vi
     # galaxies_iterable = enumerate(nsa_in_decals_area)
     for idx, gal in galaxies_enumerated:
         nm, coomatch = find_matching_brick(gal, bricks)
-        #  record if one matching brick, or many
+        #  record if one or more matching bricks
         if nm > 0:
             total_matches += 1
             decals_indices[idx] = True  # set nsa filter to True for this galaxy
-            bricks_indices.append(coomatch.argmax())  # record the bricks index of the one matching brick
+            bricks_indices.append(coomatch.argmax())  # record the bricks index of the (first) matching brick
         if nm > 1:
-            multi_matches += 1  # count multi-matches but do not consider them as matches
+            multi_matches += 1  # count multi-matches for display. Nb: only first match is used for catalog.
 
     print('{0:6d} total matches between NASA-Sloan Atlas and DECaLS DR{1}'.format(total_matches, data_release))
     print('{0:6d} galaxies had matches in more than one brick'.format(multi_matches))

@@ -145,16 +145,37 @@ def test_download_images_creates_fits_and_jpeg(nsa_decals, fits_dir, jpeg_dir):
     assert os.path.exists(galaxy['jpeg_loc'])
 
 
+def test_check_images_are_downloaded(nsa_decals):
+    checked_catalog = check_images_are_downloaded(nsa_decals)  # directly on test_examples directory
+    print(checked_catalog[['iauname', 'fits_ready', 'fits_filled', 'jpeg_ready']])
+    assert np.array_equal(checked_catalog['fits_ready'], np.array([False, False, True, True, True, True]))
+    assert np.array_equal(checked_catalog['fits_filled'], np.array([False, False, False, True, True, True]))
+    assert np.array_equal(checked_catalog['jpeg_ready'], np.array([False, False, True, True, True, True]))
+
+
 def test_download_images_multithreaded(nsa_decals, fits_dir, jpeg_dir):
-    # TODO
     data_release = '5'
-    download_images_multithreaded(nsa_decals, data_release, fits_dir, jpeg_dir, overwrite=True)
 
-# TODO
-# def test_verify_images_are_downloaded(nsa_decals):
-#     checked_catalog = check_images_are_downloaded(nsa_decals)
-    # assert checked_catalog['fits_exists'] == np.array([False, False, True, True, True, True])
+    # download to new temporary directory
+    nsa_decals['fits_loc'] = [get_fits_loc(fits_dir, galaxy) for galaxy in nsa_decals]
+    nsa_decals['jpeg_loc'] = [get_fits_loc(jpeg_dir, galaxy) for galaxy in nsa_decals]
 
+    # verify files are not already downloaded
+    for galaxy in nsa_decals:
+        assert not os.path.exists(galaxy['fits_loc'])
+        assert not os.path.exists(galaxy['jpeg_loc'])
 
-# TODO test bad image counters with mock downloader
-# TODO test time out counters with mock downloader
+    # run download
+    output_catalog = download_images_multithreaded(nsa_decals, data_release, fits_dir, jpeg_dir, overwrite=True)
+
+    # verify files are now downloaded (to some unknown quality)
+    for galaxy in output_catalog:
+        assert os.path.exists(galaxy['fits_loc'])
+        assert os.path.exists(galaxy['jpeg_loc'])
+
+    # verify catalog correctly reports as now downloaded
+    np.array_equal(output_catalog['fits_ready'], np.ones(len(output_catalog), dtype=bool))
+    np.array_equal(output_catalog['fits_filled'], np.ones(len(output_catalog), dtype=bool))
+    np.array_equal(output_catalog['jpeg_ready'], np.ones(len(output_catalog), dtype=bool))
+
+    # TODO add a test case with consistently bad pixels from DR5

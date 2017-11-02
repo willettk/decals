@@ -33,7 +33,7 @@ def download_joint_catalog_images(joint_catalog, dr, nsa_version, fits_dir, jpeg
     else:
         galaxies = joint_catalog
 
-        joint_catalog = download_images_multithreaded(galaxies, dr, fits_dir, jpeg_dir, overwrite=overwrite)
+    joint_catalog = download_images_multithreaded(galaxies, dr, fits_dir, jpeg_dir, overwrite=overwrite)
 
     return joint_catalog
 
@@ -41,12 +41,12 @@ def download_joint_catalog_images(joint_catalog, dr, nsa_version, fits_dir, jpeg
 if __name__ == "__main__":
     # Run all steps to create the NSA-DECaLS-GZ catalog
 
-    data_release = '3'
+    data_release = '5'
 
     catalog_dir = '/data/galaxy_zoo/decals/catalogs'
 
-    fits_dir = '/data/galaxy_zoo/decals/fits/data_release{}'.format(data_release)
-    jpeg_dir = '/data/galaxy_zoo/decals/jpeg/data_release{}'.format(data_release)
+    fits_dir = '/data/galaxy_zoo/decals/fits/dr{}'.format(data_release)
+    jpeg_dir = '/data/galaxy_zoo/decals/jpeg/dr{}'.format(data_release)
 
     nsa_version = '0_1_2'
     # nsa_version = '1_0_0'
@@ -64,15 +64,12 @@ if __name__ == "__main__":
         raise ValueError('Data Release "{}" not recognised'.format(data_release))
     bricks_loc = '{}/{}'.format(catalog_dir, bricks_filename)
 
-    # subject_dir = '/data/galaxy_zoo/decals/subjects'
-    # previous_decals_subjects = '{}/decals_dr1_and_dr2.csv'.format(subject_dir)
-
     nsa = get_nsa_catalog(nsa_catalog_loc)
     bricks = get_decals_bricks(bricks_loc, data_release)
 
-    new_catalog = False
+    new_catalog = True
     if new_catalog:
-        joint_catalog = create_joint_catalog(nsa, bricks, data_release, nsa_version, run_to=50)  # set None not -1
+        joint_catalog = create_joint_catalog(nsa, bricks, data_release, nsa_version, run_to=None)  # set None not -1
         joint_catalog.write(joint_catalog_loc, overwrite=True)
         # TODO still need to apply broken PETRO check (small number of cases)
     else:
@@ -89,5 +86,5 @@ if __name__ == "__main__":
             fits_dir,
             jpeg_dir,
             random_sample=False,
-            overwrite=False)
+            overwrite=True)
         joint_catalog_after_download.write(joint_catalog_loc, overwrite=True)
