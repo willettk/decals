@@ -6,85 +6,128 @@ import random
 
 from astropy.table import Table
 from astropy.io import fits
+import pandas as pd
 
 from python.get_catalogs.get_joint_nsa_decals_catalog import create_joint_catalog, get_nsa_catalog, get_decals_bricks, apply_selection_cuts
 from python.get_images.download_images_threaded import download_images_multithreaded, get_fits_loc
+from python.get_catalogs.previous_subjects import get_previous_subjects_with_nsa
+from python.get_catalogs.find_new_subjects import find_new_catalog_images
 
 
-def download_joint_catalog_images(joint_catalog, dr, nsa_version, fits_dir, jpeg_dir, random_sample=False,
-                                  overwrite=False):
-    '''
-    For galaxies with coverage in the DECaLS bricks, download FITS images from cutout service and make JPGs
+class Settings():
+    # Define parameters, file locations, etc.
 
-    Args:
-        joint_catalog (astropy.Table): catalog of galaxies in both nsa and decals including RA, Dec, Petro.
-        dr (str): data release to download
-        nsa_version (str): version of NSA catalog being used. Defines output catalog filenames.
-        random_sample (bool): if True, restrict to a random sample of 101 galaxies only
-        overwrite (bool): if True, download FITS and remake JPEG even if identically-named file(s) already exist
+    def get_nsa_catalog_loc(self):
+        return '{}/nsa_v{}.fits'.format(self.catalog_dir, self.nsa_version)
+
+    def get_joint_catalog_loc(self):
+        return '{0}/nsa_v{1}_decals_dr{2}.fits'.format(
+            self.catalog_dir, self.nsa_version, self.data_release)
+
+    def get_upload_catalog_loc(self):
+        return '{}/dr{}_nsa{}_to_upload.csv'.format(self.catalog_dir, self.data_release, self.nsa_version)
+
+    def get_bricks_loc(self):
+        data_release = self.data_release
+        if data_release == '5' or data_release == '3':
+            bricks_filename = 'survey-bricks-dr{}-with-coordinates.fits'.format(data_release)
+        elif data_release == '2':
+            bricks_filename = 'decals-bricks-dr2.fits'
+        elif data_release == '1':
+            bricks_filename = 'decals-bricks-dr1.fits'
+        else:
+            raise ValueError('Data Release "{}" not recognised'.format(data_release))
+        return '{}/{}'.format(self.catalog_dir, bricks_filename)
+
+    def derive_file_paths(self):
+        self.nsa_catalog_loc = self.get_nsa_catalog_loc()
+        self.joint_catalog_loc = self.get_joint_catalog_loc()
+        self.bricks_loc = self.get_bricks_loc()
+        self.upload_catalog_loc = self.get_upload_catalog_loc()
+
+    def __init__(self,
+                 data_release='3',
+                 nsa_version='1_0_0',
+                 catalog_dir='/data/galaxy_zoo/decals/catalogs',
+                 fits_dir='/data/galaxy_zoo/decals/fits/unknown_dr',
+                 jpeg_dir='/data/galaxy_zoo/decals/jpeg/unknown_dr',
+                 subject_loc='/data/galaxy_zoo/decals/subjects/decals_dr1_and_dr2.csv'):
+
+        self.data_release = data_release
+        self.nsa_version = nsa_version
+        self.catalog_dir = catalog_dir
+        self.fits_dir = fits_dir
+        self.jpeg_dir = jpeg_dir
+        self.subject_loc = subject_loc
+
+        self.derive_file_paths()
+
+
+def get_decals(nsa, bricks, previous_subjects, s):
+
+    nsa_after_cuts = apply_selection_cuts(nsa)
+
+    if s.new_catalog:
+        joint_catalog = create_joint_catalog(nsa_after_cuts, bricks, s.data_release, s.nsa_version, run_to=s.run_to)
+        joint_catalog.write(s.joint_catalog_loc, overwrite=True)
+        # TODO still need to apply broken PETRO check (small number of cases)
+    else:
+        joint_catalog = Table(fits.getdata(s.joint_catalog_loc))
+
+    if s.new_images:
+        joint_catalog = download_images_multithreaded(
+            joint_catalog,
+            s.data_release,
+            s.fits_dir,
+            s.jpeg_dir,
+            overwrite=s.overwrite_existing_images)
+        joint_catalog.write(s.joint_catalog_loc, overwrite=True)
+
+    # add nsa info to previous gz subjects downloaded from data dump
+    previous_galaxy_zoo_with_nsa = get_previous_subjects_with_nsa(previous_subjects, nsa)
+
+    # find_new_catalog_images expects two Table catalogs
+    # galaxy zoo catalog should include where the FITS would be
+    previous_galaxy_zoo_with_nsa['fits_loc'] = [get_fits_loc(s.catalog_dir, galaxy) for _, galaxy in previous_galaxy_zoo_with_nsa.iterrows()]
+    # TODO a bit messy - I need to settle on astropy vs. pandas as soon as I get to metadata stage
+    previous_galaxy_zoo_with_nsa = [row.to_dict() for _, row in previous_galaxy_zoo_with_nsa.iterrows()]  # neaten
+    previous_galaxy_zoo_with_nsa = Table(previous_galaxy_zoo_with_nsa)
+
+    # compare DR{} with previous subjects to see what's new
+    return find_new_catalog_images(old_catalog=previous_galaxy_zoo_with_nsa, new_catalog=joint_catalog)
+
+
+def main():
+    """
+    Run all steps to create the NSA-DECaLS-GZ catalog
 
     Returns:
         None
-    '''
+    """
 
-    if random_sample:
-        N = 101
-        galaxies = random.sample(joint_catalog, N)
-    else:
-        galaxies = joint_catalog
-
-    joint_catalog = download_images_multithreaded(galaxies, dr, fits_dir, jpeg_dir, overwrite=overwrite)
-
-    return joint_catalog
-
-
-if __name__ == "__main__":
-    # Run all steps to create the NSA-DECaLS-GZ catalog
-
-    data_release = '5'
-
-    catalog_dir = '/data/galaxy_zoo/decals/catalogs'
-
+    data_release = '3'
     fits_dir = '/data/galaxy_zoo/decals/fits/dr{}'.format(data_release)
     jpeg_dir = '/data/galaxy_zoo/decals/jpeg/dr{}'.format(data_release)
 
-    nsa_version = '0_1_2'
-    # nsa_version = '1_0_0'
-    nsa_catalog_loc = '{}/nsa_v{}.fits'.format(catalog_dir, nsa_version)
+    nondefault_params = {
+        'data_release': data_release,
+        'fits_dir': fits_dir,
+        'jpeg_dir': jpeg_dir
+    }
+    s = Settings(**nondefault_params)
 
-    joint_catalog_loc = '{0}/nsa_v{1}_decals_dr{2}.fits'.format(catalog_dir, nsa_version, data_release)
+    # for safety, these settings must be separately specified
+    s.new_catalog = True
+    s.new_images = True
+    s.overwrite_existing_images = False
+    s.run_to = None
 
-    if data_release == '5' or data_release == '3':
-        bricks_filename = 'survey-bricks-dr{}-with-coordinates.fits'.format(data_release)
-    elif data_release == '2':
-        bricks_filename = 'decals-bricks-dr2.fits'
-    elif data_release == '1':
-        bricks_filename = 'decals-bricks-dr1.fits'
-    else:
-        raise ValueError('Data Release "{}" not recognised'.format(data_release))
-    bricks_loc = '{}/{}'.format(catalog_dir, bricks_filename)
+    nsa = get_nsa_catalog(s.nsa_catalog_loc)
+    bricks = get_decals_bricks(s.bricks_loc, s.data_release)
+    previous_subjects = pd.read_csv(s.subject_loc)  # previously extracted decals subjects
 
-    nsa = get_nsa_catalog(nsa_catalog_loc)
-    bricks = get_decals_bricks(bricks_loc, data_release)
+    catalog_to_upload = get_decals(nsa, bricks, previous_subjects, s)
+    catalog_to_upload[['nsa_id', 'iauname', 'ra', 'dec', 'galaxy_is_new', 'galaxy_is_updated']].to_pandas().to_csv(s.upload_catalog_loc, index=False)
 
-    new_catalog = True
-    if new_catalog:
-        joint_catalog = create_joint_catalog(nsa, bricks, data_release, nsa_version, run_to=None)  # set None not -1
-        joint_catalog.write(joint_catalog_loc, overwrite=True)
-        # TODO still need to apply broken PETRO check (small number of cases)
-    else:
-        joint_catalog = Table(fits.getdata(joint_catalog_loc))
-
-    selected_joint_catalog = apply_selection_cuts(joint_catalog)
-
-    new_images = True
-    if new_images:
-        joint_catalog_after_download = download_joint_catalog_images(
-            selected_joint_catalog,
-            data_release,
-            nsa_version,
-            fits_dir,
-            jpeg_dir,
-            random_sample=False,
-            overwrite=True)
-        joint_catalog_after_download.write(joint_catalog_loc, overwrite=True)
+if __name__ == '__main__':
+    main()

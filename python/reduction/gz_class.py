@@ -1,6 +1,6 @@
 # Adapted from galaxyzoo2.gz2string
 
-def gal_string(datarow,survey='decals'):
+def gal_string(datarow, survey='decals'):
 
     """ Determine a string for the consensus GZ2 classification of a
         galaxy's morphology.

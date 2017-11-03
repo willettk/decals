@@ -7,6 +7,9 @@ from tqdm import tqdm
 
 from python.get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog
 
+# TODO move this prep. work into another file
+
+
 def get_galaxy_zoo_decals_catalog(subject_loc):
     subjects = pd.read_csv(subject_loc, nrows=None)
     return subjects
@@ -57,36 +60,35 @@ def split_json_str_to_columns(input_df, json_column_name):
     return pd.concat([input_df, json_df], axis=1)
 
 
-def get_galaxy_zoo_decals_catalog_with_nsa(subject_loc, nsa_catalog_loc):
+def get_previous_subjects_with_nsa(previous_subjects, nsa):
+    # TODO break up each concat step into separate functions
     '''
 
     Args:
-        subject_loc (str):
-        nsa_catalog_loc (str):
+        previous_subjects (pd.DataFrame): decals subjects, extracted from galaxy zoo data dump subjects file
+        nsa (str):
 
     Returns:
         (pd.DataFrame)
     '''
 
-    nsa = get_nsa_catalog(nsa_catalog_loc)
-    galaxy_zoo = get_galaxy_zoo_decals_catalog(subject_loc)
-
     # galaxy zoo catalog has 'provided_object_id' column with IAU name values. Rename to match exposure catalog.
-    galaxy_zoo = galaxy_zoo.rename(columns={'provided_image_id': 'iauname',
-                                            'data_release': 'data_release'})
+    previous_subjects = previous_subjects.rename(columns={'provided_image_id': 'iauname',
+                                            'dr': 'data_release'})
 
     nsa_id_columns = ['nsa_id', 'iauname', 'ra', 'dec']
     nsa = nsa[nsa_id_columns].to_pandas()
+    nsa.loc[:, 'nsa_id'] = nsa['nsa_id'].astype(int)
     assert all(nsa['iauname'].duplicated() == False)
     assert all(nsa['nsa_id'].duplicated() == False)
 
     # galaxy_zoo_id_columns = ['nsa_id', 'data_release', 'iauname', 'sdss_id', 'sdss_dr7_id', 'sdss_dr8_id', 'sdss_dr12_objid']
-    # print(galaxy_zoo[galaxy_zoo_id_columns].sample(20))
+    # print(previous_subjects[galaxy_zoo_id_columns].sample(20))
 
     # split into DR1 (IAU name as ID) and DR2 (NSA ID as ID)
-    galaxy_zoo_dr1 = galaxy_zoo.dropna(subset=['iauname'])
-    galaxy_zoo_dr2 = galaxy_zoo.dropna(subset=['nsa_id'])
-    assert len(galaxy_zoo_dr1) + len(galaxy_zoo_dr2) == len(galaxy_zoo)
+    galaxy_zoo_dr1 = previous_subjects.dropna(subset=['iauname'])
+    galaxy_zoo_dr2 = previous_subjects.dropna(subset=['nsa_id'])
+    assert len(galaxy_zoo_dr1) + len(galaxy_zoo_dr2) == len(previous_subjects)
 
     # add nsa data to dr1
     assert all(galaxy_zoo_dr1['data_release'].isnull())
@@ -103,21 +105,14 @@ def get_galaxy_zoo_decals_catalog_with_nsa(subject_loc, nsa_catalog_loc):
     del galaxy_zoo_dr2['iauname']  # will be filled by the NSA table in merge below
     galaxy_zoo_dr2.loc[:, 'nsa_id'] = galaxy_zoo_dr2['nsa_id'].str.lstrip('NSA_').astype(int)
     assert all(galaxy_zoo_dr2['nsa_id'].duplicated() == False)
+
     galaxy_zoo_dr2_with_nsa = pd.merge(galaxy_zoo_dr2, nsa, on='nsa_id', how='inner')
     assert len(galaxy_zoo_dr2_with_nsa) == len(galaxy_zoo_dr2)
 
     # restack
     galaxy_zoo_with_nsa = pd.concat([galaxy_zoo_dr1_with_nsa, galaxy_zoo_dr2_with_nsa])
-    # assert all(galaxy_zoo_with_nsa['iauname'].duplicated() == False)
-    # galaxy_zoo_with_nsa.drop_duplicates(keep='first', inplace=True)
 
-    # remove galaxies in both dr1 and dr2?
-
-    print(galaxy_zoo_with_nsa[galaxy_zoo_with_nsa['iauname'].duplicated(keep=False)].sort_values('iauname')[['_id', 'zooniverse_id', 'nsa_id', 'iauname', 'data_release', 'ra', 'dec']])
-
-    # print(galaxy_zoo_with_nsa['iauname'].value_counts())
-    # print(galaxy_zoo_with_nsa['nsa_id'].value_counts())
-    # assert all(galaxy_zoo_with_nsa['zooniverse_id'] == False)
+    # note that some galaxies will appear twice, correctly, with dif. zooniverse ids
 
     return galaxy_zoo_with_nsa.set_index('zooniverse_id', drop=True)
 
@@ -135,7 +130,10 @@ if __name__ == "__main__":
 
     subject_loc = '/data/galaxy_zoo/decals/subjects/decals_dr1_and_dr2.csv'
 
-    galaxy_zoo_with_nsa = get_galaxy_zoo_decals_catalog_with_nsa(subject_loc, nsa_catalog_loc)
+    nsa = get_nsa_catalog(nsa_catalog_loc)
+    galaxy_zoo = get_galaxy_zoo_decals_catalog(subject_loc)
+
+    galaxy_zoo_with_nsa = get_previous_subjects_with_nsa(galaxy_zoo, nsa)
 
     print(galaxy_zoo_with_nsa.sample(10)[['nsa_id', 'iauname', 'data_release', 'ra', 'dec']])
 

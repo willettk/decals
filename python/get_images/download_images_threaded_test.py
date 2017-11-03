@@ -129,6 +129,28 @@ def test_download_fits_cutout_corrects_incomplete_fits(partially_downloaded_gala
     assert fits_downloaded_correctly(partially_downloaded_galaxy_params['fits_loc'])
 
 
+def test_get_download_quality_of_fits_on_missing_fits():
+    downloaded, good_pix = get_download_quality_of_fits('nothing here')
+    assert not downloaded
+    assert not good_pix
+
+
+def test_get_download_quality_of_fits_on_incomplete_fits():
+    incomplete_fits_loc = '../test_examples/example_incomplete.fits'
+    assert os.path.exists(incomplete_fits_loc)  # file exists
+    downloaded, good_pix = get_download_quality_of_fits(incomplete_fits_loc)
+    assert not downloaded  # file exists but is not completely downloaded
+    assert not good_pix
+
+
+def test_get_download_quality_of_fits_on_bad_pix_fits():
+    partial_fits_loc = '../test_examples/example_bad_pix.fits'
+    assert os.path.exists(partial_fits_loc)
+    downloaded, good_pix = get_download_quality_of_fits(partial_fits_loc)
+    assert downloaded
+    assert not good_pix
+
+
 def test_make_jpeg_from_fits_creates_jpeg(jpeg_loc):
     fits_loc = '../test_examples/example_a.fits'
     assert os.path.exists(fits_loc)  # check I use a real fits path

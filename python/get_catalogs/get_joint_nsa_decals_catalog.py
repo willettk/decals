@@ -1,10 +1,12 @@
 
+from multiprocessing.dummy import Pool as ThreadPool
+import functools
+
 import numpy as np
 from astropy.io import fits
 import astropy.table
 from astropy.table import Table
 from tqdm import tqdm
-
 import matplotlib.pyplot as plt
 
 # TODO should check that galaxy names are unique within each catalog, here and in unit tests
@@ -76,7 +78,7 @@ def get_decals_bricks(bricks_loc, dr):
     return bricks
 
 
-def find_matching_brick(gal, bricks):
+def find_matching_brick(gal, bricks, pbar=None):
     '''
     Find the DECaLS brick covering the (RA,dec) coordinates for a galaxy's position
     Galaxy coordinates may be part of multiple bricks
@@ -106,9 +108,14 @@ def find_matching_brick(gal, bricks):
     decmatch = (bricks['dec1'] < decgal) & (bricks['dec2'] >= decgal)
 
     coomatch = (ramatch & decmatch)  # boolean array of bricks that match in both RA and dec
-    nmatch = sum(coomatch)
+    match_count = coomatch.sum()
 
-    return nmatch, coomatch
+    first_match = coomatch.argmax()
+
+    if pbar:
+        pbar.update()
+
+    return match_count, first_match
 
 
 def create_joint_catalog(nsa, bricks, data_release, nsa_version, run_to=None, visualise=False):
@@ -133,44 +140,46 @@ def create_joint_catalog(nsa, bricks, data_release, nsa_version, run_to=None, vi
     # outside the observed RA/dec range of the DECaLS bricks.
     nsa_in_decals_area = filter_catalog_to_approximate_sky_area(nsa, bricks, data_release, visualise=visualise)
 
-    total_matches = 0
-    multi_matches = 0
-    # 1 if that galaxy is in decals, else 0, for all nsa galaxies
-    decals_indices = np.zeros(len(nsa_in_decals_area), dtype=bool)
-    bricks_indices = []  # empty list, will contain all coordinates of nsa galaxies matched to (exactly) 1 decals brick
+    nsa_to_match = nsa_in_decals_area[:run_to]
 
     # For every galaxy in the NSA catalog, if it is in DECALS RA/DEC window, find which brick(s) it is in
-    galaxies_enumerated = tqdm(
-        enumerate(nsa_in_decals_area[:run_to]),
-        total=len(nsa_in_decals_area[:run_to]),
-        unit=' galaxies checked')
-    # galaxies_iterable = enumerate(nsa_in_decals_area)
-    for idx, gal in galaxies_enumerated:
-        nm, coomatch = find_matching_brick(gal, bricks)
-        #  record if one or more matching bricks
-        if nm > 0:
-            total_matches += 1
-            decals_indices[idx] = True  # set nsa filter to True for this galaxy
-            bricks_indices.append(coomatch.argmax())  # record the bricks index of the (first) matching brick
-        if nm > 1:
-            multi_matches += 1  # count multi-matches for display. Nb: only first match is used for catalog.
+    pbar = tqdm(total=len(nsa_to_match), unit=' galaxies checked')
 
-    print('{0:6d} total matches between NASA-Sloan Atlas and DECaLS DR{1}'.format(total_matches, data_release))
-    print('{0:6d} galaxies had matches in more than one brick'.format(multi_matches))
+    match_params = {
+        'bricks': bricks,
+        'pbar': pbar
+    }
+    find_matching_brick_partial = functools.partial(find_matching_brick, **match_params)
 
-    nsa_decals = nsa_in_decals_area[decals_indices]  # filter table to only galaxies which are matched to DECALS
+    pool = ThreadPool(10)
+    # must be an ordered map! relies on nsa index
+    results = np.array(pool.map(find_matching_brick_partial, nsa_to_match))
+    pbar.close()
+    pool.close()
+    pool.join()
+
+    match_count, first_match = results[:, 0], results[:, 1]
+
+    # filter matches and nsa table to only galaxies which are matched to DECALS
+    has_match = match_count > 0
+    match_count = match_count[has_match]
+    first_match = first_match[has_match]
+    nsa_decals = nsa_to_match[has_match]
 
     # ought to have that many coordinates in the 'bricks_indices' list
-    assert len(nsa_decals) == len(bricks_indices), \
-        "Length of joint_catalog ({0}) and bricks_indices ({1}) must match".format(len(nsa_decals), len(bricks_indices))
+    assert len(nsa_decals) == len(first_match), \
+        "Length of joint_catalog ({0}) and bricks_indices ({1}) must match".format(len(nsa_decals), len(first_match))
 
-    matched_bricks = Table(bricks[bricks_indices])
+    matched_bricks = Table(bricks[first_match])
 
     assert len(nsa_decals) == len(matched_bricks)
 
     # add the bricks data into the joint_catalog table (manual merge!)
     nsa_decals_bricks = astropy.table.hstack([nsa_decals, matched_bricks])
     assert len(nsa_decals_bricks) == len(matched_bricks)
+
+    print('{0:6d} galaxies match between NASA-Sloan Atlas and DECaLS DR{1}'.format(has_match.sum(), data_release))
+    print('{0:6d} galaxies had matches in more than one brick'.format((match_count > 1).sum()))
 
     return nsa_decals
 
@@ -245,9 +254,8 @@ def apply_selection_cuts(input_catalog):
 
     """
 
-    # TODO update catalogs with all lowercase
     petrotheta_above_3 = input_catalog['petrotheta'] > 3
-    # petrotheta_above_3 = input_catalog['PETROTHETA'] > 3
+    redshift_below_p05 = input_catalog['z'] < 0.05
 
     '''
     NSA catalog’s PETROTHETA calculation sometimes fails to a ‘default’ value that is related to the annulus used to
@@ -273,7 +281,7 @@ def apply_selection_cuts(input_catalog):
     # print(len(input_catalog), len(selected_catalog))
     # return selected_catalog
 
-    return input_catalog[petrotheta_above_3]
+    return input_catalog[petrotheta_above_3 & redshift_below_p05]
 
 
 if __name__ == "__main__":
@@ -283,7 +291,8 @@ if __name__ == "__main__":
 
     catalog_dir = '/data/galaxy_zoo/decals/catalogs'
 
-    nsa_version = '0_1_2'
+    # nsa_version = '0_1_2'
+    nsa_version = '1_0_0'
     nsa_catalog_loc = '{}/nsa_v{}.fits'.format(catalog_dir, nsa_version)
 
     data_release = '5'
@@ -291,14 +300,15 @@ if __name__ == "__main__":
     bricks_loc = '{}/{}'.format(catalog_dir, bricks_filename)
 
     nsa = get_nsa_catalog(nsa_catalog_loc)
+    nsa_after_cuts = apply_selection_cuts(nsa)
+
     bricks = get_decals_bricks(bricks_loc, data_release)
 
-    joint_catalog = create_joint_catalog(nsa, bricks, data_release, nsa_version, run_to=-1)
+    joint_catalog = create_joint_catalog(nsa_after_cuts, bricks, data_release, nsa_version, run_to=-1)
     # Write to file
     joint_catalog_loc = '{0}/nsa_v{1}_decals_dr{2}.fits'.format(catalog_dir, nsa_version, data_release)
     joint_catalog.write(joint_catalog_loc, overwrite=True)
 
-    selected_joint_catalog = apply_selection_cuts(joint_catalog)
     # Write to file
     selected_joint_catalog_loc = '{0}/nsa_v{1}_decals_dr{2}_after_cuts.fits'.format(catalog_dir, nsa_version, data_release)
     # selected_joint_catalog.write(selected_joint_catalog_loc, overwrite=True)

@@ -45,7 +45,7 @@ def download_images_multithreaded(catalog, data_release, fits_dir, jpeg_dir, ove
     }
     download_images_partial = functools.partial(download_images, **download_params)
 
-    pool = ThreadPool(80)
+    pool = ThreadPool(10)
     pool.map(download_images_partial, catalog)
     pbar.close()
     pool.close()
@@ -85,6 +85,7 @@ def download_images(galaxy, data_release, overwrite=False, pbar=None, max_attemp
     jpeg_loc = galaxy['jpeg_loc']
 
     # Download multi-band fits images
+    # TODO could report a dictionary from fits_downloaded_correctly
     if not fits_downloaded_correctly(fits_loc) or overwrite is True:
         attempt = 0
         downloaded = False
@@ -109,22 +110,6 @@ def download_images(galaxy, data_release, overwrite=False, pbar=None, max_attemp
 
     if pbar:
         pbar.update()
-
-
-def fits_downloaded_correctly(fits_loc):
-    """
-
-    Args:
-        fits_loc ():
-
-    Returns:
-
-    """
-    try:
-        img, _ = fits.getdata(fits_loc, 0, header=True)
-        return True
-    except Exception as err:
-        return False
 
 
 def get_fits_loc(fits_dir, galaxy):
@@ -234,23 +219,6 @@ def make_jpeg_from_fits(fits_loc, jpeg_loc):
         return False
 
 
-def fits_has_few_missing_pixels(fits_loc, badmax_limit=0.2):
-    img, _ = fits.getdata(fits_loc, 0, header=True)
-
-    badmax = 0.
-    for j in range(img.shape[0]):
-        band = img[j, :, :]
-        nbad = (band == 0.).sum() + np.isnan(band).sum()  # count of bad pixels in band
-        fracbad = nbad / np.prod(band.shape)  # fraction of bad pixels in band
-        badmax = max(badmax, fracbad)  # update worst band fraction
-
-    # if worst fraction of bad pixels is < 0.2, consider image as 'good'
-    if badmax < badmax_limit:
-        return True
-    else:
-        return False
-
-
 def check_images_are_downloaded(catalog):
     """
 
@@ -265,18 +233,70 @@ def check_images_are_downloaded(catalog):
     catalog['fits_filled'] = np.zeros(len(catalog), dtype=bool)
     catalog['jpeg_ready'] = np.zeros(len(catalog), dtype=bool)
 
-    for row_index, galaxy in tqdm(enumerate(catalog), total=len(catalog)):
-        if fits_downloaded_correctly(galaxy['fits_loc']):
-            catalog['fits_ready'][row_index] = True
-
-            if fits_has_few_missing_pixels(galaxy['fits_loc']):
-                catalog['fits_filled'][row_index] = True
-
-            # fits must be ready for jpeg to be ready
+    for row_index, galaxy in tqdm(enumerate(catalog), total=len(catalog), unit=' images checked'):
+        downloaded, complete = get_download_quality_of_fits(galaxy['fits_loc'])
+        catalog['fits_ready'][row_index] = downloaded
+        catalog['fits_filled'][row_index] = complete
+        if downloaded:  # fits must be ready for jpeg to be ready
             if os.path.exists(galaxy['jpeg_loc']):
                 catalog['jpeg_ready'][row_index] = True
-
     return catalog
+
+
+def fits_downloaded_correctly(fits_loc, badmax_limit=0.2):
+    """
+    Quantify if image is
+
+    Args:
+        fits_loc (str): location of fits file to open
+        badmax_limit(float): maximum ratio of empty pixels for image to be considered 'correct'
+
+    Returns:
+        (bool) is image downloaded?
+        (bool) is empty pixel ratio below the allowed limit?
+    """
+
+    try:
+        img, _ = fits.getdata(fits_loc, 0, header=True)
+        return True
+    except:  # image fails to open
+        return False
+
+
+def get_download_quality_of_fits(fits_loc, badmax_limit=0.2):
+    """
+    Quantify if image is
+
+    Args:
+        fits_loc (str): location of fits file to open
+        badmax_limit(float): maximum ratio of empty pixels for image to be considered 'correct'
+
+    Returns:
+        (bool) is image downloaded?
+        (bool) is empty pixel ratio below the allowed limit?
+    """
+
+    try:
+        img, _ = fits.getdata(fits_loc, 0, header=True)
+        complete = few_missing_pixels(img, badmax_limit)
+        return True, complete
+    except:  # image fails to open
+        return False, False
+
+
+def few_missing_pixels(img, badmax_limit):
+    badmax = 0.
+    for j in range(img.shape[0]):
+        band = img[j, :, :]
+        nbad = (band == 0.).sum() + np.isnan(band).sum()  # count of bad pixels in band
+        fracbad = nbad / np.prod(band.shape)  # fraction of bad pixels in band
+        badmax = max(badmax, fracbad)  # update worst band fraction
+
+    # if worst fraction of bad pixels is < 0.2, consider image as 'good'
+    if badmax < badmax_limit:
+        return True
+    else:
+        return False
 
 
 if __name__ == '__main__':

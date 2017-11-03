@@ -62,16 +62,18 @@ def dstn_rgb(imgs, bands, mnmx=None, arcsinh=None, scales=None, desaturate=False
     else:
         mn, mx = mnmx
 
-    # TODO nlmap -> non-linear map
     if arcsinh is not None:
-        # TODO move out of if statement
-        def nlmap(x):
+        # TODO move out of if statement?
+        def nonlinear_map(x):
+            # arcsinh (as opposed to np.arcsinh) is parameter (1. from downloader), inverse of softening factor B
+            # applies both arcsinh and inverse sqrt rescaling
             return np.arcsinh(x * arcsinh) / np.sqrt(arcsinh)
-        rgb = nlmap(rgb)
-        mn = nlmap(mn)
-        mx = nlmap(mx)
+        # TODO image rescaled by band-pixel not image-pixel, which means colours depend on brightness at this point??
+        rgb = nonlinear_map(rgb)
+        mn = nonlinear_map(mn)
+        mx = nonlinear_map(mx)
 
-    # rescale image to be between min and max
+    # lastly, rescale image to be between min and max
     rgb = (rgb - mn) / (mx - mn)
 
     # default False, but downloader sets True
@@ -100,3 +102,6 @@ def dstn_rgb(imgs, bands, mnmx=None, arcsinh=None, scales=None, desaturate=False
     clipped = np.clip(rgb, 0., 1.)  # set max/min to 0 and 1
 
     return clipped
+
+# TODO unit tests creating rgb image from artificial colour-path fits file,
+    # then verifying the colours produced are unique per g-r, r-z colour in input file
