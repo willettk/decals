@@ -255,7 +255,7 @@ def apply_selection_cuts(input_catalog):
     """
 
     petrotheta_above_3 = input_catalog['petrotheta'] > 3
-    redshift_below_p05 = input_catalog['z'] < 0.05
+    # redshift_below_p05 = input_catalog['z'] < 0.05
 
     '''
     NSA catalog’s PETROTHETA calculation sometimes fails to a ‘default’ value that is related to the annulus used to
@@ -281,7 +281,8 @@ def apply_selection_cuts(input_catalog):
     # print(len(input_catalog), len(selected_catalog))
     # return selected_catalog
 
-    return input_catalog[petrotheta_above_3 & redshift_below_p05]
+    return input_catalog[petrotheta_above_3]
+    # return input_catalog[petrotheta_above_3 & redshift_below_p05]
 
 
 if __name__ == "__main__":

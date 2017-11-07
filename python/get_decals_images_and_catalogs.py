@@ -105,7 +105,7 @@ def main():
         None
     """
 
-    data_release = '3'
+    data_release = '5'
     fits_dir = '/data/galaxy_zoo/decals/fits/dr{}'.format(data_release)
     jpeg_dir = '/data/galaxy_zoo/decals/jpeg/dr{}'.format(data_release)
 
