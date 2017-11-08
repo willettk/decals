@@ -12,10 +12,6 @@ def fits_loc():
 
 
 @pytest.fixture()
-# def jpeg_loc(tmpdir):
-#     return tmpdir.mkdir('jpeg_loc').strpath + '/test.jpg'
-
-@pytest.fixture()
 def jpeg_loc():
     return 'python/test_examples/test_output.jpg'
 

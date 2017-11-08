@@ -162,7 +162,7 @@ def test_make_jpeg_from_fits_creates_jpeg(jpeg_loc):
 def test_download_images_creates_fits_and_jpeg(nsa_decals, fits_dir, jpeg_dir):
     galaxy = nsa_decals[-1]
     data_release = '5'
-    download_images(galaxy, data_release=data_release, overwrite=True)
+    download_images(galaxy, data_release=data_release, overwrite_fits=False, overwrite_jpeg=False)
     assert fits_downloaded_correctly(galaxy['fits_loc'])
     assert os.path.exists(galaxy['jpeg_loc'])
 
@@ -188,7 +188,8 @@ def test_download_images_multithreaded(nsa_decals, fits_dir, jpeg_dir):
         assert not os.path.exists(galaxy['jpeg_loc'])
 
     # run download
-    output_catalog = download_images_multithreaded(nsa_decals, data_release, fits_dir, jpeg_dir, overwrite=True)
+    output_catalog = download_images_multithreaded(nsa_decals, data_release, fits_dir, jpeg_dir, overwrite_fits=False,
+                                                   overwrite_jpeg=False)
 
     # verify files are now downloaded (to some unknown quality)
     for galaxy in output_catalog:

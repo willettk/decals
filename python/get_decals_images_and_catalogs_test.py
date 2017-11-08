@@ -182,19 +182,20 @@ def test_get_decals(nsa, bricks, previous_subjects, settings):
     # for safety, these settings must be separately specified
     settings.new_catalog = True
     settings.new_images = True
-    settings.overwrite_existing_images = True
+    settings.overwrite_fits = True
+    settings.overwrite_jpeg = True
     settings.run_to = None
 
     catalog = get_decals(nsa, bricks, previous_subjects, settings)
 
     remaining_names = set(catalog['iauname'])
     assert 'iau_small' not in remaining_names
-    assert 'iau_far' not in remaining_names
     assert 'iau_below_bricks' not in remaining_names
     assert 'iau_outside_bricks' not in remaining_names
     assert 'iau_previous_dr1_subject' not in remaining_names
     assert 'iau_previous_dr2_subject' not in remaining_names
     assert 'iau_new_subject' in remaining_names
+    assert 'iau_far' in remaining_names  # redshift filtering is currently off
 
     new_subject = catalog[0]
 
