@@ -1,4 +1,4 @@
-![build_status](https://travis-ci.org/zooniverse/decals.svg?branch=first_image_download)
+[![Build Status](https://travis-ci.org/zooniverse/decals.svg?branch=master)](https://travis-ci.org/zooniverse/decals)
 
 # decals
 
