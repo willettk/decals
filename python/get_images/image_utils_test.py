@@ -3,12 +3,12 @@ import pytest
 from astropy.io import fits
 import matplotlib.pyplot as plt
 
-from python.get_images.image_utils import dstn_rgb, get_rgb, lupton_rgb
+from get_images.image_utils import dstn_rgb, get_rgb, lupton_rgb
 
 
 @pytest.fixture()
 def fits_loc():
-    return '../test_examples/example_a.fits'
+    return 'python/test_examples/example_a.fits'
 
 
 @pytest.fixture()
@@ -17,7 +17,7 @@ def fits_loc():
 
 @pytest.fixture()
 def jpeg_loc():
-    return '../test_examples/test_output.jpg'
+    return 'python/test_examples/test_output.jpg'
 
 
 def image_data_by_band(fits_loc):
@@ -59,11 +59,11 @@ def plot_jpegs(jpegs, name):
         cbar = ax.imshow(jpegs[ax_index])
     # fig.colorbar(cbar)
     plt.tight_layout()
-    plt.savefig('../test_examples/{}.jpg'.format(name))
+    plt.savefig('python/test_examples/{}.jpg'.format(name))
 
 
 def test_dstn_rgb_on_varying_brightness():
-    original_data_by_band = image_data_by_band('../test_examples/example_e.fits')
+    original_data_by_band = image_data_by_band('python/test_examples/example_e.fits')
     data_up_20pc = [band * 2. for band in original_data_by_band]
     data_down_20pc = [band * 0.5 for band in original_data_by_band]
 
@@ -80,7 +80,7 @@ def test_dstn_rgb_on_varying_brightness():
 
 
 def test_decals_on_varying_brightness():
-    original_data_by_band = image_data_by_band('../test_examples/example_e.fits')
+    original_data_by_band = image_data_by_band('python/test_examples/example_e.fits')
     data_up_20pc = [band * 2. for band in original_data_by_band]
     data_down_20pc = [band * 0.5 for band in original_data_by_band]
 
@@ -91,7 +91,7 @@ def test_decals_on_varying_brightness():
 
 
 def test_lupton_on_varying_brightness():
-    original_data_by_band = image_data_by_band('../test_examples/example_e.fits')
+    original_data_by_band = image_data_by_band('python/test_examples/example_e.fits')
     data_up_20pc = [band * 2. for band in original_data_by_band]
     data_down_20pc = [band * 0.5 for band in original_data_by_band]
 

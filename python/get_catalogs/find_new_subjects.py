@@ -47,8 +47,6 @@ def find_new_catalog_images(old_catalog, new_catalog):
     new_catalog['galaxy_is_new'] = galaxy_is_new
     new_catalog['galaxy_is_updated'] = galaxy_is_updated
 
-    print(new_catalog[['iauname', 'galaxy_is_new', 'galaxy_is_updated']])
-
     return new_catalog[galaxy_is_new | galaxy_is_updated]
 
 

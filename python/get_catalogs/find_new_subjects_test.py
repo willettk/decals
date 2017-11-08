@@ -2,7 +2,7 @@ import pytest
 
 from astropy.table import Table
 
-from python.get_catalogs.find_new_subjects import fits_are_identical, find_new_catalog_images
+from get_catalogs.find_new_subjects import fits_are_identical, find_new_catalog_images
 
 
 @pytest.fixture()

@@ -1,6 +1,6 @@
 import pytest
 
-from python.get_images.download_images_threaded import *
+from get_images.download_images_threaded import *
 from astropy.table import Table
 
 
@@ -38,7 +38,7 @@ def fits_image_params(fits_download_loc):
 @pytest.fixture
 def nsa_decals(fits_dir, jpeg_dir):
 
-    test_example_dir = '../test_examples'
+    test_example_dir = 'python/test_examples'
 
     gal_missing = {
         'iauname': 'J094651.45-010228.5',
@@ -136,7 +136,7 @@ def test_get_download_quality_of_fits_on_missing_fits():
 
 
 def test_get_download_quality_of_fits_on_incomplete_fits():
-    incomplete_fits_loc = '../test_examples/example_incomplete.fits'
+    incomplete_fits_loc = 'python/test_examples/example_incomplete.fits'
     assert os.path.exists(incomplete_fits_loc)  # file exists
     downloaded, good_pix = get_download_quality_of_fits(incomplete_fits_loc)
     assert not downloaded  # file exists but is not completely downloaded
@@ -144,7 +144,7 @@ def test_get_download_quality_of_fits_on_incomplete_fits():
 
 
 def test_get_download_quality_of_fits_on_bad_pix_fits():
-    partial_fits_loc = '../test_examples/example_bad_pix.fits'
+    partial_fits_loc = 'python/test_examples/example_bad_pix.fits'
     assert os.path.exists(partial_fits_loc)
     downloaded, good_pix = get_download_quality_of_fits(partial_fits_loc)
     assert downloaded
@@ -152,7 +152,7 @@ def test_get_download_quality_of_fits_on_bad_pix_fits():
 
 
 def test_make_jpeg_from_fits_creates_jpeg(jpeg_loc):
-    fits_loc = '../test_examples/example_a.fits'
+    fits_loc = 'python/test_examples/example_a.fits'
     assert os.path.exists(fits_loc)  # check I use a real fits path
     make_jpeg_from_fits(fits_loc, jpeg_loc)
     assert os.path.exists(jpeg_loc)

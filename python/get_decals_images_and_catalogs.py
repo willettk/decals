@@ -8,10 +8,10 @@ from astropy.table import Table
 from astropy.io import fits
 import pandas as pd
 
-from python.get_catalogs.get_joint_nsa_decals_catalog import create_joint_catalog, get_nsa_catalog, get_decals_bricks, apply_selection_cuts
-from python.get_images.download_images_threaded import download_images_multithreaded, get_fits_loc
-from python.get_catalogs.previous_subjects import get_previous_subjects_with_nsa
-from python.get_catalogs.find_new_subjects import find_new_catalog_images
+from get_catalogs.get_joint_nsa_decals_catalog import create_joint_catalog, get_nsa_catalog, get_decals_bricks, apply_selection_cuts
+from get_images.download_images_threaded import download_images_multithreaded, get_fits_loc
+from get_catalogs.previous_subjects import get_previous_subjects_with_nsa
+from get_catalogs.find_new_subjects import find_new_catalog_images
 
 
 class Settings():
@@ -76,11 +76,12 @@ def get_decals(nsa, bricks, previous_subjects, s):
 
     if s.new_images:
         joint_catalog = download_images_multithreaded(
-            joint_catalog,
+            joint_catalog[:s.run_to],
             s.data_release,
             s.fits_dir,
             s.jpeg_dir,
-            overwrite=s.overwrite_existing_images)
+            overwrite_fits=s.overwrite_fits,
+            overwrite_jpeg=s.overwrite_jpeg)
         joint_catalog.write(s.joint_catalog_loc, overwrite=True)
 
     # add nsa info to previous gz subjects downloaded from data dump
@@ -112,22 +113,34 @@ def main():
     nondefault_params = {
         'data_release': data_release,
         'fits_dir': fits_dir,
-        'jpeg_dir': jpeg_dir
+        'jpeg_dir': jpeg_dir,
+        'nsa_version': '1_0_0'
     }
     s = Settings(**nondefault_params)
 
     # for safety, these settings must be separately specified
     s.new_catalog = True
     s.new_images = True
-    s.overwrite_existing_images = False
-    s.run_to = None
+    s.overwrite_fits = False
+    s.overwrite_jpeg = False
+    s.run_to = 100
 
     nsa = get_nsa_catalog(s.nsa_catalog_loc)
     bricks = get_decals_bricks(s.bricks_loc, s.data_release)
     previous_subjects = pd.read_csv(s.subject_loc)  # previously extracted decals subjects
 
     catalog_to_upload = get_decals(nsa, bricks, previous_subjects, s)
-    catalog_to_upload[['nsa_id', 'iauname', 'ra', 'dec', 'galaxy_is_new', 'galaxy_is_updated']].to_pandas().to_csv(s.upload_catalog_loc, index=False)
+
+    output_columns = ['nsa_id',
+                      'iauname',
+                      'ra',
+                      'dec',
+                      'galaxy_is_new',
+                      'galaxy_is_updated',
+                      'fits_ready',
+                      'fits_filled',
+                      'jpeg_ready']
+    catalog_to_upload[output_columns].to_pandas().to_csv(s.upload_catalog_loc, index=False)
 
 if __name__ == '__main__':
     main()

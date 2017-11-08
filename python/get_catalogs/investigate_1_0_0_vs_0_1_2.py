@@ -3,7 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from python.get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog, get_decals_bricks
+from get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog, get_decals_bricks
 
 data_release = '5'
 

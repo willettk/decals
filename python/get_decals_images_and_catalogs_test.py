@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from PIL import Image
 
-from python.get_decals_images_and_catalogs import *
+from get_decals_images_and_catalogs import *
 
 
 # @pytest.fixture()

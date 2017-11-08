@@ -10,13 +10,13 @@ from astropy.io import fits
 from astropy.table import Table
 from matplotlib import pyplot as plt
 
-from python.get_images.image_utils import dstn_rgb
+from get_images.image_utils import dstn_rgb
 from tqdm import tqdm
 
 min_pixelscale = 0.10
 
 
-def download_images_multithreaded(catalog, data_release, fits_dir, jpeg_dir, overwrite=False):
+def download_images_multithreaded(catalog, data_release, fits_dir, jpeg_dir, overwrite_fits, overwrite_jpeg):
     '''
     Multi-threaded analogy to get_decals_images_and_catalogs.py downloads
 
@@ -25,11 +25,10 @@ def download_images_multithreaded(catalog, data_release, fits_dir, jpeg_dir, ove
         data_release (str): DECALS data release e.g. '3'
         fits_dir (str): directory to save fits files
         jpeg_dir (str): directory to save jpeg files
-        overwrite (bool): if [default=False], overwrite existing fits and jpeg. Else, skip.
-
+        overwrite_fits (bool): if True, force new fits download.
+        overwrite_jpeg (bool): if True, force new jpeg download.
     Returns:
-        (list) catalog index of galaxies which timed out
-        (list) catalog index of galaxies with bad pixels
+        (astropy.Table) catalog with new columns for fits/jpeg locations and quality checks
     '''
 
     # Table does not support .apply - use list comprehension instead
@@ -40,12 +39,13 @@ def download_images_multithreaded(catalog, data_release, fits_dir, jpeg_dir, ove
 
     download_params = {
         'data_release': data_release,
-        'overwrite': overwrite,
+        'overwrite_fits': overwrite_fits,
+        'overwrite_jpeg': overwrite_jpeg,
         'pbar': pbar
     }
     download_images_partial = functools.partial(download_images, **download_params)
 
-    pool = ThreadPool(10)
+    pool = ThreadPool(30)
     pool.map(download_images_partial, catalog)
     pbar.close()
     pool.close()
@@ -61,7 +61,7 @@ def download_images_multithreaded(catalog, data_release, fits_dir, jpeg_dir, ove
     return catalog
 
 
-def download_images(galaxy, data_release, overwrite=False, pbar=None, max_attempts=5):
+def download_images(galaxy, data_release, overwrite_fits=False, overwrite_jpeg=False, pbar=None, max_attempts=5):
     '''
     Download a multi-plane FITS image from the DECaLS skyserver
     Write multi-plane FITS images to separate files for each band
@@ -86,7 +86,7 @@ def download_images(galaxy, data_release, overwrite=False, pbar=None, max_attemp
 
     # Download multi-band fits images
     # TODO could report a dictionary from fits_downloaded_correctly
-    if not fits_downloaded_correctly(fits_loc) or overwrite is True:
+    if not fits_downloaded_correctly(fits_loc) or overwrite_fits:
         attempt = 0
         downloaded = False
         while attempt < max_attempts:
@@ -99,7 +99,7 @@ def download_images(galaxy, data_release, overwrite=False, pbar=None, max_attemp
                 print(err, 'on galaxy {}, attempt {}'.format(galaxy['iauname'], attempt))
                 attempt += 1
 
-        if downloaded:
+        if downloaded or overwrite_jpeg:
             try:
                 # Create artistic jpeg for Galaxy Zoo from the new FITS
                 make_jpeg_from_fits(fits_loc, jpeg_loc)
@@ -148,10 +148,10 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixsc
 
     Args:
         fits_loc (str): location to save file, excluding type e.g. /data/fits/test_image.fits
-        ra (float): right ascension (corner? center?)
-        dec (float): declination (corner? center?)
+        ra (float): right ascension (center)
+        dec (float): declination (center)
         pixscale (float): proportional to decals pixels vs. image pixels. 0.262 for 1-1 map.
-        size (int): image edge length in pixels
+        size (int): image edge length in pixels. Default 424 to match GZ2, but consider 512.
 
     Returns:
         None
@@ -174,7 +174,7 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixsc
 
 def make_jpeg_from_fits(fits_loc, jpeg_loc):
     '''
-    Create artistically-scaled JPG from multi-band FITS using Dustin Lang's method
+    Create artistically-scaled JPG from multi-band FITS
 
     Args:
         fits_loc (str): location of FITS to read
@@ -205,18 +205,6 @@ def make_jpeg_from_fits(fits_loc, jpeg_loc):
         scales=_scales,
         desaturate=True)
     plt.imsave(jpeg_loc, rgbimg, origin='lower')
-
-    badmax = 0.
-    for j in range(img.shape[0]):
-        band = img[j, :, :]
-        nbad = (band == 0.).sum() + np.isnan(band).sum()  # count of bad pixels in band
-        fracbad = nbad / np.prod(band.shape)  # fraction of bad pixels in band
-        badmax = max(badmax, fracbad)  # update worst band fraction
-
-    if badmax < 0.2:  # if worst fraction of bad pixels is < 0.2, consider image as 'good'
-        return True
-    else:
-        return False
 
 
 def check_images_are_downloaded(catalog):
@@ -301,8 +289,8 @@ def few_missing_pixels(img, badmax_limit):
 
 if __name__ == '__main__':
     data_release = '3'
-    # nsa_version = '1_0_0'
-    nsa_version = '0_1_2'
+    nsa_version = '1_0_0'
+    # nsa_version = '0_1_2'
     fits_dir = '../../fits/nsa/dr3'
     jpeg_dir = '../../jpeg/dr3'
     nsa_decals = Table(fits.getdata(

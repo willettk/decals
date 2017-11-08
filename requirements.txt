@@ -1,0 +1,8 @@
+numpy
+scipy
+astropy
+pandas
+pytest
+tqdm
+matplotlib
+pillow

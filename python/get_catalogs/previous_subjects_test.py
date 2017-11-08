@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from astropy.table import Table
 
-from python.get_catalogs.previous_subjects import *
+from get_catalogs.previous_subjects import *
 
 
 @pytest.fixture()

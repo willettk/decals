@@ -5,7 +5,7 @@ import astropy.table
 
 from tqdm import tqdm
 
-from python.get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog
+from get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog
 
 # TODO move this prep. work into another file
 
