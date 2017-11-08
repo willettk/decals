@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use('Agg')
+
 import pytest
 
 from get_images.download_images_threaded import *

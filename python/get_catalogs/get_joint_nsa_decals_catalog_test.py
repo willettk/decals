@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use('Agg')
+
 import pytest
 
 from get_catalogs.get_joint_nsa_decals_catalog import *
