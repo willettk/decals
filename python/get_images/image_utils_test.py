@@ -46,11 +46,6 @@ def dustin_creation_params():
         arcsinh=1.,
         bands='grz')
 
-# def test_dstn_rgb(image_data_by_band, jpeg_creation_params, jpeg_loc):
-#
-#     rgbimg = dstn_rgb(image_data_by_band, **jpeg_creation_params)
-#     plt.imsave(jpeg_loc, rgbimg, origin='lower')
-
 
 def plot_jpegs(jpegs, name):
     fig, axes = plt.subplots(1, 3)

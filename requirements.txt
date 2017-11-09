@@ -6,3 +6,5 @@ pytest
 tqdm
 matplotlib
 pillow
+coverage
+python-coveralls

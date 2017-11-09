@@ -1,6 +1,3 @@
-import matplotlib
-matplotlib.use('Agg')
-
 import pytest
 
 from astropy.table import Table

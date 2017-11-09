@@ -174,7 +174,7 @@ def get_rgb(imgs, bands, mnmx=None, arcsinh=None, scales=None,
     return rgb
 
 
-def nonlinear_map(x, arcsinh=1, clip=True):
+def nonlinear_map(x, arcsinh=1, sqrt=False):
     """
     Apply non-linear map to input matrix. Useful to rescale telescope pixels for viewing.
     Args:
@@ -184,10 +184,10 @@ def nonlinear_map(x, arcsinh=1, clip=True):
     Returns:
 
     """
-    return np.arcsinh(x * arcsinh) / np.sqrt(arcsinh)
+    return np.arcsinh(x * arcsinh)
 
 
-def lupton_rgb(imgs, bands='grz', arcsinh=.1):
+def lupton_rgb(imgs, bands='grz', arcsinh=1., mn=0.1, mx=100., sqrt=False):
     """
 
     Args:
@@ -212,22 +212,14 @@ def lupton_rgb(imgs, bands='grz', arcsinh=.1):
 
     I = img.sum(axis=2).reshape(424, 424, 1)
 
-    rescaling = nonlinear_map(I, arcsinh=arcsinh)/I
+    rescaling = nonlinear_map(I, arcsinh=arcsinh, sqrt=sqrt)/I
 
     rescaled_img = img * rescaling
 
-    # TODO still not sure of the best operations
-    # max_rgb = rescaled_img.max()
-    # if max_rgb > 1.:
-    #     return rescaled_img / max_rgb
-    # else:
-    #     return rescaled_img
+    # mn = nonlinear_map(mn, arcsinh=arcsinh, sqrt=sqrt)
+    # mx = nonlinear_map(mx, arcsinh=arcsinh, sqrt=sqrt)
 
-    mn, mx = 0.5, 100.
-    mn = nonlinear_map(mn)
-    mx = nonlinear_map(mx)
-
-    rescaled_img = (rescaled_img - mn) / (mx - mn)
+    rescaled_img = (rescaled_img - mn) * (mx - mn)
 
     clip = True
     if clip:

@@ -100,7 +100,7 @@ def get_decals(nsa, bricks, previous_subjects, s):
 
 def main():
     """
-    Run all steps to create the NSA-DECaLS-GZ catalog
+    Create the NSA-DECaLS-GZ catalog, download fits, produce jpeg, and identify new subjects
 
     Returns:
         None
@@ -123,7 +123,7 @@ def main():
     s.new_images = True
     s.overwrite_fits = False
     s.overwrite_jpeg = False
-    s.run_to = 100
+    s.run_to = 100000
 
     nsa = get_nsa_catalog(s.nsa_catalog_loc)
     bricks = get_decals_bricks(s.bricks_loc, s.data_release)
