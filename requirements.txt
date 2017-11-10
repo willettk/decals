@@ -8,3 +8,4 @@ matplotlib
 pillow
 coverage
 python-coveralls
+pytest-cov
