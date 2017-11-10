@@ -3,7 +3,7 @@ from astropy.io import fits
 from astropy.table import Table
 
 
-def merge_bricks_catalogs(data_release):
+def merge_bricks_catalogs(data_release, brick_coordinates_loc, brick_exposures_loc, brick_loc):
     '''
     DR3 has put brick exposure counts and brick coordinate edges in different tables (sad face).
     These tables need to be merged so that bricks with both good exposures and matching coordinates can be identified
@@ -11,12 +11,9 @@ def merge_bricks_catalogs(data_release):
     Returns:
         None
     '''
-    catalog_dir = '/data/galaxy_zoo/decals/catalogs/'
-    brick_coordinate_catalog_filename = 'survey-bricks-data_release{}-edges.fits'.format(data_release)
-    brick_exposures_catalog_filename = 'survey-bricks-data_release{}.fits'.format(data_release)
 
-    coordinate_catalog = Table(fits.getdata(catalog_dir + brick_coordinate_catalog_filename, 1))
-    exposure_catalog = Table(fits.getdata(catalog_dir + brick_exposures_catalog_filename, 1))
+    coordinate_catalog = Table(fits.getdata(brick_coordinates_loc, 1))
+    exposure_catalog = Table(fits.getdata(brick_exposures_loc, 1))
 
     # coordinate catalog has brick listing for whole survey - more bricks than have been imaged in DR3
     assert len(coordinate_catalog) > len(exposure_catalog)
@@ -35,7 +32,7 @@ def merge_bricks_catalogs(data_release):
     # check that all exposed bricks were 1-1 matched
     assert len(bricks_catalog) == len(exposure_catalog)
 
-    bricks_catalog.write(catalog_dir + 'survey-bricks-data_release{}-with-coordinates.fits'.format(data_release), overwrite=True)
+    bricks_catalog.write(brick_loc, overwrite=True)
 
 if __name__ == '__main__':
     data_release = '5'
