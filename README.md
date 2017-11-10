@@ -103,7 +103,7 @@ Run everything!
 
 Below is a diagram showing the steps performed. Filenames are the program defaults for a DR5 download.
 
-![flowchart](https://www.lucidchart.com/documents/embeddedchart/44b20689-7a72-4318-a37a-26e49046fb59)
+![flowchart](https://www.lucidchart.com/publicSegments/view/7a2db1ef-4fda-460a-9397-1cea25bd9451/image.jpeg)
 
 #### Known Issues
 
