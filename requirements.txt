@@ -1,0 +1,12 @@
+numpy
+scipy
+astropy
+pandas
+pytest
+tqdm
+matplotlib
+pillow
+coverage
+python-coveralls
+pytest-cov
+codecov
