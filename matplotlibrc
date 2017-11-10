@@ -1,0 +1,4 @@
+# Configuration for Matplotlib. Used when running tests from root directory, via automatic working directory search.
+
+# Travis CI has no XWindows backend, causing subplots to fail in TkAgg. Switch to Agg.
+backend      : Agg
