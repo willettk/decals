@@ -79,3 +79,5 @@ fits/nsa_not_gz/*fits
 fits/nsa_not_gz/*fits.gz
 fits/nsa_*fits
 fits/*.csv
+.cache
+*/.cache
