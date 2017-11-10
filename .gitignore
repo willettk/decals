@@ -81,3 +81,5 @@ fits/nsa_*fits
 fits/*.csv
 .cache
 */.cache
+.idea
+*/.idea
