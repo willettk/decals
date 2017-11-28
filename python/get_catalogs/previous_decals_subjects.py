@@ -1,10 +1,4 @@
-import json
-
 import pandas as pd
-import astropy.table
-
-from tqdm import tqdm
-
 from get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog
 
 

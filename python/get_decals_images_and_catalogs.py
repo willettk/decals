@@ -185,20 +185,22 @@ def main():
     """
 
     data_release = '5'
+    nsa_version = '1_0_0'
     fits_dir = '/data/galaxy_zoo/decals/fits/dr{}'.format(data_release)
     jpeg_dir = '/data/galaxy_zoo/decals/jpeg/dr{}'.format(data_release)
 
     nondefault_params = {
+        'nsa_version': nsa_version,
         'data_release': data_release,
         'fits_dir': fits_dir,
         'jpeg_dir': jpeg_dir,
-        'nsa_version': '1_0_0'
+
     }
     s = Settings(**nondefault_params)
 
     # specify setup options
-    s.merge_bricks = True
-    s.new_previous_subjects = True
+    s.merge_bricks = False
+    s.new_previous_subjects = False
 
     # Setup tasks generate the 'bricks' and 'previous subjects' data tables used later.
     # They need only be completed once after downloading the required files
@@ -206,10 +208,10 @@ def main():
 
     # specify execution options
     s.new_catalog = True
-    s.new_images = True
+    s.new_images = False
     s.overwrite_fits = False
     s.overwrite_jpeg = False
-    s.run_to = 100
+    s.run_to = -1
 
     nsa = get_nsa_catalog(s.nsa_catalog_loc)
     bricks = get_decals_bricks(s.bricks_loc, s.data_release)
@@ -222,10 +224,15 @@ def main():
                       'ra',
                       'dec',
                       'galaxy_is_new',
-                      'galaxy_is_updated',
-                      'fits_ready',
-                      'fits_filled',
-                      'jpeg_ready']
+                      'galaxy_is_updated']
+
+    if s.new_images:
+        output_columns.append([
+            'fits_ready',
+            'fits_filled',
+            'jpeg_ready'
+        ])
+
     catalog_to_upload[output_columns].to_pandas().to_csv(s.upload_catalog_loc, index=False)
 
 if __name__ == '__main__':
