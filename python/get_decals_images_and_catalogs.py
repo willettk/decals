@@ -186,15 +186,16 @@ def main():
 
     data_release = '5'
     nsa_version = '1_0_0'
-    fits_dir = '/data/galaxy_zoo/decals/fits/dr{}'.format(data_release)
-    jpeg_dir = '/data/galaxy_zoo/decals/jpeg/dr{}'.format(data_release)
+    # fits_dir = '/data/galaxy_zoo/decals/fits/dr{}'.format(data_release)
+    # jpeg_dir = '/data/galaxy_zoo/decals/jpeg/dr{}'.format(data_release)
+    fits_dir = '/Volumes/external/decals/fits/dr{}'.format(data_release)
+    jpeg_dir = '/Volumes/external/decals/jpeg/dr{}'.format(data_release)
 
     nondefault_params = {
         'nsa_version': nsa_version,
         'data_release': data_release,
         'fits_dir': fits_dir,
         'jpeg_dir': jpeg_dir,
-
     }
     s = Settings(**nondefault_params)
 
@@ -207,8 +208,8 @@ def main():
     setup_tables(s)
 
     # specify execution options
-    s.new_catalog = True
-    s.new_images = False
+    s.new_catalog = False
+    s.new_images = True
     s.overwrite_fits = False
     s.overwrite_jpeg = False
     s.run_to = -1
