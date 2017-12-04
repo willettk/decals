@@ -9,29 +9,29 @@ from make_calibration_images.get_calibration_catalog import get_expert_catalog_j
 from get_images import image_utils, download_images_threaded
 
 
-def make_calibration_images(calibration_catalog, jpeg_dir):
-
-    # equalise classes, or just use everything?
-    # TODO
+def make_calibration_images(calibration_catalog, calibration_dir, new_images=True):
 
     # make images with top 2 options selected from mosaic experiment
-    calibration_catalog['dr2_jpeg_loc'] = [get_dr2_jpeg_loc(jpeg_dir, galaxy) for galaxy in calibration_catalog]
-    calibration_catalog['colour_jpeg_loc'] = [get_colour_jpeg_loc(jpeg_dir, galaxy) for galaxy in calibration_catalog]
+    calibration_catalog['dr2_jpeg_loc'] = [get_dr2_jpeg_loc(calibration_dir, galaxy) for galaxy in calibration_catalog]
+    calibration_catalog['colour_jpeg_loc'] = [get_colour_jpeg_loc(calibration_dir, galaxy) for galaxy in calibration_catalog]
 
-    pbar = tqdm(total=len(calibration_catalog), unit=' image sets created')
+    if new_images:
+        pbar = tqdm(total=len(calibration_catalog), unit=' image sets created')
 
-    save_calibration_images_of_galaxy_partial = functools.partial(save_calibration_images_of_galaxy, **{'pbar': pbar})
+        save_calibration_images_of_galaxy_partial = functools.partial(save_calibration_images_of_galaxy, **{'pbar': pbar})
 
-    pool = ThreadPool(30)
-    pool.map(save_calibration_images_of_galaxy_partial, calibration_catalog)
-    pbar.close()
-    pool.close()
-    pool.join()
+        pool = ThreadPool(30)
+        pool.map(save_calibration_images_of_galaxy_partial, calibration_catalog)
+        pbar.close()
+        pool.close()
+        pool.join()
+
+    return calibration_catalog
 
 
 def save_calibration_images_of_galaxy(galaxy, pbar=None):
     # TODO temporary fix, need to rethink the image location labelling to happen outside actual download run
-    fits_dir = '/data/galaxy_zoo/decals/fits/dr5'
+    fits_dir = '/Volumes/external/decals/fits/dr5'
     fits_loc = download_images_threaded.get_fits_loc(fits_dir, galaxy)
     try:
         img_data = fits.getdata(fits_loc)
@@ -40,7 +40,6 @@ def save_calibration_images_of_galaxy(galaxy, pbar=None):
         if pbar:
             pbar.update()
         return None
-    print('fits loaded')
 
     dr2_img = get_dr2_style_image(img_data)
     colour_img = get_colour_style_image(img_data)
@@ -86,6 +85,6 @@ def get_colour_jpeg_loc(jpeg_dir, galaxy):
 
 if __name__ == '__main__':
     # TODO should use the catalog including metadata not raw joint
-    calibration_catalog = get_expert_catalog_joined_with_decals()[:50]
+    calibration_catalog = get_expert_catalog_joined_with_decals()
     print(calibration_catalog.columns.values)
-    make_calibration_images(calibration_catalog, '/data/galaxy_zoo/decals/jpeg/calibration')
+    make_calibration_images(calibration_catalog, '/Volumes/external/decals/jpeg/calibration')

@@ -6,12 +6,10 @@ import pandas as pd
 from astropy.io import fits
 from astropy.table import Table
 
+from get_catalogs.get_joint_nsa_decals_catalog import create_joint_catalog, get_nsa_catalog, get_decals_bricks, apply_selection_cuts
+from get_images.download_images_threaded import download_images_multithreaded
 from setup.filter_decals_from_previous_subjects import save_decals_subjects_from_subject_data_dump
 from setup.join_brick_tables import merge_bricks_catalogs
-from get_catalogs.find_new_subjects import find_new_catalog_images
-from get_catalogs.get_joint_nsa_decals_catalog import create_joint_catalog, get_nsa_catalog, get_decals_bricks, apply_selection_cuts
-from get_catalogs.previous_decals_subjects import get_previous_subjects_with_nsa
-from get_images.download_images_threaded import download_images_multithreaded, get_fits_loc
 
 
 class Settings():
@@ -129,7 +127,7 @@ def setup_tables(s):
         save_decals_subjects_from_subject_data_dump(all_subjects_loc, decals_subject_loc)
 
 
-def get_decals(nsa, bricks, previous_subjects, s):
+def get_decals(nsa, bricks, s):
     """
     Find NSA galaxies imaged by DECALS. Download fits. Create RGB jpegs. Return catalog of new galaxies.
 
@@ -162,18 +160,7 @@ def get_decals(nsa, bricks, previous_subjects, s):
             overwrite_jpeg=s.overwrite_jpeg)
         joint_catalog.write(s.joint_catalog_loc, overwrite=True)
 
-    # add nsa info to previous gz subjects downloaded from data dump
-    previous_galaxy_zoo_with_nsa = get_previous_subjects_with_nsa(previous_subjects, nsa)
-
-    # find_new_catalog_images expects two Table catalogs
-    # galaxy zoo catalog should include where the FITS would be
-    previous_galaxy_zoo_with_nsa['fits_loc'] = [get_fits_loc(s.catalog_dir, galaxy) for _, galaxy in previous_galaxy_zoo_with_nsa.iterrows()]
-    # TODO a bit messy - I need to settle on astropy vs. pandas as soon as I get to metadata stage
-    previous_galaxy_zoo_with_nsa = [row.to_dict() for _, row in previous_galaxy_zoo_with_nsa.iterrows()]  # neaten
-    previous_galaxy_zoo_with_nsa = Table(previous_galaxy_zoo_with_nsa)
-
-    # compare DR{} with previous subjects to see what's new
-    return find_new_catalog_images(old_catalog=previous_galaxy_zoo_with_nsa, new_catalog=joint_catalog)
+    return joint_catalog
 
 
 def main():
@@ -186,8 +173,6 @@ def main():
 
     data_release = '5'
     nsa_version = '1_0_0'
-    # fits_dir = '/data/galaxy_zoo/decals/fits/dr{}'.format(data_release)
-    # jpeg_dir = '/data/galaxy_zoo/decals/jpeg/dr{}'.format(data_release)
     fits_dir = '/Volumes/external/decals/fits/dr{}'.format(data_release)
     jpeg_dir = '/Volumes/external/decals/jpeg/dr{}'.format(data_release)
 
@@ -216,16 +201,14 @@ def main():
 
     nsa = get_nsa_catalog(s.nsa_catalog_loc)
     bricks = get_decals_bricks(s.bricks_loc, s.data_release)
-    previous_subjects = pd.read_csv(s.subject_loc)  # previously extracted decals subjects
 
-    catalog_to_upload = get_decals(nsa, bricks, previous_subjects, s)
+    joint_catalog = get_decals(nsa, bricks, s)
 
     output_columns = ['nsa_id',
                       'iauname',
                       'ra',
-                      'dec',
-                      'galaxy_is_new',
-                      'galaxy_is_updated']
+                      'dec'
+                      ]
 
     if s.new_images:
         output_columns.append([
@@ -234,7 +217,7 @@ def main():
             'jpeg_ready'
         ])
 
-    catalog_to_upload[output_columns].to_pandas().to_csv(s.upload_catalog_loc, index=False)
+    joint_catalog[output_columns].to_pandas().to_csv(s.upload_catalog_loc, index=False)
 
 if __name__ == '__main__':
     main()

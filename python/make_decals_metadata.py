@@ -29,9 +29,9 @@ def get_key_astrophysical_columns(catalog):
     ]
     # TODO use hstack
     for col in columns_to_copy:
-        t[col] = nsa_decals[col]
+        t[col] = catalog[col]
 
-    size = calculate_sizes_in_kpc(nsa_decals)
+    size = calculate_sizes_in_kpc(catalog)
     t['absolute_size'] = size.value
 
     mag = get_extinction_corrected_magnitudes(catalog)
@@ -55,7 +55,7 @@ def get_key_astrophysical_columns(catalog):
     fluxarr = get_r_flux(catalog)
     t['petroflux'] = fluxarr
 
-    t['redshift'] = nsa_decals['z']
+    t['redshift'] = catalog['z']
 
     return t
 
@@ -69,14 +69,14 @@ def get_r_magnitude(catalog):
 
 def get_extinction_corrected_magnitudes(catalog):
     # nmgy: Galactic - extinction corrected AB flux used for K - correction(from SERSICFLUX) in FNugriz
-    mag = 22.5 - 2.5 * np.log10(nsa_decals['nmgy']).astype(float)
+    mag = 22.5 - 2.5 * np.log10(catalog['nmgy']).astype(float)
     mag[~np.isfinite(mag)] = -99.
     return mag
 
 
 def get_r_flux(catalog):
     # Azimuthally - averaged SDSS - style Petrosian flux in FNugriz
-    fluxarr = nsa_decals['petroflux'][:, 4].astype(float)
+    fluxarr = catalog['petroflux'][:, 4].astype(float)
     return fluxarr
 
 

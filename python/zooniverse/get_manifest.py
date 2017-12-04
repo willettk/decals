@@ -14,3 +14,4 @@ def get_manifest(key_data):
     # for imgtype in ('standard', 'inverted', 'thumbnail'):
     #     lst = url_stub + '/{0}/'.format(imgtype) + nsa_decals['iauname'] + '.jpeg'
     #     t['location.{0}'.format(imgtype)] = lst
+

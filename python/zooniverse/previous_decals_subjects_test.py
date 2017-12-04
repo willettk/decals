@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from astropy.table import Table
 
-from get_catalogs.previous_decals_subjects import *
+from zooniverse.previous_decals_subjects import *
 
 
 @pytest.fixture()

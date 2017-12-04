@@ -1,8 +1,7 @@
 import pytest
-
 from astropy.table import Table
 
-from get_catalogs.find_new_subjects import fits_are_identical, find_new_catalog_images
+from zooniverse.find_new_subjects import fits_are_identical, find_new_catalog_images
 
 
 TEST_DIR = 'python/test_examples'

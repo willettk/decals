@@ -4,22 +4,20 @@ from astropy.io import fits
 import pandas as pd
 
 import matplotlib.pyplot as plt
-import datashader as ds
-import datashader.transfer_functions as tf
-from datashader.utils import export_image
+# import datashader as ds
+# import datashader.transfer_functions as tf
+# from datashader.utils import export_image
 
 
-def get_expert_catalog_joined_with_decals():
-    catalog_dir = '/data/galaxy_zoo/decals/catalogs'
-    joint_columns = [
-        'nsa_id',
-        'iauname',
-        'ra',
-        'dec']
+def get_expert_catalog_joined_with_decals(joint_catalog, expert_catalog):
 
-    expert_catalog = get_expert_catalog()
-
-    joint_catalog = Table(fits.getdata('{}/nsa_v1_0_0_decals_dr5.fits'.format(catalog_dir)))[joint_columns]
+    # joint_columns = [
+    #     'nsa_id',
+    #     'iauname',
+    #     'ra',
+    #     'dec']
+    #
+    # joint_catalog = joint_catalog[joint_columns]
     joint_catalog['iauname_1dp'] = joint_catalog['iauname']
 
     output_catalog = join(joint_catalog, expert_catalog, keys='iauname_1dp', join_type='inner', table_names=['joint', 'expert'])
@@ -38,9 +36,9 @@ def get_expert_catalog_joined_with_decals():
     return output_catalog
 
 
-def get_expert_catalog():
+def get_expert_catalog(expert_catalog_loc):
 
-    catalog = Table(fits.getdata('/data/galaxy_zoo/decals/catalogs/nair_sdss_catalog.fit'))
+    catalog = Table(fits.getdata(expert_catalog_loc))
 
     # convert column names to be consistent with nsa
     for column_name in catalog.colnames:
@@ -55,21 +53,21 @@ def get_expert_catalog():
     return catalog
 
 
-def plot_joint_and_expert_overlap(joint_catalog, expert_catalog):
-
-    joint_to_plot = joint_catalog[['ra', 'dec']].to_pandas()
-    joint_to_plot['catalog'] = 'joint'
-    expert_to_plot = expert_catalog[['_ra', '_de']].to_pandas()
-    expert_to_plot.rename(columns={'_ra': 'ra', '_de': 'dec'}, inplace=True)
-    expert_to_plot['catalog'] = 'expert'
-
-    df_to_plot = pd.concat([joint_to_plot] + [expert_to_plot for n in range(int(len(joint_to_plot)/len(expert_to_plot)))])
-    df_to_plot['catalog'] = df_to_plot['catalog'].astype('category')
-
-    canvas = ds.Canvas(plot_width=300, plot_height=300)
-    aggc = canvas.points(df_to_plot, 'ra', 'dec', ds.count_cat('catalog'))
-    img = tf.shade(aggc)
-    export_image(img, 'locations_datashader_overlaid')
+# def plot_joint_and_expert_overlap(joint_catalog, expert_catalog):
+#
+#     joint_to_plot = joint_catalog[['ra', 'dec']].to_pandas()
+#     joint_to_plot['catalog'] = 'joint'
+#     expert_to_plot = expert_catalog[['_ra', '_de']].to_pandas()
+#     expert_to_plot.rename(columns={'_ra': 'ra', '_de': 'dec'}, inplace=True)
+#     expert_to_plot['catalog'] = 'expert'
+#
+#     df_to_plot = pd.concat([joint_to_plot] + [expert_to_plot for n in range(int(len(joint_to_plot)/len(expert_to_plot)))])
+#     df_to_plot['catalog'] = df_to_plot['catalog'].astype('category')
+#
+#     canvas = ds.Canvas(plot_width=300, plot_height=300)
+#     aggc = canvas.points(df_to_plot, 'ra', 'dec', ds.count_cat('catalog'))
+#     img = tf.shade(aggc)
+#     export_image(img, 'locations_datashader_overlaid')
 
 
 def decode_bar_ints(encoded_int):
@@ -116,7 +114,7 @@ def ring_int_label_to_str(ring_int_label):
 
 
 def save_output_catalog_statistics(output_catalog):
-    output_catalog = output_catalog.to_pandas()
+    output_catalog = output_catalog[['tt', 'has_bar', 'has_ring']].to_pandas()
 
     output_catalog['tt'].value_counts().sort_index().plot(kind='bar')
     plt.ylabel('Count')
