@@ -94,9 +94,6 @@ if __name__ == '__main__':
     nsa_decals = Table(
         fits.getdata('/data/galaxy_zoo/decals/catalogs/nsa_v{}_decals_dr{}.fits'.format(nsa_version, data_release), 1))
 
-    # print(nsa_decals.colnames)
-    print(nsa_decals[0])
-
     key_data = get_key_astrophysical_columns(nsa_decals)
 
     # Check format and content

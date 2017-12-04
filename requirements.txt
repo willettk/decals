@@ -10,3 +10,4 @@ coverage
 python-coveralls
 pytest-cov
 codecov
+datashader
