@@ -1,5 +1,3 @@
-from astroquery.vizier import Vizier
-
 import numpy as np
 from astropy.table import Table, join
 from astropy.io import fits
@@ -9,7 +7,6 @@ import matplotlib.pyplot as plt
 import datashader as ds
 import datashader.transfer_functions as tf
 from datashader.utils import export_image
-import seaborn as sns
 
 
 def get_expert_catalog_joined_with_decals():
