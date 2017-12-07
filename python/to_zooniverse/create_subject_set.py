@@ -1,17 +1,14 @@
-
+import ast
 import functools
 from multiprocessing.dummy import Pool as ThreadPool
-import ast
-import pandas as pd
-from tqdm import tqdm
+
 import astropy.table
-
+import pandas as pd
 from panoptes_client import Panoptes, Project, SubjectSet, Subject
+from tqdm import tqdm
 
+from download_decals.get_images.download_images_threaded import get_jpeg_loc
 from make_decals_metadata import get_key_astrophysical_columns
-
-# TODO temporary fix
-from get_images.download_images_threaded import get_jpeg_loc
 
 
 def create_prototype_subject_set(catalog_of_new, calibration_catalog):

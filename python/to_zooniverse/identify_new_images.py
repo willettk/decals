@@ -1,10 +1,9 @@
 # from astropy.io import fits
 from astropy.table import Table
 
-from get_images.download_images_threaded import get_fits_loc
-
-from zooniverse.previous_decals_subjects import get_previous_subjects_with_nsa
-from zooniverse.find_new_subjects import find_new_catalog_images
+from download_decals.get_images.download_images_threaded import get_fits_loc
+from find_new_subjects import find_new_catalog_images
+from previous_decals_subjects import get_previous_subjects_with_nsa
 
 
 def get_new_images(joint_catalog, previous_subjects, nsa_catalog):

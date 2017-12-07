@@ -1,7 +1,9 @@
 import pytest
+from astropy.table import Table
 
 from get_images.download_images_threaded import *
-from astropy.table import Table
+
+TEST_EXAMPLES_DIR = 'test_examples'
 
 
 @pytest.fixture
@@ -38,8 +40,6 @@ def fits_image_params(fits_download_loc):
 @pytest.fixture
 def nsa_decals(fits_dir, jpeg_dir):
 
-    test_example_dir = 'python/test_examples'
-
     gal_missing = {
         'iauname': 'J094651.45-010228.5',
         'fits_loc': '{}/example_missing.fits'.format(fits_dir),
@@ -51,8 +51,8 @@ def nsa_decals(fits_dir, jpeg_dir):
 
     gal_incomplete = {
         'iauname': 'J094651.45-010228.5',
-        'fits_loc': '{}/example_incomplete.fits'.format(test_example_dir),
-        'jpeg_loc': '{}/example_incomplete.jpeg'.format(test_example_dir),
+        'fits_loc': '{}/example_incomplete.fits'.format(TEST_EXAMPLES_DIR),
+        'jpeg_loc': '{}/example_incomplete.jpeg'.format(TEST_EXAMPLES_DIR),
         'ra': 146.714208787,
         'dec': -1.04128156958,
         'petroth50': 3.46419,
@@ -60,8 +60,8 @@ def nsa_decals(fits_dir, jpeg_dir):
 
     gal_bad_pix = {
         'iauname': 'J094651.45-010258.5',
-        'fits_loc': '{}/example_bad_pix.fits'.format(test_example_dir),
-        'jpeg_loc': '{}/example_bad_pix.jpeg'.format(test_example_dir),
+        'fits_loc': '{}/example_bad_pix.fits'.format(TEST_EXAMPLES_DIR),
+        'jpeg_loc': '{}/example_bad_pix.jpeg'.format(TEST_EXAMPLES_DIR),
         'ra': 146.714208787,
         'dec': -1.04128156958,
         'petroth50': 3.46419,
@@ -69,8 +69,8 @@ def nsa_decals(fits_dir, jpeg_dir):
 
     gal_a = {
         'iauname': 'J094651.40-010228.5',
-        'fits_loc': '{}/example_a.fits'.format(test_example_dir),
-        'jpeg_loc': '{}/example_a.jpeg'.format(test_example_dir),
+        'fits_loc': '{}/example_a.fits'.format(TEST_EXAMPLES_DIR),
+        'jpeg_loc': '{}/example_a.jpeg'.format(TEST_EXAMPLES_DIR),
         'ra': 146.714208787,
         'dec': -1.04128156958,
         'petroth50': 3.46419,
@@ -78,8 +78,8 @@ def nsa_decals(fits_dir, jpeg_dir):
 
     gal_b = {
         'iauname': 'J094631.60-005917.7',
-        'fits_loc': '{}/example_b.fits'.format(test_example_dir),
-        'jpeg_loc': '{}/example_b.jpeg'.format(test_example_dir),
+        'fits_loc': '{}/example_b.fits'.format(TEST_EXAMPLES_DIR),
+        'jpeg_loc': '{}/example_b.jpeg'.format(TEST_EXAMPLES_DIR),
         'ra': 146.631735209,
         'dec': -0.988354858412,
         'petroth50': 2.28976,
@@ -87,8 +87,8 @@ def nsa_decals(fits_dir, jpeg_dir):
 
     gal_c = {
         'iauname': 'J094842.33-002114.4',
-        'fits_loc': '{}/example_c.fits'.format(test_example_dir),
-        'jpeg_loc': '{}/example_c.jpeg'.format(test_example_dir),
+        'fits_loc': '{}/example_c.fits'.format(TEST_EXAMPLES_DIR),
+        'jpeg_loc': '{}/example_c.jpeg'.format(TEST_EXAMPLES_DIR),
         'ra': 147.176446949,
         'dec': -0.354030416643,
         'petroth50': 7.16148,
@@ -136,7 +136,7 @@ def test_get_download_quality_of_fits_on_missing_fits():
 
 
 def test_get_download_quality_of_fits_on_incomplete_fits():
-    incomplete_fits_loc = 'python/test_examples/example_incomplete.fits'
+    incomplete_fits_loc = '{}/example_incomplete.fits'.format(TEST_EXAMPLES_DIR)
     assert os.path.exists(incomplete_fits_loc)  # file exists
     downloaded, good_pix = get_download_quality_of_fits(incomplete_fits_loc)
     assert not downloaded  # file exists but is not completely downloaded
@@ -144,7 +144,7 @@ def test_get_download_quality_of_fits_on_incomplete_fits():
 
 
 def test_get_download_quality_of_fits_on_bad_pix_fits():
-    partial_fits_loc = 'python/test_examples/example_bad_pix.fits'
+    partial_fits_loc = '{}/example_bad_pix.fits'.format(TEST_EXAMPLES_DIR)
     assert os.path.exists(partial_fits_loc)
     downloaded, good_pix = get_download_quality_of_fits(partial_fits_loc)
     assert downloaded
@@ -152,7 +152,7 @@ def test_get_download_quality_of_fits_on_bad_pix_fits():
 
 
 def test_make_jpeg_from_fits_creates_jpeg(jpeg_loc):
-    fits_loc = 'python/test_examples/example_a.fits'
+    fits_loc = '{}/example_a.fits'.format(TEST_EXAMPLES_DIR)
     assert os.path.exists(fits_loc)  # check I use a real fits path
     make_jpeg_from_fits(fits_loc, jpeg_loc)
     assert os.path.exists(jpeg_loc)

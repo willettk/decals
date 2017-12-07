@@ -1,7 +1,7 @@
-import pytest
-
 import os
+
 import numpy as np
+import pytest
 from PIL import Image
 
 from get_decals_images_and_catalogs import *
@@ -74,19 +74,30 @@ def nsa():
             'z': .01
         },
 
-        {
-            'iauname': 'iau_previous_dr1_subject',
-            'nsa_id': '4',
-            'ra': 10.,
-            'dec': -1.,
-            'petrotheta': 4.,
-            'petroth50': 3.5,
-            'petroth90': 10.,
-            'z': .01
-        },
+        # {
+        #     'iauname': 'iau_previous_dr1_subject',
+        #     'nsa_id': '4',
+        #     'ra': 10.,
+        #     'dec': -1.,
+        #     'petrotheta': 4.,
+        #     'petroth50': 3.5,
+        #     'petroth90': 10.,
+        #     'z': .01
+        # },
+        #
+        # {
+        #     'iauname': 'iau_previous_dr2_subject',
+        #     'nsa_id': '5',
+        #     'ra': 10.,
+        #     'dec': -1.,
+        #     'petrotheta': 4.,
+        #     'petroth50': 3.5,
+        #     'petroth90': 10.,
+        #     'z': .01
+        # },
 
         {
-            'iauname': 'iau_previous_dr2_subject',
+            'iauname': 'iau_good_subject',
             'nsa_id': '5',
             'ra': 10.,
             'dec': -1.,
@@ -96,16 +107,16 @@ def nsa():
             'z': .01
         },
 
-        {
-            'iauname': 'iau_new_subject',
-            'nsa_id': '6',
-            'ra': 10.,
-            'dec': -1.,
-            'petrotheta': 4.,
-            'petroth50': 3.5,
-            'petroth90': 10.,
-            'z': 0.01
-        }
+        # {
+        #     'iauname': 'iau_new_subject',
+        #     'nsa_id': '6',
+        #     'ra': 10.,
+        #     'dec': -1.,
+        #     'petrotheta': 4.,
+        #     'petroth50': 3.5,
+        #     'petroth90': 10.,
+        #     'z': 0.01
+        # }
     ])
 
 
@@ -178,7 +189,7 @@ def settings(catalog_dir, fits_dir, jpeg_dir):
     return Settings(**nondefault_params)
 
 
-def test_get_decals(nsa, bricks, previous_subjects, settings):
+def test_get_decals(nsa, bricks, settings):
 
     # for safety, these settings must be separately specified
     settings.new_catalog = True
@@ -187,15 +198,15 @@ def test_get_decals(nsa, bricks, previous_subjects, settings):
     settings.overwrite_jpeg = True
     settings.run_to = None
 
-    catalog = get_decals(nsa, bricks, previous_subjects, settings)
+    catalog = get_decals(nsa, bricks, settings)
 
     remaining_names = set(catalog['iauname'])
     assert 'iau_small' not in remaining_names
     assert 'iau_below_bricks' not in remaining_names
     assert 'iau_outside_bricks' not in remaining_names
-    assert 'iau_previous_dr1_subject' not in remaining_names
-    assert 'iau_previous_dr2_subject' not in remaining_names
-    assert 'iau_new_subject' in remaining_names
+    # assert 'iau_previous_dr1_subject' not in remaining_names
+    # assert 'iau_previous_dr2_subject' not in remaining_names
+    assert 'iau_good_subject' in remaining_names
     assert 'iau_far' in remaining_names  # redshift filtering is currently off
 
     new_subject = catalog[0]

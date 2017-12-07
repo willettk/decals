@@ -1,17 +1,17 @@
+import functools
 import os
 import urllib.parse
 import urllib.request
-from multiprocessing.dummy import Pool as ThreadPool
-import functools
 import warnings
+from multiprocessing.dummy import Pool as ThreadPool
 
 import numpy as np
 from astropy.io import fits
 from astropy.table import Table
 from matplotlib import pyplot as plt
+from tqdm import tqdm
 
 from get_images.image_utils import dstn_rgb
-from tqdm import tqdm
 
 min_pixelscale = 0.10
 

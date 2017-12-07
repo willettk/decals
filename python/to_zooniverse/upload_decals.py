@@ -1,13 +1,12 @@
 import pandas as pd
-
 from astropy.io import fits
 from astropy.table import Table
 
-from zooniverse.identify_new_images import get_new_images
-from get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog
+from download_decals.get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog
 from make_calibration_images.get_calibration_catalog import get_expert_catalog, get_expert_catalog_joined_with_decals
 from make_calibration_images.get_calibration_images import make_calibration_images
-from zooniverse.create_subject_set import create_prototype_subject_set
+from to_zooniverse.create_subject_set import create_prototype_subject_set
+from to_zooniverse.identify_new_images import get_new_images
 
 
 def main():

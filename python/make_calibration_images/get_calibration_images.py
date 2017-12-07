@@ -1,12 +1,13 @@
-from multiprocessing.dummy import Pool as ThreadPool
 import functools
+from multiprocessing.dummy import Pool as ThreadPool
 
-from astropy.io import fits
 import matplotlib.pyplot as plt
+from astropy.io import fits
+from get_images import download_images_threaded
 from tqdm import tqdm
 
-from make_calibration_images.get_calibration_catalog import get_expert_catalog_joined_with_decals
-from get_images import image_utils, download_images_threaded
+from download_decals.get_images import image_utils
+from get_calibration_catalog import get_expert_catalog_joined_with_decals
 
 
 def make_calibration_images(calibration_catalog, calibration_dir, new_images=True):

@@ -1,6 +1,6 @@
 import pytest
 
-from make_calibration_images.get_calibration_catalog import decode_binary_mask
+from get_calibration_catalog import decode_binary_mask
 
 
 def test_decode_binary_mask():

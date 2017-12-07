@@ -1,9 +1,8 @@
 # Temporarily here
 
-import numpy as np
 import matplotlib.pyplot as plt
 
-from get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog, get_decals_bricks
+from download_decals.get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog, get_decals_bricks
 
 data_release = '5'
 
