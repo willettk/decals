@@ -6,6 +6,7 @@ pytest
 tqdm
 matplotlib
 pillow
+panoptes-client
 coverage
 python-coveralls
 pytest-cov

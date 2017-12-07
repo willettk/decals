@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from astropy.io import fits
 from tqdm import tqdm
 
-from download_decals.get_images import image_utils
+from get_images import image_utils
 
 
 def make_calibration_images(calibration_catalog, calibration_dir, new_images=True):
