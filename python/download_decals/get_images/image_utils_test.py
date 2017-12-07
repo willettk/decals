@@ -4,17 +4,17 @@ from astropy.io import fits
 
 from get_images.image_utils import dstn_rgb, get_rgb, lupton_rgb
 
-TEST_EXAMPLES_DIR = 'test_examples'
+TEST_EXAMPLES_DIR = 'python/test_examples'
 
 
 @pytest.fixture()
 def fits_loc():
-    return 'python/test_examples/example_a.fits'
+    return '{}/example_a.fits'.format(TEST_EXAMPLES_DIR)
 
 
 @pytest.fixture()
 def jpeg_loc():
-    return 'python/test_examples/test_output.jpg'
+    return '{}/test_output.jpg'.format(TEST_EXAMPLES_DIR)
 
 
 def image_data_by_band(fits_loc):

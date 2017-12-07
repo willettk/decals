@@ -3,7 +3,7 @@ from astropy.table import Table
 
 from get_images.download_images_threaded import *
 
-TEST_EXAMPLES_DIR = 'test_examples'
+TEST_EXAMPLES_DIR = 'python/test_examples'
 
 
 @pytest.fixture
