@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 # TODO should check that galaxy names are unique within each catalog, here and in unit tests
 
 
-def get_nsa_catalog(nsa_catalog_loc):
+def get_nsa_catalog(nsa_catalog_loc, nsa_version):
     '''
     Return the loaded NASA-Sloan Atlas catalog
 
@@ -28,6 +28,8 @@ def get_nsa_catalog(nsa_catalog_loc):
     for colname in nsa.colnames:
         nsa.rename_column(colname, colname.lower())
     nsa.rename_column('nsaid', 'nsa_id')
+
+    nsa['nsa_version'] = nsa_version
 
     return nsa
 

@@ -3,11 +3,9 @@ from multiprocessing.dummy import Pool as ThreadPool
 
 import matplotlib.pyplot as plt
 from astropy.io import fits
-from get_images import download_images_threaded
 from tqdm import tqdm
 
 from download_decals.get_images import image_utils
-from get_calibration_catalog import get_expert_catalog_joined_with_decals
 
 
 def make_calibration_images(calibration_catalog, calibration_dir, new_images=True):
@@ -31,13 +29,11 @@ def make_calibration_images(calibration_catalog, calibration_dir, new_images=Tru
 
 
 def save_calibration_images_of_galaxy(galaxy, pbar=None):
-    # TODO temporary fix, need to rethink the image location labelling to happen outside actual download run
-    fits_dir = '/Volumes/external/decals/fits/dr5'
-    fits_loc = download_images_threaded.get_fits_loc(fits_dir, galaxy)
+
     try:
-        img_data = fits.getdata(fits_loc)
+        img_data = fits.getdata(galaxy['fits_loc'])
     except:
-        print('no fits at ' + fits_loc)
+        print('no fits at ' + galaxy['fits_loc'])
         if pbar:
             pbar.update()
         return None
@@ -83,9 +79,3 @@ def get_dr2_jpeg_loc(jpeg_dir, galaxy):
 
 def get_colour_jpeg_loc(jpeg_dir, galaxy):
     return '{}/{}_colour.jpeg'.format(jpeg_dir, galaxy['iauname'])
-
-if __name__ == '__main__':
-    # TODO should use the catalog including metadata not raw joint
-    calibration_catalog = get_expert_catalog_joined_with_decals()
-    print(calibration_catalog.columns.values)
-    make_calibration_images(calibration_catalog, '/Volumes/external/decals/jpeg/calibration')

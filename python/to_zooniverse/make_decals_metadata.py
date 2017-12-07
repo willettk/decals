@@ -7,6 +7,7 @@
 # Equivalent to make_decals_metadata but for dr2. Minor changes to account for different data table.
 
 import os
+import warnings
 
 import numpy as np
 from astropy import units as u
@@ -17,7 +18,7 @@ from astropy.table import Table
 
 def get_key_astrophysical_columns(catalog):
 
-    t = Table()
+    key_data = Table()
 
     columns_to_copy = [
         'ra',
@@ -25,26 +26,30 @@ def get_key_astrophysical_columns(catalog):
         'nsa_id',
         'petroth50',
         'petrotheta',
-
+        'nsa_version'
     ]
-    # TODO use hstack
+
     for col in columns_to_copy:
-        t[col] = catalog[col]
+        try:
+            key_data[col] = catalog[col]
+        except:
+            pass
+            print(warnings.warn('Key metadata column "{}" missing; manifest incomplete'.format(col), UserWarning))
 
     size = calculate_sizes_in_kpc(catalog)
-    t['absolute_size'] = size.value
+    key_data['absolute_size'] = size.value
 
     mag = get_extinction_corrected_magnitudes(catalog)
-    t['mag.faruv'] = mag[:, 0]
-    t['mag.nearuv'] = mag[:, 1]
-    t['mag.u'] = mag[:, 2]
-    t['mag.g'] = mag[:, 3]
-    t['mag.r'] = mag[:, 4]
-    t['mag.i'] = mag[:, 5]
-    t['mag.z'] = mag[:, 6]
+    key_data['mag_faruv'] = mag[:, 0]
+    key_data['mag_nearuv'] = mag[:, 1]
+    key_data['mag_u'] = mag[:, 2]
+    key_data['mag_g'] = mag[:, 3]
+    key_data['mag_r'] = mag[:, 4]
+    key_data['mag_i'] = mag[:, 5]
+    key_data['mag_z'] = mag[:, 6]
 
     absmag_r = get_r_magnitude(catalog)
-    t['mag.abs_r'] = absmag_r
+    key_data['mag_abs_r'] = absmag_r
 
     # TODO this column has gone missing somewhere
     # only works for DR5 catalog - but that's okay, we only need the latest
@@ -53,11 +58,11 @@ def get_key_astrophysical_columns(catalog):
     # t['metadata.nexp_g'] = nsa_decals['nexp_g']
 
     fluxarr = get_r_flux(catalog)
-    t['petroflux'] = fluxarr
+    key_data['petroflux'] = fluxarr
 
-    t['redshift'] = catalog['z']
+    key_data['redshift'] = catalog['z']
 
-    return t
+    return key_data
 
 
 def get_r_magnitude(catalog):

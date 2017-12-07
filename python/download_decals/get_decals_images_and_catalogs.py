@@ -199,7 +199,7 @@ def main():
     s.overwrite_jpeg = False
     s.run_to = -1
 
-    nsa = get_nsa_catalog(s.nsa_catalog_loc)
+    nsa = get_nsa_catalog(s.nsa_catalog_loc, nsa_version)
     bricks = get_decals_bricks(s.bricks_loc, s.data_release)
 
     joint_catalog = get_decals(nsa, bricks, s)
