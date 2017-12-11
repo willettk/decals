@@ -123,7 +123,7 @@ def bricks(data_release):
 
 
 def test_filter_catalog_to_approximate_sky_area_dr5(catalog, bricks, data_release):
-    nsa_in_decals_area = filter_catalog_to_approximate_sky_area(catalog, bricks, data_release, visualise=False)
+    nsa_in_decals_area = filter_nsa_catalog_to_approximate_sky_area(catalog, bricks, data_release, visualise=False)
     remaining_names = set(nsa_in_decals_area['iauname'])
 
     assert 'gal_a' in remaining_names
@@ -149,16 +149,3 @@ def test_create_joint_catalog(catalog, bricks, data_release, nsa_version):
     assert 'gal_outside_bricks' not in remaining_names
 
     # selection cuts are not applied to joint catalog by default
-
-
-# it's confusing to have this function in the same place as create joint catalog, which doesn't use it
-def test_apply_selection_cuts(catalog):
-    filtered_catalog = apply_selection_cuts(catalog)
-    remaining_names = set(filtered_catalog['iauname'])
-
-    assert 'gal_a' in remaining_names
-    assert 'gal_a_duplicate' in remaining_names
-
-    assert 'gal_a_small' not in remaining_names
-    assert 'gal_a_negative_size' not in remaining_names
-    # assert 'gal_a_far' not in remaining_names TODO redshift filtering currently disabled

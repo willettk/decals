@@ -9,18 +9,17 @@ from astropy.table import Table
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-# TODO should check that galaxy names are unique within each catalog, here and in unit tests
-
 
 def get_nsa_catalog(nsa_catalog_loc, nsa_version):
     '''
-    Return the loaded NASA-Sloan Atlas catalog
+    Get the loaded NASA-Sloan Atlas galaxy catalog
 
     Args:
         nsa_catalog_loc (str): absolute file path to NSA catalog e.g. [dir]/nsa_v_0_1_2.fits
+        nsa_version (str): version of NSA catalog e.g v0_1_2. Useful to interpret nsa_id column.
 
     Returns:
-
+        (astropy.Table) NASA-Sloan Atlas. Each row is a galaxy in SDSS.
     '''
 
     nsa = astropy.table.Table(fits.getdata(nsa_catalog_loc, 1))
@@ -42,10 +41,11 @@ def get_decals_bricks(bricks_loc, dr):
     No constraints on catalog entry for DR2, oddly.
 
     Args:
+        bricks_loc (str): absolute file path to DECaLS brick catalog e.g. [dir]/decals_dr5.fits
         dr (str): load bricks from (data_release) data release
 
     Returns:
-        (dict) catalog of RA, Dec edges of DECALS 'brick' tile images in rgz bands
+        (astropy.Table) catalog of RA, Dec edges of DECALS 'brick' tile images in rgz bands
     '''
 
     bricks_all = astropy.table.Table(fits.getdata(bricks_loc, 1))
@@ -80,38 +80,37 @@ def get_decals_bricks(bricks_loc, dr):
     return bricks
 
 
-def find_matching_brick(gal, bricks, pbar=None):
+def find_matching_brick(galaxy, bricks, pbar=None):
     '''
-    Find the DECaLS brick covering the (RA,dec) coordinates for a galaxy's position
-    Galaxy coordinates may be part of multiple bricks
+    Find the DECaLS brick covering the (ra, dec) coordinates of an NSA galaxy
+    Galaxy coordinates may be part of multiple bricks, but only the first match is returned
 
-    Args:
-        gal (dict): galaxy coordinates in form {RA, DEC}
-        bricks (): catalog table of DECALS bricks, listing RA and DE edges
-
-    Returns:
-        nmatch (int) total number of bricks containing the galaxy coordinates
-        coomatch (int) boolean array of len(bricks), 1 where brick matches galaxy coordinates
-    '''
-
-    '''
     Bricks are roughly 0.25 deg x 0.25 deg on each side
     Three sets of coordinates:
-    ra,dec = center of brick
-    ra1,dec1 = lower right corner of brick
-    ra2,dec2 = upper left corner of brick
+    ra, dec = center of brick
+    ra1, dec1 = lower right corner of brick
+    ra2, dec2 = upper left corner of brick
+
+    Args:
+        galaxy (dict): galaxy row from NASA-Sloan Atlas including RA, DEC
+        bricks (astropy.Table): catalog of DECALS bricks, listing RA and DE edges (see above)
+
+    Returns:
+        match_count (int) total number of bricks containing the galaxy coordinates
+        first_match (int) boolean array of len(bricks), 1 where brick matches galaxy coordinates
     '''
 
-    ragal, decgal = gal['ra'], gal['dec']
+    ragal, decgal = galaxy['ra'], galaxy['dec']
 
     # Find boolean array of bricks that match in RA
     ramatch = (bricks['ra1'] < ragal) & (bricks['ra2'] >= ragal)
+
     # Find boolean array of bricks that match in dec
     decmatch = (bricks['dec1'] < decgal) & (bricks['dec2'] >= decgal)
 
-    coomatch = (ramatch & decmatch)  # boolean array of bricks that match in both RA and dec
+    # boolean array of bricks that match in both RA and dec
+    coomatch = (ramatch & decmatch)
     match_count = coomatch.sum()
-
     first_match = coomatch.argmax()
 
     if pbar:
@@ -123,15 +122,15 @@ def find_matching_brick(gal, bricks, pbar=None):
 def create_joint_catalog(nsa, bricks, data_release, nsa_version, run_to=None, visualise=False):
     '''
     Create a matched catalogue of all NSA sources that have grz imaging in DECaLS
-
-    Galaxies must match the galaxy selection criteria (not yet implemented - 'with_cuts' or 'clean' catalog?)
+    Selection criteria (currently petrosian radius > 3) are NOT applied here
 
     Args:
-        nsa ():
-        bricks ():
+        nsa (astropy.Table): NSA catalog of SDSS galaxies
+        bricks (astropy.Table): catalog of DECALS imaging bricks
         data_release (str): DECALS data release version e.g. '2'
-        nsa_version (str): NASA Sloan Atlas version e.g. TODO
-        run_to (int): nsa galaxies to match. If -1, matches all
+        nsa_version (str): NASA Sloan Atlas version e.g. v1_0_0
+        run_to (int): nsa galaxies to match. If None, matches all
+        visualise (bool): if True, plot and save sky footprint of NSA catalog
 
     Returns:
         (astropy.Table) of format [{NSA galaxy, NSA details, DECALS brick with that galaxy}]
@@ -140,7 +139,7 @@ def create_joint_catalog(nsa, bricks, data_release, nsa_version, run_to=None, vi
 
     # Make this routine somewhat quicker by first eliminating everything in the NSA catalog
     # outside the observed RA/dec range of the DECaLS bricks.
-    nsa_in_decals_area = filter_catalog_to_approximate_sky_area(nsa, bricks, data_release, visualise=visualise)
+    nsa_in_decals_area = filter_nsa_catalog_to_approximate_sky_area(nsa, bricks, data_release, visualise=visualise)
 
     nsa_to_match = nsa_in_decals_area[:run_to]
 
@@ -176,7 +175,7 @@ def create_joint_catalog(nsa, bricks, data_release, nsa_version, run_to=None, vi
 
     assert len(nsa_decals) == len(matched_bricks)
 
-    # add the bricks data into the joint_catalog table (manual merge!)
+    # add the bricks data into the joint_catalog table (manual merge)
     nsa_decals_bricks = astropy.table.hstack([nsa_decals, matched_bricks])
     assert len(nsa_decals_bricks) == len(matched_bricks)
 
@@ -186,16 +185,20 @@ def create_joint_catalog(nsa, bricks, data_release, nsa_version, run_to=None, vi
     return nsa_decals
 
 
-def filter_catalog_to_approximate_sky_area(nsa, bricks, data_release, visualise=False):
+def filter_nsa_catalog_to_approximate_sky_area(nsa, bricks, data_release, visualise=False):
     """
+    DECALS is only in a well-defined portion of sky (which depends on the data release version). Filter the NSA catalog
+    so that it only includes galaxies in that approximate area. This saves time matching later.
 
     Args:
-        nsa ():
-        bricks ():
-        data_release ():
-        visualise ():
+        nsa (astropy.Table): NSA catalog of SDSS galaxies
+        bricks (astropy.Table): catalog of DECALS imaging bricks
+        data_release (str): DECALS data release version e.g. '2'
+        visualise (bool): if True, plot and save sky footprint of NSA catalog
 
     Returns:
+
+        (astropy.Table) NSA catalog filtered to galaxies within the approximate sky area imaged by DECALS
 
     """
 
@@ -214,104 +217,10 @@ def filter_catalog_to_approximate_sky_area(nsa, bricks, data_release, visualise=
 
     brick_maxdec = max(bricks['dec2'])
     brick_mindec = min(bricks['dec1'])
-    # brick_maxra = max(bricks['ra2'])
-    # brick_minra = min(bricks['ra2'])
 
-    # Rough limits of DR1
-    if data_release == '1':
-        ralim = ((nsa['RA'] > 15/24. * 360) & (nsa['RA'] < 18/24. * 360)) | (nsa['RA'] < 1/24. * 360) | (nsa['RA'] > 21/24. * 360) | (nsa['RA'] > 7/24. * 360) & (nsa['RA'] < 11/24. * 360)
-        declim = (nsa['DEC'] >= brick_mindec) & (nsa['DEC'] <= brick_maxdec)
+    # ra spans 0 through 360, do not filter
+    declim = (nsa['dec'] >= brick_mindec) & (nsa['dec'] <= brick_maxdec)  # approximately -25 to +30 degrees
 
-    # Rough limits of DR2
-    elif data_release == '2':
-        ralim = ((nsa['ra'] > 7/24. * 360) & (nsa['ra'] < 18/24. * 360)) | (nsa['ra'] < 3/24. * 360) | (nsa['ra'] > 21/24. * 360)
-        declim = (nsa['dec'] >= brick_mindec) & (nsa['dec'] <= brick_maxdec)
-
-    elif data_release == '3':
-        # TODO this is the DR2 values and urgently needs to be updated
-        # ralim = ((nsa['ra'] > 7/24. * 360) & (nsa['ra'] < 18/24. * 360)) | (nsa['ra'] < 3/24. * 360) | (nsa['ra'] > 21/24. * 360)
-        # declim = (nsa['dec'] >= brick_mindec) & (nsa['dec'] <= brick_maxdec)
-
-        ralim = np.ones(len(nsa), dtype=bool)  # ra spans 0 through 360
-        declim = (nsa['dec'] >= brick_mindec) & (nsa['dec'] <= brick_maxdec)  # approximately -25 to +30 degrees
-
-    elif data_release == '5':
-        ralim = np.ones(len(nsa), dtype=bool)  # ra spans 0 through 360
-        declim = (nsa['dec'] >= brick_mindec) & (nsa['dec'] <= brick_maxdec)  # approximately -25 to +30 degrees
-
-    nsa_in_decals_area = nsa[declim & ralim]
+    nsa_in_decals_area = nsa[declim]
 
     return nsa_in_decals_area
-
-
-def apply_selection_cuts(input_catalog):
-    """
-    Select only galaxies with PETROTHETA > 3 and not within 1e-3 of default value (i.e. bad measurement)
-
-    Args:
-        catalog (astropy.Table): Galaxy catalog including NSA information
-
-    Returns:
-        (astropy.Table) catalog of galaxies matching selection criteria above
-
-    """
-
-    petrotheta_above_3 = input_catalog['petrotheta'] > 3
-    # redshift_below_p05 = input_catalog['z'] < 0.05
-
-    '''
-    NSA catalog’s PETROTHETA calculation sometimes fails to a ‘default’ value that is related to the annulus used to
-    measure the Petrosian radius.
-    The relation is (found via fitting the observed ‘snap to’ values to the annulus values):
-    PETROTHETA_snap_to = 0.997 * PROFTHETA ** 0.998
-    Any galaxies with PETROTHETA within 1e-3 of the snap_to value likely has the wrong size.
-    '''
-    # TODO discuss with Coleman: PROFTHETA is 15 values, which value (or all)?
-    #
-    # print(input_catalog['PROFTHETA'])
-    # proftheta = np.array(input_catalog['PROFTHETA'])
-    # snap_values = 0.997 * np.power(input_catalog['PROFTHETA'], 0.998)  # ** syntax behaves unexpectedly with Column
-    # snap_tolerance = 1e-3
-    # snap_lower_limit = snap_values - snap_tolerance
-    # snap_upper_limit = snap_values + snap_tolerance
-    #
-    # above_snap_lower_limit = input_catalog['PETROTHETA'] > snap_lower_limit
-    # below_snap_upper_limit = input_catalog['PETROTHETA'] < snap_upper_limit
-    # within_snap_window = above_snap_lower_limit & below_snap_upper_limit
-    #
-    # selected_catalog = input_catalog[petrotheta_above_3 & ~ within_snap_window]
-    # print(len(input_catalog), len(selected_catalog))
-    # return selected_catalog
-
-    return input_catalog[petrotheta_above_3]
-    # return input_catalog[petrotheta_above_3 & redshift_below_p05]
-
-
-if __name__ == "__main__":
-
-    # The below will move to main routine
-    # Run all steps to create the NSA-DECaLS-GZ catalog
-
-    catalog_dir = '/data/galaxy_zoo/decals/catalogs'
-
-    # nsa_version = '0_1_2'
-    nsa_version = '1_0_0'
-    nsa_catalog_loc = '{}/nsa_v{}.fits'.format(catalog_dir, nsa_version)
-
-    data_release = '5'
-    bricks_filename = 'survey-bricks-dr3-with-coordinates.fits'
-    bricks_loc = '{}/{}'.format(catalog_dir, bricks_filename)
-
-    nsa = get_nsa_catalog(nsa_catalog_loc)
-    nsa_after_cuts = apply_selection_cuts(nsa)
-
-    bricks = get_decals_bricks(bricks_loc, data_release)
-
-    joint_catalog = create_joint_catalog(nsa_after_cuts, bricks, data_release, nsa_version, run_to=-1)
-    # Write to file
-    joint_catalog_loc = '{0}/nsa_v{1}_decals_dr{2}.fits'.format(catalog_dir, nsa_version, data_release)
-    joint_catalog.write(joint_catalog_loc, overwrite=True)
-
-    # Write to file
-    selected_joint_catalog_loc = '{0}/nsa_v{1}_decals_dr{2}_after_cuts.fits'.format(catalog_dir, nsa_version, data_release)
-    # selected_joint_catalog.write(selected_joint_catalog_loc, overwrite=True)
