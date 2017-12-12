@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/zooniverse/decals.svg?branch=master)](https://travis-ci.org/zooniverse/decals)
 [![codecov](https://codecov.io/gh/zooniverse/decals/branch/master/graph/badge.svg)](https://codecov.io/gh/zooniverse/decals)
+[![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)
 
 
 # Decals
