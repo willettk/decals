@@ -1,9 +1,10 @@
 import numpy as np
 
 
-def dstn_rgb(imgs, bands, mnmx=None, arcsinh=None, scales=None, desaturate=False):
+def dr2_style_rgb(imgs, bands, mnmx=None, arcsinh=None, scales=None, desaturate=False):
     '''
     Given a list of image arrays in the given bands, returns a scaled RGB image.
+    Originally written by Dustin Lang and used by Kyle Willett for DECALS DR1/DR2 Galaxy Zoo subjects
 
     Args:
         imgs (list): numpy arrays, all the same size, in nanomaggies
@@ -14,12 +15,11 @@ def dstn_rgb(imgs, bands, mnmx=None, arcsinh=None, scales=None, desaturate=False
         desaturate (bool): If [default=False] desaturate pixels dominated by a single colour
 
     Returns:
-        (np.array) of shape (H, W, 3) with values between 0 and 1
+        (np.array) of shape (H, W, 3) with values between 0 and 1 of pixel values for colour image
     '''
 
     bands = ''.join(bands)  # stick list of bands into single string
 
-    # TODO refactor grzscales
     # first number is index of that band
     # second number is scale divisor - divide pixel values by scale divisor for rgb pixel value
     grzscales = dict(
@@ -63,7 +63,7 @@ def dstn_rgb(imgs, bands, mnmx=None, arcsinh=None, scales=None, desaturate=False
         mn, mx = mnmx
 
     if arcsinh is not None:
-        # TODO image rescaled by single-pixel not image-pixel, which means colours depend on brightness at this point??
+        # image rescaled by single-pixel not image-pixel, which means colours depend on brightness
         rgb = nonlinear_map(rgb, arcsinh=arcsinh)
         mn = nonlinear_map(mn, arcsinh=arcsinh)
         mx = nonlinear_map(mx, arcsinh=arcsinh)
@@ -99,21 +99,24 @@ def dstn_rgb(imgs, bands, mnmx=None, arcsinh=None, scales=None, desaturate=False
     return clipped
 
 
-def get_rgb(imgs, bands, mnmx=None, arcsinh=None, scales=None,
-            clip=True):
+def decals_internal_rgb(imgs, bands, mnmx=None, arcsinh=None, scales=None,
+                        clip=True):
     """
     Given a list of images in the given bands, returns a scaled RGB-like matrix.
-    Written by Dustin Lang and used internally by DECALS
+    Written by Dustin Lang and used internally by DECALS collaboration
     Copied from https://github.com/legacysurvey/legacypipe/tree/master/py/legacypipe repo
+    Not recommended - tends to oversaturate galaxy center
+
     Args:
         imgs (list): numpy arrays, all the same size, in nanomaggies
         bands (list): strings, eg, ['g','r','z']
         mnmx (min,max), values that will become black/white *after* scaling. ):
         arcsinh (bool): if True, use nonlinear scaling (as in SDSS)
         scales (str): Override preset band scaling. Dict of form {band: (plane index, scale divider)}
+        clip (bool): if True, restrict output values to range (0., 1.)
 
     Returns:
-        (np.array) of shape (H, W, 3) with values between 0 and 1
+        (np.array) of shape (H, W, 3) of pixel values for colour image
 
     """
 
@@ -174,34 +177,26 @@ def get_rgb(imgs, bands, mnmx=None, arcsinh=None, scales=None,
     return rgb
 
 
-def nonlinear_map(x, arcsinh=1, sqrt=False):
+def lupton_rgb(imgs, bands='grz', arcsinh=1., mn=0.1, mx=100.):
     """
-    Apply non-linear map to input matrix. Useful to rescale telescope pixels for viewing.
-    Args:
-        x (np.array): array to have map applied
-        arcsinh (np.float):
-
-    Returns:
-
-    """
-    return np.arcsinh(x * arcsinh)
-
-
-def lupton_rgb(imgs, bands='grz', arcsinh=1., mn=0.1, mx=100., sqrt=False):
-    """
+    Create human-interpretable rgb image from multi-band pixel data
+    Follow the comments of Lupton (2004) to preserve colour during rescaling
 
     Args:
-        imgs ():
-        bands ():
-        arcsinh ():
+        imgs (list): of 2-dim np.arrays, each with pixel data on a band # TODO refactor to one 3-dim array
+        bands (str): ordered characters of bands of the 2-dim pixel arrays in imgs
+        arcsinh (float): softening factor for arcsinh rescaling
+        mn (float): min pixel value to set before (0, 1) clipping
+        mx (float): max pixel value to set before (0, 1) clipping
 
     Returns:
-
+        (np.array) of shape (H, W, 3) of pixel values for colour image
     """
 
+    # set the relative intensities of each band to be approximately equal
     grzscales = dict(g=(2, 0.00526),
                      r=(1, 0.008),
-                     z=(0, 0.0135),
+                     z=(0, 0.0135)
                      )
 
     h, w = imgs[0].shape
@@ -211,21 +206,22 @@ def lupton_rgb(imgs, bands='grz', arcsinh=1., mn=0.1, mx=100., sqrt=False):
         img[:, :, plane] = (im / scale).astype(np.float32)
 
     I = img.sum(axis=2).reshape(424, 424, 1)
-
-    rescaling = nonlinear_map(I, arcsinh=arcsinh, sqrt=sqrt)/I
-
+    rescaling = nonlinear_map(I, arcsinh=arcsinh)/I
     rescaled_img = img * rescaling
-
-    # mn = nonlinear_map(mn, arcsinh=arcsinh, sqrt=sqrt)
-    # mx = nonlinear_map(mx, arcsinh=arcsinh, sqrt=sqrt)
 
     rescaled_img = (rescaled_img - mn) * (mx - mn)
 
-    clip = True
-    if clip:
-        return np.clip(rescaled_img, 0., 1.)
-    else:
-        return rescaled_img
+    return np.clip(rescaled_img, 0., 1.)
 
-    # TODO unit tests creating rgb image from artificial colour-path fits file,
-    # then verifying the colours produced are unique per g-r, r-z colour in input file
+
+def nonlinear_map(x, arcsinh=1.):
+    """
+    Apply non-linear map to input matrix. Useful to rescale telescope pixels for viewing.
+    Args:
+        x (np.array): array to have map applied
+        arcsinh (np.float):
+
+    Returns:
+        (np.array) array with map applied
+    """
+    return np.arcsinh(x * arcsinh)

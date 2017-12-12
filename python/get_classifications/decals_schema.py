@@ -1,4 +1,4 @@
-schema = {
+SCHEMA = [
 
     {'task': 'T0',
      'task_label': 'Is the galaxy simply smooth and rounded, with no sign of a disk?',
@@ -44,4 +44,18 @@ schema = {
      'task_label': 'Is the odd feature a ring, or is the galaxy disturbed or irregular?',
      'answers': ['ring', 'lens or arc', 'disturbed', 'irregular', 'other', 'merger', 'dust lane']}
 
+]
+
+TASK_ANSWERS = {
+    'T0':  ['smooth', 'features or disk', 'star or artefact'],
+    'T1': ['completely round', 'inbetween', 'cigar-shaped'],
+    'T2': ['yes', 'no'],
+    'T3': ['rounded', 'boxy', 'no bulge'],
+    'T4': ['bar', 'no bar'],
+    'T5': ['spiral', 'no spiral'],
+    'T6': ['tight', 'medium', 'loose'],
+    'T7': ['1', '2', '3', '4', 'more than 4', "can't tell"],
+    'T8': ['no bulge', 'just noticeable', 'obvious', 'dominant'],
+    'T9': ['yes', 'no'],
+    'T10': ['ring', 'lens or arc', 'disturbed', 'irregular', 'other', 'merger', 'dust lane']
 }

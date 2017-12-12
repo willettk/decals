@@ -7,18 +7,17 @@ from multiprocessing.dummy import Pool as ThreadPool
 
 import numpy as np
 from astropy.io import fits
-from astropy.table import Table
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
-from get_images.image_utils import dstn_rgb
+from get_images.image_utils import dr2_style_rgb
 
 min_pixelscale = 0.10
 
 
 def download_images_multithreaded(catalog, data_release, fits_dir, jpeg_dir, overwrite_fits, overwrite_jpeg):
     '''
-    Multi-threaded analogy to get_decals_images_and_catalogs.py downloads
+    Download fits of catalog, create jpeg images. Update catalog with fits and jpeg locations. Run multithreaded.
 
     Args:
         catalog (astropy.Table): catalog of NSA galaxies and DECALS bricks
@@ -62,25 +61,25 @@ def download_images_multithreaded(catalog, data_release, fits_dir, jpeg_dir, ove
 
 
 def download_images(galaxy, data_release, overwrite_fits=False, overwrite_jpeg=False, pbar=None, max_attempts=5):
-    '''
+    """
     Download a multi-plane FITS image from the DECaLS skyserver
     Write multi-plane FITS images to separate files for each band
     Default arguments are used due to pool.map(download_images, nsa), no more args. Can fix.
-
     Args:
         galaxy (astropy.TableRow): catalog entry of galaxy to download
-        fits_dir (str): directory to save downloaded FITS
         data_release (str): DECALS data release e.g. '2'
-        remove_multi_fits (bool): if True, delete multi-band FITS after writing to single-band
+        overwrite_fits (bool): if False, do not download fits if fits file already exists in target location
+        overwrite_jpeg (bool): if False, do not download jpeg if joeg file already exists in target location
+        pbar (tqdm): progress bar shared between processes, to be updated. If None, no progress bar will be shown.
+        max_attempts (int): max number of fits download attempts per file
 
     Returns:
-        (bool) Download timed out?
-        (bool) Image has no bad pixels?
-    '''
+        None
+    """
 
     pixscale = max(min(galaxy['petroth50'] * 0.04, galaxy['petroth50'] * 0.02), min_pixelscale)
 
-    # for convenience
+    # For convenience
     fits_loc = galaxy['fits_loc']
     jpeg_loc = galaxy['jpeg_loc']
 
@@ -110,6 +109,25 @@ def download_images(galaxy, data_release, overwrite_fits=False, overwrite_jpeg=F
 
     if pbar:
         pbar.update()
+
+
+def fits_downloaded_correctly(fits_loc):
+    """
+    Is there a readable fits image at fits_loc?
+    Does NOT check for bad pixels
+
+    Args:
+        fits_loc (str): location of fits file to open
+
+    Returns:
+        (bool) True if file at fits_loc is readable, else False
+    """
+
+    try:
+        img, _ = fits.getdata(fits_loc, 0, header=True)
+        return True
+    except:  # image fails to open
+        return False
 
 
 def get_fits_loc(fits_dir, galaxy):
@@ -174,14 +192,14 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixsc
 
 def make_jpeg_from_fits(fits_loc, jpeg_loc):
     '''
-    Create artistically-scaled JPG from multi-band FITS
+    Create jpeg from multi-band fits
 
     Args:
         fits_loc (str): location of FITS to read
         jpegpath (str): directory to save JPG in
 
     Returns:
-        (bool) Image successfully created with < 20% bad pixels in any band?
+        None
     '''
 
     # Set parameters for RGB image creation
@@ -194,10 +212,9 @@ def make_jpeg_from_fits(fits_loc, jpeg_loc):
     try:
         img, hdr = fits.getdata(fits_loc, 0, header=True)
     except Exception:
-        print('Invalid fits at {}'.format(fits_loc))
-        return False
+        warnings.warn('Invalid fits at {}'.format(fits_loc))
 
-    rgbimg = dstn_rgb(
+    rgbimg = dr2_style_rgb(
         (img[0, :, :], img[1, :, :], img[2, :, :]),
         'grz',
         mnmx=_mnmx,
@@ -209,13 +226,13 @@ def make_jpeg_from_fits(fits_loc, jpeg_loc):
 
 def check_images_are_downloaded(catalog):
     """
-
+    Record if images are downloaded. Add 'fits_ready', 'jpeg_ready' and 'fits_complete' columns to catalog.
 
     Args:
         catalog (astropy.Table): joint NSA/decals catalog
 
     Returns:
-
+        (astropy.Table) catalog with image quality check columns added
     """
     catalog['fits_ready'] = np.zeros(len(catalog), dtype=bool)
     catalog['fits_filled'] = np.zeros(len(catalog), dtype=bool)
@@ -231,29 +248,9 @@ def check_images_are_downloaded(catalog):
     return catalog
 
 
-def fits_downloaded_correctly(fits_loc, badmax_limit=0.2):
-    """
-    Quantify if image is
-
-    Args:
-        fits_loc (str): location of fits file to open
-        badmax_limit(float): maximum ratio of empty pixels for image to be considered 'correct'
-
-    Returns:
-        (bool) is image downloaded?
-        (bool) is empty pixel ratio below the allowed limit?
-    """
-
-    try:
-        img, _ = fits.getdata(fits_loc, 0, header=True)
-        return True
-    except:  # image fails to open
-        return False
-
-
 def get_download_quality_of_fits(fits_loc, badmax_limit=0.2):
     """
-    Quantify if image is
+    Find if fits at fits_loc a) opens b) has few bad pixels
 
     Args:
         fits_loc (str): location of fits file to open
@@ -273,6 +270,17 @@ def get_download_quality_of_fits(fits_loc, badmax_limit=0.2):
 
 
 def few_missing_pixels(img, badmax_limit):
+    """
+    Find if img contains few NaN pixels e.g. from incomplete imaging
+
+    Args:
+        img (np.array): multi-band (i.e. 3-dim) pixel data to check
+        badmax_limit(float): maximum ratio of empty pixels for image to be considered 'correct' e.g. 0.2 (20%)
+
+    Returns:
+        (bool) True if few NaN pixels, else False
+
+    """
     badmax = 0.
     for j in range(img.shape[0]):
         band = img[j, :, :]
@@ -280,19 +288,8 @@ def few_missing_pixels(img, badmax_limit):
         fracbad = nbad / np.prod(band.shape)  # fraction of bad pixels in band
         badmax = max(badmax, fracbad)  # update worst band fraction
 
-    # if worst fraction of bad pixels is < 0.2, consider image as 'good'
+    # if worst fraction of bad pixels is < badmax_limit, consider image as 'good'
     if badmax < badmax_limit:
         return True
     else:
         return False
-
-
-if __name__ == '__main__':
-    data_release = '3'
-    nsa_version = '1_0_0'
-    # nsa_version = '0_1_2'
-    fits_dir = '../../fits/nsa/dr3'
-    jpeg_dir = '../../jpeg/dr3'
-    nsa_decals = Table(fits.getdata(
-        '/data/galaxy_zoo/decals/catalogs/nsa_v{0}_decals_dr{1}.fits'.format(nsa_version, data_release), 1))
-    download_images_multithreaded(nsa_decals, data_release, fits_dir, jpeg_dir, overwrite=True)

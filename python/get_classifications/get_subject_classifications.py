@@ -1,33 +1,8 @@
 
 import json
 import pandas as pd
-import numpy as np
 
-TASK_ANSWERS = {
-    'T0':  ['smooth', 'features or disk', 'star or artefact'],
-    'T1': ['completely round', 'inbetween', 'cigar-shaped'],
-    'T2': ['yes', 'no'],
-    'T3': ['rounded', 'boxy', 'no bulge'],
-    'T4': ['bar', 'no bar'],
-    'T5': ['spiral', 'no spiral'],
-    'T6': ['tight', 'medium', 'loose'],
-    'T7': ['1', '2', '3', '4', 'more than 4', "can't tell"],
-    'T8': ['no bulge', 'just noticeable', 'obvious', 'dominant'],
-    'T9': ['yes', 'no'],
-    'T10': ['ring', 'lens or arc', 'disturbed', 'irregular', 'other', 'merger', 'dust lane']
-}
-
-
-class Subject():
-
-    def __init__(self):
-        pass
-
-
-class Classification():
-
-    def __init__(self):
-        pass
+from decals_schema import TASK_ANSWERS
 
 
 def get_task_name_from_id(task_id):
@@ -152,7 +127,7 @@ def aggregate_classifications(df):
                 {answer: list(matching_answers['user_id'])}
             )
 
-    # data = pd.DataFrame(data)
+    # TODO could have each column as e.g. T0_Smooth, rather than nested dict?
     return data
 
 

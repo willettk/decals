@@ -1,11 +1,13 @@
-from get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog
-import numpy as np
+
 import pandas as pd
+import matplotlib.pyplot as plt
+
+from get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog
 
 
-def apply_selection_cuts(input_catalog):
+def apply_selection_cuts(input_catalog, snap_tolerance=1e-3):
     """
-    Select only galaxies with PETROTHETA > 3 and not within 1e-3 of default value (i.e. bad measurement)
+    Select only galaxies with PETROTHETA > 3 and not within 1e-3 of bad measurement snap value
 
     Args:
         catalog (astropy.Table): Galaxy catalog including NSA information
@@ -15,43 +17,33 @@ def apply_selection_cuts(input_catalog):
 
     """
 
+    # Galaxies should be sufficiently extended across the sky
     petrotheta_above_3 = input_catalog['petrotheta'] > 3
-    # redshift_below_p05 = input_catalog['z'] < 0.05
 
-    '''
-    NSA catalog’s PETROTHETA calculation sometimes fails to a ‘default’ value that is related to the annulus used to
-    measure the Petrosian radius.
-    The relation is (found via fitting the observed ‘snap to’ values to the annulus values):
-    PETROTHETA_snap_to = 0.997 * PROFTHETA ** 0.998
-    Any galaxies with PETROTHETA within 1e-3 of the snap_to value likely has the wrong size.
-    '''
-    # TODO discuss with Coleman: PROFTHETA is 15 values, which value (or all)?
-    #
-    # print(input_catalog['PROFTHETA'])
-    # proftheta = np.array(input_catalog['PROFTHETA'])
-    # snap_values = 0.997 * np.power(input_catalog['PROFTHETA'], 0.998)  # ** syntax behaves unexpectedly with Column
-    # snap_tolerance = 1e-3
-    # snap_lower_limit = snap_values - snap_tolerance
-    # snap_upper_limit = snap_values + snap_tolerance
-    #
-    # above_snap_lower_limit = input_catalog['PETROTHETA'] > snap_lower_limit
-    # below_snap_upper_limit = input_catalog['PETROTHETA'] < snap_upper_limit
-    # within_snap_window = above_snap_lower_limit & below_snap_upper_limit
-    #
-    # selected_catalog = input_catalog[petrotheta_above_3 & ~ within_snap_window]
-    # print(len(input_catalog), len(selected_catalog))
-    # return selected_catalog
+    # NSA catalog’s petrotheta calculation sometimes fails to a ‘default’ value
+    # Any galaxies with petrotheta within 1e-3 of the snap_to value likely has the wrong size.
+    bad_petrotheta_value = 27.653702
+    snap_lower_limit = bad_petrotheta_value - snap_tolerance
+    snap_upper_limit = bad_petrotheta_value + snap_tolerance
 
-    return input_catalog[petrotheta_above_3]
-    # return input_catalog[petrotheta_above_3 & redshift_below_p05]
+    above_snap_lower_limit = input_catalog['PETROTHETA'] > snap_lower_limit
+    below_snap_upper_limit = input_catalog['PETROTHETA'] < snap_upper_limit
+    within_snap_window = above_snap_lower_limit & below_snap_upper_limit
+
+    selected_catalog = input_catalog[petrotheta_above_3 & ~ within_snap_window]
+    return selected_catalog
 
 
-if __name__ == '__main__':
+def visualise_bad_petrotheta_measurements(nsa):
+    """
+    Save histograms of petrotheta, demonstrating the snap value problem
 
-    nsa_version = '1_0_0'
-    nsa_catalog_loc = '/data/galaxy_zoo/decals/catalogs/nsa_v1_0_0.fits'
-    nsa = get_nsa_catalog(nsa_catalog_loc, nsa_version)
-    import matplotlib.pyplot as plt
+    Args:
+        nsa (astropy.Table): NSA catalog of galaxies
+
+    Returns:
+
+    """
     nsa_small = nsa[nsa['petrotheta'] < 50]
     plt.hist(nsa_small['petrotheta'], bins=100)
     plt.ylabel('Count')
@@ -67,4 +59,9 @@ if __name__ == '__main__':
 
     print(pd.Series(nsa_wrong['petrotheta']).value_counts())
 
-    nsa_bad = nsa[nsa['petrotheta'] == 27.653702]
+if __name__ == '__main__':
+    # save figures of the petrotheta measurement problem
+    nsa_version = '1_0_0'
+    nsa_catalog_loc = '/data/galaxy_zoo/decals/catalogs/nsa_v1_0_0.fits'
+    nsa = get_nsa_catalog(nsa_catalog_loc, nsa_version)
+    visualise_bad_petrotheta_measurements(nsa)

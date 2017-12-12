@@ -60,7 +60,7 @@ def get_dr2_style_image(img_data):
         'arcsinh': 1.,
         'desaturate': False
 }
-    return image_utils.dstn_rgb(img_bands, **kwargs)
+    return image_utils.dr2_style_rgb(img_bands, **kwargs)
 
 
 def get_colour_style_image(img_data):

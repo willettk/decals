@@ -47,7 +47,7 @@ if __name__ == '__main__':
     # print(catalog_sample.colnames)
     fits_to_rgb_instructions = [
         {
-            'function': image_utils.dstn_rgb,
+            'function': image_utils.dr2_style_rgb,
             'kwargs': {
                 'scales': dict(
                     g=(2, 0.008),
@@ -60,7 +60,7 @@ if __name__ == '__main__':
             }
         },
         {
-            'function': image_utils.get_rgb,
+            'function': image_utils.decals_internal_rgb,
             'kwargs':
                 dict(mnmx=(-1, 100.),
                 arcsinh=1.,

@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pytest
 from astropy.io import fits
 
-from get_images.image_utils import dstn_rgb, get_rgb, lupton_rgb
+from get_images.image_utils import dr2_style_rgb, decals_internal_rgb, lupton_rgb
 
 TEST_EXAMPLES_DIR = 'python/test_examples'
 
@@ -62,12 +62,12 @@ def test_dstn_rgb_on_varying_brightness():
     data = [data_down_20pc, original_data_by_band, data_up_20pc]
 
     desaturate_off = jpeg_creation_params()
-    jpegs = [dstn_rgb(image, **desaturate_off) for image in data]
+    jpegs = [dr2_style_rgb(image, **desaturate_off) for image in data]
     plot_jpegs(jpegs, 'ours_comparison')
 
     desaturate_on = desaturate_off
     desaturate_on['desaturate'] = True
-    jpegs = [dstn_rgb(image, **desaturate_on) for image in data]
+    jpegs = [dr2_style_rgb(image, **desaturate_on) for image in data]
     plot_jpegs(jpegs, 'ours_comparison_desaturate')
 
 
@@ -78,7 +78,7 @@ def test_decals_on_varying_brightness():
 
     data = [data_down_20pc, original_data_by_band, data_up_20pc]
 
-    jpegs = [get_rgb(image, **dustin_creation_params()) for image in data]
+    jpegs = [decals_internal_rgb(image, **dustin_creation_params()) for image in data]
     plot_jpegs(jpegs, 'dustin_comparison')
 
 
