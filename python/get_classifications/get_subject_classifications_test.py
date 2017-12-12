@@ -86,23 +86,23 @@ def flat_classifications():
         {'task': 'T0',
          'value': 'features or disk',
          'user_id': 'a',
-         'subject_ids': 's1'},
+         'subject_id': 's1'},
         {'task': 'T2',
          'value': 'no',
          'user_id': 'a',
-         'subject_ids': 's1'},
+         'subject_id': 's1'},
         {'task': 'T4',
          'value': 'no bar',
          'user_id': 'a',
-         'subject_ids': 's1'},
+         'subject_id': 's1'},
         {'task': 'T0',
          'value': 'features or disk',
          'user_id': 'b',
-         'subject_ids': 's1'},
+         'subject_id': 's1'},
         {'task': 'T4',
          'value': 'bar',
          'user_id': 'b',
-         'subject_ids': 's1'}
+         'subject_id': 's1'}
     ])
 #
 # @pytest.fixture()

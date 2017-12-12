@@ -6,7 +6,8 @@ import pandas as pd
 from astropy.io import fits
 from astropy.table import Table
 
-from get_catalogs.get_joint_nsa_decals_catalog import create_joint_catalog, get_nsa_catalog, get_decals_bricks, apply_selection_cuts
+from get_catalogs.get_joint_nsa_decals_catalog import create_joint_catalog, get_nsa_catalog, get_decals_bricks
+from get_catalogs.selection_cuts import apply_selection_cuts
 from get_images.download_images_threaded import download_images_multithreaded
 from setup.filter_decals_from_previous_subjects import save_decals_subjects_from_subject_data_dump
 from setup.join_brick_tables import merge_bricks_catalogs

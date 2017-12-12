@@ -26,8 +26,8 @@ def apply_selection_cuts(input_catalog, snap_tolerance=1e-3):
     snap_lower_limit = bad_petrotheta_value - snap_tolerance
     snap_upper_limit = bad_petrotheta_value + snap_tolerance
 
-    above_snap_lower_limit = input_catalog['PETROTHETA'] > snap_lower_limit
-    below_snap_upper_limit = input_catalog['PETROTHETA'] < snap_upper_limit
+    above_snap_lower_limit = input_catalog['petrotheta'] > snap_lower_limit
+    below_snap_upper_limit = input_catalog['petrotheta'] < snap_upper_limit
     within_snap_window = above_snap_lower_limit & below_snap_upper_limit
 
     selected_catalog = input_catalog[petrotheta_above_3 & ~ within_snap_window]
