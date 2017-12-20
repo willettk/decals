@@ -9,7 +9,6 @@ from astropy.table import Table
 from get_catalogs.get_joint_nsa_decals_catalog import create_joint_catalog, get_nsa_catalog, get_decals_bricks
 from get_catalogs.selection_cuts import apply_selection_cuts
 from get_images.download_images_threaded import download_images_multithreaded
-from setup.filter_decals_from_previous_subjects import save_decals_subjects_from_subject_data_dump
 from setup.join_brick_tables import merge_bricks_catalogs
 
 
@@ -105,7 +104,6 @@ class Settings():
 
 
 def setup_tables(s):
-    # TODO these are not yet unit tested
     """
     Generate the 'bricks' and 'previous subjects' data tables used in main program.
     Only needs to be run once after downloading the required files.
@@ -118,14 +116,13 @@ def setup_tables(s):
     """
     if s.merge_bricks:
         if s.data_release == '3' or s.data_release == '5':
-            merge_bricks_catalogs(s.data_release, s.brick_coordinates_loc, s.brick_exposures_loc, s.bricks_loc)
+            coordinate_catalog = Table(fits.getdata(s.brick_coordinates_loc, 1))
+            exposure_catalog = Table(fits.getdata(s.brick_exposures_loc, 1))
+            bricks_catalog = merge_bricks_catalogs(coordinate_catalog, exposure_catalog)
+            bricks_catalog.write(s.brick_loc, overwrite=True)
+
         else:
             warnings.warn('Data release "{}" does not require joining brick tables - skipping'.format(s.data_release))
-
-    if s.new_previous_subjects:
-        all_subjects_loc = '~/Downloads/galaxy_zoo_subjects.csv'
-        decals_subject_loc = '/data/galaxy_zoo/decals/subjects/decals_dr1_and_dr2.csv'
-        save_decals_subjects_from_subject_data_dump(all_subjects_loc, decals_subject_loc)
 
 
 def get_decals(nsa, bricks, s):
@@ -187,9 +184,8 @@ def main():
 
     # specify setup options
     s.merge_bricks = False
-    s.new_previous_subjects = False
 
-    # Setup tasks generate the 'bricks' and 'previous subjects' data tables used later.
+    # Setup tasks generate the 'bricks' data table used later.
     # They need only be completed once after downloading the required files
     setup_tables(s)
 

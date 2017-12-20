@@ -7,10 +7,11 @@ from get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog
 
 def apply_selection_cuts(input_catalog, snap_tolerance=1e-3):
     """
-    Select only galaxies with PETROTHETA > 3 and not within 1e-3 of bad measurement snap value
+    Select only galaxies with petrotheta > 3 and not within 1e-3 of bad measurement snap value
 
     Args:
         catalog (astropy.Table): Galaxy catalog including NSA information
+        snap_tolerance (float): Minimum deviation from bad measurement snap value allowed
 
     Returns:
         (astropy.Table) catalog of galaxies matching selection criteria above
@@ -22,7 +23,7 @@ def apply_selection_cuts(input_catalog, snap_tolerance=1e-3):
 
     # NSA catalog’s petrotheta calculation sometimes fails to a ‘default’ value
     # Any galaxies with petrotheta within 1e-3 of the snap_to value likely has the wrong size.
-    bad_petrotheta_value = 27.653702
+    bad_petrotheta_value = 27.653702  # this 'magic' value can be confirmed by looking at petrotheta histograms
     snap_lower_limit = bad_petrotheta_value - snap_tolerance
     snap_upper_limit = bad_petrotheta_value + snap_tolerance
 
@@ -42,7 +43,7 @@ def visualise_bad_petrotheta_measurements(nsa):
         nsa (astropy.Table): NSA catalog of galaxies
 
     Returns:
-
+        None
     """
     nsa_small = nsa[nsa['petrotheta'] < 50]
     plt.hist(nsa_small['petrotheta'], bins=100)

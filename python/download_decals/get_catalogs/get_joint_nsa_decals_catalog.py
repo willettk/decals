@@ -35,8 +35,8 @@ def get_nsa_catalog(nsa_catalog_loc, nsa_version):
 
 def get_decals_bricks(bricks_loc, dr):
     '''
-
     Return the loaded catalog of DECaLS image bricks
+    Catalog must contain brick edges (in ra/dec) and brick exposure counts by band
     Include only bricks with images in r, g, and z-bands.
     No constraints on catalog entry for DR2, oddly.
 
@@ -97,7 +97,7 @@ def find_matching_brick(galaxy, bricks, pbar=None):
 
     Returns:
         match_count (int) total number of bricks containing the galaxy coordinates
-        first_match (int) boolean array of len(bricks), 1 where brick matches galaxy coordinates
+        first_match (int) bricks index of first brick containing the galaxy coordinates
     '''
 
     ragal, decgal = galaxy['ra'], galaxy['dec']
@@ -134,7 +134,6 @@ def create_joint_catalog(nsa, bricks, data_release, nsa_version, run_to=None, vi
 
     Returns:
         (astropy.Table) of format [{NSA galaxy, NSA details, DECALS brick with that galaxy}]
-
     '''
 
     # Make this routine somewhat quicker by first eliminating everything in the NSA catalog
@@ -158,16 +157,17 @@ def create_joint_catalog(nsa, bricks, data_release, nsa_version, run_to=None, vi
     pbar.close()
     pool.close()
     pool.join()
-
+    # match count is number of bricks with galaxy n, for all galaxies
+    # first match is the first index of bricks containing galaxy n, for all galaxies
     match_count, first_match = results[:, 0], results[:, 1]
 
-    # filter matches and nsa table to only galaxies which are matched to DECALS
+    # filter matches and nsa table to only galaxies which are matched to DECALS bricks
     has_match = match_count > 0
     match_count = match_count[has_match]
     first_match = first_match[has_match]
-    nsa_decals = nsa_to_match[has_match]
+    nsa_decals = nsa_to_match[has_match]  # all nsa galaxies imaged by decals - will have decals data added
 
-    # ought to have that many coordinates in the 'bricks_indices' list
+    # ought to have as many galaxies shared between nsa and decals as decals brick indexes for nsa galaxies
     assert len(nsa_decals) == len(first_match), \
         "Length of joint_catalog ({0}) and bricks_indices ({1}) must match".format(len(nsa_decals), len(first_match))
 
