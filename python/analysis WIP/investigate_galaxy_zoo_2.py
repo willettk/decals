@@ -1,3 +1,8 @@
+"""
+Checks if all DR5 subjects are included in either GZ2 or DR1/DR2
+They are - DR5 doesn't contain any new galaxies
+"""
+
 import pandas as pd
 from astropy.io import fits
 from astropy.table import Table
@@ -29,8 +34,9 @@ def match_galaxies_to_catalog(galaxies, catalog, matching_radius=10 * u.arcsec):
     catalog['best_match'] = catalog.index.values
 
     matched_catalog = pd.merge(matched_galaxies, catalog, on='best_match', how='inner', suffixes=['_subject', ''])
+    unmatched_galaxies = galaxies[galaxies['sky_separation'] >= matching_radius.value]
 
-    return matched_catalog
+    return matched_catalog, unmatched_galaxies
 
 
 def plot_catalog_overlap(catalog_a, catalog_b, legend):
@@ -43,11 +49,10 @@ def plot_catalog_overlap(catalog_a, catalog_b, legend):
     df_to_plot = pd.concat([a_coords, b_coords])
     df_to_plot['catalog'] = df_to_plot['catalog'].astype('category')
 
-    canvas = ds.Canvas(plot_width=300, plot_height=300)
+    canvas = ds.Canvas(plot_width=400, plot_height=400)
     aggc = canvas.points(df_to_plot, 'ra', 'dec', ds.count_cat('catalog'))
     img = tf.shade(aggc)
     export_image(img, 'catalog_overlap')
-
 
 
 catalog_dir = '/data/galaxy_zoo/decals/catalogs'
@@ -59,56 +64,22 @@ joint_catalog = Table(fits.getdata('{}/nsa_v1_0_0_decals_dr5.fits'.format(catalo
 joint_catalog = joint_catalog[['nsa_id', 'ra', 'dec', 'petrotheta']].to_pandas()
 print('decals nsa galaxies: {}'.format(len(joint_catalog)))
 
-gz_and_decals = pd.merge(gz_catalog, joint_catalog, on='nsa_id', how='inner')
+gz_and_decals = pd.merge(gz_catalog, joint_catalog, on='nsa_id', how='outer')
 print('gz and decals: {}'.format(len(gz_and_decals)))
 
-old_galaxies = match_galaxies_to_catalog(joint_catalog, gz_and_decals)
-new_galaxies = joint_catalog[~joint_catalog['iauname'].isin(set(old_galaxies['iauname']))]
+old_galaxies, new_galaxies = match_galaxies_to_catalog(joint_catalog, gz_and_decals)
 
+print(len(old_galaxies))
 print(len(new_galaxies))
+
+print(new_galaxies.columns.values)
 plot_catalog_overlap(old_galaxies, new_galaxies, ['old', 'new'])
 
-new_galaxies['petrotheta'].dist()
+canvas = ds.Canvas(plot_width=400, plot_height=400)
+aggc = canvas.points(new_galaxies, 'ra', 'dec')
+img = tf.shade(aggc)
+export_image(img, 'new_galaxies_in_dr5')
 
-
-
-    # interesting_cols = ['data_release', 'nsa_id', 'ra', 'dec']
-# decals_dr1_dr2 = pd.read_csv(
-#         '/data/galaxy_zoo/decals/catalogs/galaxy_zoo_decals_with_nsa_v1_0_0.csv',
-#         nrows=None,
-#         usecols=interesting_cols)
-# print('decals_dr1_dr2 nsa galaxies: {}'.format(len(decals_dr1_dr2)))
-#
-# decals_all = pd.merge(decals_dr1_dr2, joint_catalog, on='nsa_id', how='outer')
-# print('decals all: {}'.format(len(decals_all)))
-# decals_repeated = pd.merge(decals_dr1_dr2, joint_catalog, on='nsa_id', how='inner')
-# print('decals repeated: {}'.format(len(decals_repeated)))
-#
-# gz_or_previous_decals = pd.merge(gz_catalog, decals_dr1_dr2, on='nsa_id', how='outer')
-# print('gz or previous decals: {}'.format(len(gz_or_previous_decals)))
-#
-# gz_and_previous_decals = pd.merge(gz_catalog, decals_dr1_dr2, on='nsa_id', how='inner')
-# print('gz and previous decals: {}'.format(len(gz_and_previous_decals)))
-#
-# all_galaxies = pd.merge(gz_or_previous_decals, decals_all, on='nsa_id', how='outer')
-# print('all galaxies: {}'.format(len(all_galaxies)))
-#
-#
-# new_dr5_galaxies = joint_catalog[~joint_catalog['nsa_id'].isin(gz_and_previous_decals['nsa_id'])]
-# print(len(new_dr5_galaxies))
-#
-# new_small_galaxies = new_dr5_galaxies[new_dr5_galaxies['petrotheta'] < 50]
-# new_small_galaxies['petrotheta'].hist(bins=30)
-# plt.xlabel('r petrosian radius')
-# plt.ylabel('count')
-# plt.tight_layout()
-# plt.savefig('new_petrotheta.png')
-
-
-
-# new_dr5_galaxies['']
-
-# https://stackoverflow.com/questions/23284409/how-to-subtract-rows-of-one-pandas-data-frame-from-another
-# joint_catalog['name'] = 'joint_catalog'
-# # gz_and_previous_decals['name'] = 'gz_and_previous_decals'
-# new_dr5_galaxies = pd.merge(joint_catalog, gz_and_previous_decals, on='nsa_id', how='left')
+new_galaxies['petrotheta'].hist()
+plt.savefig('petrotheta_of_new.png')
+plt.clf()

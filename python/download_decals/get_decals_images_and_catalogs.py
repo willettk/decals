@@ -35,7 +35,7 @@ class Settings():
         Returns:
             (str) location of catalog of all NSA galaxies imaged by DECALS DR{} and not yet classified. Output file.
         """
-        return '{}/dr{}_nsa{}_to_upload.csv'.format(self.catalog_dir, self.data_release, self.nsa_version)
+        return '{}/dr{}_nsa{}_to_upload.fits'.format(self.catalog_dir, self.data_release, self.nsa_version)
 
     def get_bricks_loc(self):
         """
@@ -201,20 +201,8 @@ def main():
 
     joint_catalog = get_decals(nsa, bricks, s)
 
-    output_columns = ['nsa_id',
-                      'iauname',
-                      'ra',
-                      'dec'
-                      ]
+    joint_catalog.write(s.upload_catalog_loc)
 
-    if s.new_images:
-        output_columns.append([
-            'fits_ready',
-            'fits_filled',
-            'jpeg_ready'
-        ])
-
-    joint_catalog[output_columns].to_pandas().to_csv(s.upload_catalog_loc, index=False)
 
 if __name__ == '__main__':
     main()
