@@ -6,7 +6,7 @@ from get_catalogs.get_joint_nsa_decals_catalog import *
 @pytest.fixture()
 def catalog():
 
-    # DR5 is from 0-360 in RA and -20 to +30 in Dec
+    # DR5 is from approx. 0-360 in RA and -20 to +30 in Dec
     return Table([
         {'iauname': 'gal_a',
          'ra': 150.,
@@ -142,10 +142,11 @@ def test_create_joint_catalog(catalog, bricks, data_release, nsa_version):
 
     assert 'gal_a' in remaining_names
     assert 'gal_a_duplicate' in remaining_names
-    assert 'gal_multiple_bricks' in remaining_names  # for multi-match galaxies, the first match is recorded
+    assert 'gal_multiple_bricks' in remaining_names  # for multi-match galaxies, (only) the first match is recorded
 
     assert 'gal_below_bricks' not in remaining_names
     assert 'gal_above_bricks' not in remaining_names
     assert 'gal_outside_bricks' not in remaining_names
 
-    # selection cuts are not applied to joint catalog by default
+    # selection cuts are not applied to joint catalog - check they have not been excluded yet
+    assert 'gal_a_far' in remaining_names

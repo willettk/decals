@@ -181,6 +181,10 @@ def lupton_rgb(imgs, bands='grz', arcsinh=1., mn=0.1, mx=100.):
     """
     Create human-interpretable rgb image from multi-band pixel data
     Follow the comments of Lupton (2004) to preserve colour during rescaling
+    1) linearly scale each band to have good colour spread (subjective choice)
+    2) nonlinear rescale of total intensity using arcsinh
+    3) linearly scale all pixel values to lie between mn and mx
+    4) clip all pixel values to lie between 0 and 1
 
     Args:
         imgs (list): of 2-dim np.arrays, each with pixel data on a band # TODO refactor to one 3-dim array
