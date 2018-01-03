@@ -20,13 +20,13 @@ def classifications_to_table(classifications):
     for row_n, classification in classifications.iterrows():
         annotations = json.loads(classification['annotations'])  # get the user responses [(task, value)] for a subject
         clean_annotations = remove_markdown(annotations)  # remove annoying markdown from each response
-        flat_df = pd.DataFrame(clean_annotations)  # put each response task/value pair on a dataframe row
+        flat_df = pd.DataFrame(clean_annotations)  # put each [task, value] pair on a dataframe row
         flat_df['user_id'] = classification['user_id']  # record the (same) user and subject on every row
         flat_df['subject_id'] = classification['subject_ids']
         # copy more columns as needed e.g. time, ip
         all_flat_data.append(flat_df)
     # stick together the responses of all users and all subjects
-    return pd.concat(all_flat_data)
+    return pd.concat(all_flat_data).reset_index(drop=True)  # concat messes with the index
 
 
 def remove_markdown(annotation):
