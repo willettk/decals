@@ -1,10 +1,12 @@
-# Make metadata table for DECaLS images
-# Using NSA and DECALS catalogs (matched previously), derive
-# a) astrometrics e.g. absolute size, magnitude by band (expanded from catalog)
-# b) galaxy zoo metadata e.g. url location, 'retire_at'
+""""
+Make metadata table for DECaLS images
+Using NSA and DECALS catalogs (matched previously), derive
+a) astrometrics e.g. absolute size, magnitude by band (expanded from catalog)
+b) galaxy zoo metadata e.g. url location, 'retire_at'
 
-# Runs on the 'goodimgs' catalog output after matching catalogs and downloading/checking fits
-# Equivalent to make_decals_metadata but for dr2. Minor changes to account for different data table.
+Runs on the 'goodimgs' catalog output after matching catalogs and downloading/checking fits
+Equivalent to make_decals_metadata but for dr2. Minor changes to account for different data table.
+"""""
 
 import os
 import warnings
@@ -17,6 +19,15 @@ from astropy.table import Table
 
 
 def get_key_astrophysical_columns(catalog):
+    """
+    Select or calculate the most important astrophysical columns from the joint catalog
+    This is useful to include in the 'metadata' portion of the subject upload
+    Args:
+        catalog (astropy.Table): joint catalog of decals subjects, with all columns
+
+    Returns:
+        (astropy.Table) The most important astrophysical values from the joint catalog
+    """
 
     key_data = Table()
 

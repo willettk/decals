@@ -44,7 +44,7 @@ def nsa():
 
 
 def test_get_galaxy_zoo_decals_catalog_with_nsa(galaxy_zoo, nsa):
-    galaxy_zoo_with_nsa = get_previous_subjects_with_nsa(galaxy_zoo, nsa)
+    galaxy_zoo_with_nsa = link_previous_subjects_with_nsa(galaxy_zoo, nsa)
 
     target_df = pd.DataFrame([
         {'zooniverse_id': 'gz_a',

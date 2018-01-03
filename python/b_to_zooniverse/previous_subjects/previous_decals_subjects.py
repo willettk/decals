@@ -1,23 +1,59 @@
+
 import pandas as pd
-
-from get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog
-
-
-def get_galaxy_zoo_decals_catalog(subject_loc):
-    subjects = pd.read_csv(subject_loc, nrows=None)
-    return subjects
+import json
 
 
-def get_previous_subjects_with_nsa(previous_subjects, nsa):
-    # TODO break up each concat step into separate functions
-    '''
+def get_previous_decals_subjects(all_subjects, nsa):
+    """
+    Extract decals subjects from galaxy zoo (Ouroborous) subject data dump
+    Requires loading all subjects, hence slow.
 
     Args:
-        previous_subjects (pd.DataFrame): decals subjects, extracted from galaxy zoo data dump subjects file
-        nsa (str):
+        all_subjects (pd.DataFrame): subject data dump from Galaxy Zoo complete dump zip (pinned on Slack)
 
     Returns:
-        (pd.DataFrame)
+        (pd.DataFrame): all decals subjects classified by Galaxy Zoo prior to DR5, as a flat table, joined to NSA
+    """
+
+    # TODO this could be done with sky position matching instead, allowing any NSA catalog
+    if any(nsa['nsa_version'] != '1_0_0'):
+        raise Exception('Fatal error: using previous subjects requires NSA catalog version 1_0_0')
+
+    data_df = split_json_str_to_columns(all_subjects, 'metadata')
+    decals_df = data_df[data_df['survey'] == 'decals']
+
+    # now we would like to clean up the inconsistent metadata and join the decals subjects with the NSA catalog
+    decals_and_nsa = link_previous_subjects_with_nsa(decals_df, nsa)
+    return decals_and_nsa
+
+
+def split_json_str_to_columns(input_df, json_column_name):
+    """
+    Expand Dataframe column of json string into many columns
+
+    Args:
+        input_df (pd.DataFrame): dataframe with json str column
+        json_column_name (str): json string column name
+
+    Returns:
+        (pd.DataFrame) input dataframe with json column expanded into many columns
+    """
+    json_df = pd.DataFrame(list(input_df[json_column_name].apply(json.loads)))
+    del input_df[json_column_name]
+    return pd.concat([input_df, json_df], axis=1)
+
+
+def link_previous_subjects_with_nsa(previous_subjects, nsa):
+    '''
+    Link previous DECALS subjects with the corresponding entry in the NSA v1_0_0 catalog.
+    DR1 and DR2 decals subjects as recorded by Galaxy Zoo have limited and inconsistent information.
+
+    Args:
+        previous_subjects (pd.DataFrame): decals subjects, extracted/flattened from galaxy zoo data dump subjects file
+        nsa (str): NASA-Sloan Atlas catalog version e.g. '0_1_2'
+
+    Returns:
+        (pd.DataFrame): Previous DECALS subjects with consistent information, including the NSA catalog id
     '''
 
     # galaxy zoo catalog has 'provided_object_id' column with IAU name values. Rename to match exposure catalog.
@@ -63,26 +99,3 @@ def get_previous_subjects_with_nsa(previous_subjects, nsa):
     # note that some galaxies will appear twice, correctly, with dif. b_to_zooniverse ids
 
     return galaxy_zoo_with_nsa.set_index('zooniverse_id', drop=True)
-
-
-if __name__ == "__main__":
-
-    # The below will move to main routine
-    # Run all steps to create the NSA-DECaLS-GZ catalog
-
-    catalog_dir = '/data/galaxy_zoo/decals/catalogs'
-
-    # nsa_version = '0_1_2'
-    nsa_version = '1_0_0'  # it's crucial to use 1_0_0 for merging on iauname to work - not clear why!
-    nsa_catalog_loc = '{}/nsa_v{}.fits'.format(catalog_dir, nsa_version)
-
-    subject_loc = '/data/galaxy_zoo/decals/subjects/decals_dr1_and_dr2.csv'
-
-    nsa = get_nsa_catalog(nsa_catalog_loc)
-    galaxy_zoo = get_galaxy_zoo_decals_catalog(subject_loc)
-
-    galaxy_zoo_with_nsa = get_previous_subjects_with_nsa(galaxy_zoo, nsa)
-
-    print(galaxy_zoo_with_nsa.sample(10)[['nsa_id', 'iauname', 'data_release', 'ra', 'dec']])
-
-    galaxy_zoo_with_nsa.to_csv('{}/galaxy_zoo_decals_with_nsa_v{}.csv'.format(catalog_dir, nsa_version))

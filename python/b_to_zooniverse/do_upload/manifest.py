@@ -12,7 +12,7 @@ from do_upload.make_decals_metadata import get_key_astrophysical_columns
 
 def create_manifest_from_calibration_catalog(catalog, image_columns):
     """
-    convert to look like a joint catalog, then upload as normal
+    Convert to look like a joint catalog, then upload as normal
     Args:
         catalog ():
 

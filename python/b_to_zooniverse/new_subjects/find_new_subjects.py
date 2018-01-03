@@ -1,8 +1,7 @@
+# TODO checking for updated images has been disabled - see https://github.com/zooniverse/decals/issues/19
 
 import numpy as np
 from astropy.io import fits
-from astropy.table import Table
-
 from tqdm import tqdm
 
 
@@ -64,19 +63,3 @@ def fits_are_identical(fits_a_loc, fits_b_loc):
     pixels_a = fits.open(fits_a_loc)[0].data
     pixels_b = fits.open(fits_b_loc)[0].data
     return np.array_equal(pixels_a, pixels_b)
-
-
-if __name__ == '__main__':
-
-    catalog_dir = '/data/galaxy_zoo/decals/catalogs'
-    nsa_version = '0_1_2'
-
-    dr2_loc = '{0}/nsa_v{1}_decals_dr{2}.fits'.format(catalog_dir, nsa_version, '2')
-    dr3_loc = '{0}/nsa_v{1}_decals_dr{2}.fits'.format(catalog_dir, nsa_version, '3')
-
-    dr2 = Table(fits.getdata(dr2_loc, 1))
-    dr3 = Table(fits.getdata(dr3_loc, 1)[:100])
-
-    dr3_only_new = find_new_catalog_images(old_catalog=dr2, new_catalog=dr3)
-    print(len(dr3_only_new))
-    dr3_only_new.write('{}/galaxy_zoo_upload.fits'.format(catalog_dir), overwrite=True)

@@ -1,7 +1,7 @@
 import pytest
 from astropy.table import Table
 
-from new_subjects.find_new_subjects import fits_are_identical, find_new_catalog_images
+from new_subjects.find_new_subjects import *
 
 TEST_EXAMPLES_DIR = 'python/test_examples'
 
