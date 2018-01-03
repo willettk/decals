@@ -1,15 +1,13 @@
-
-from make_decals_metadata import get_key_astrophysical_columns
-
-import pandas as pd
-from panoptes_client import Panoptes, Project, SubjectSet, Subject
-from tqdm import tqdm
-
 import ast
 import functools
 from multiprocessing.dummy import Pool as ThreadPool
 
 import astropy.table
+import pandas as pd
+from panoptes_client import Panoptes, Project, SubjectSet, Subject
+from tqdm import tqdm
+
+from do_upload.make_decals_metadata import get_key_astrophysical_columns
 
 
 def create_manifest_from_calibration_catalog(catalog, image_columns):

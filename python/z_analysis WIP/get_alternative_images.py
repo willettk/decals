@@ -3,7 +3,7 @@ from astropy.io import fits
 from astropy.table import Table
 from get_images.download_images_threaded import get_fits_loc
 
-from download_decals.get_images import image_utils
+from a_download_decals.get_images import image_utils
 
 
 def make_mosaic(catalog_sample, fits_to_rgb_instructions, output_loc):

@@ -64,7 +64,7 @@ def test_get_galaxy_zoo_decals_catalog_with_nsa(galaxy_zoo, nsa):
          'ra': 10.0},
     ]).set_index('zooniverse_id', drop=True)
 
-    # there should be no duplicated to_zooniverse ids (there will
+    # there should be no duplicated b_to_zooniverse ids (there will
     assert not any(galaxy_zoo_with_nsa.index.duplicated())
 
     # more descriptive errors than df1.equals(df2)

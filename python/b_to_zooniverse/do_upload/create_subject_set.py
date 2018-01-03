@@ -1,8 +1,6 @@
-
 import astropy.table
 
-from download_decals.get_images.download_images_threaded import get_jpeg_loc
-from manifest import create_manifest_from_joint_catalog, create_manifest_from_calibration_catalog, \
+from do_upload.manifest import create_manifest_from_joint_catalog, create_manifest_from_calibration_catalog, \
     upload_manifest_to_galaxy_zoo
 
 

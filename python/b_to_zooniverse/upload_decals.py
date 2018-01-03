@@ -2,20 +2,19 @@ import pandas as pd
 from astropy.io import fits
 from astropy.table import Table
 
-from download_decals.get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog
-from download_decals.get_images.download_images_threaded import get_fits_loc, get_jpeg_loc
-from make_calibration_images.get_calibration_catalog import get_expert_catalog, get_expert_catalog_joined_with_decals
-from make_calibration_images.get_calibration_images import make_calibration_images
-from to_zooniverse.create_subject_set import create_prototype_subject_set
-from to_zooniverse.identify_new_images import get_new_images
-from get_classifications.filter_decals_from_previous_subjects import get_decals_subjects_from_all_subjects
-
 import settings
+from a_download_decals.get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog
+from a_download_decals.get_images.download_images_threaded import get_fits_loc, get_jpeg_loc
+from do_upload.create_subject_set import create_prototype_subject_set
+from filter_decals_from_previous_subjects import get_decals_subjects_from_all_subjects
+from get_calibration_catalog import get_expert_catalog, get_expert_catalog_joined_with_decals
+from make_calibration_images.get_calibration_images import make_calibration_images
+from new_subjects.identify_new_images import get_new_images
 
 
 def upload_decals_to_panoptes(joint_catalog, previous_subjects, nsa_catalog, calibration_dir, new_calibration_images=False):
     """
-    Using the DECALS joint catalog created by download_decals, upload DECALS sets to Panoptes
+    Using the DECALS joint catalog created by a_download_decals, upload DECALS sets to Panoptes
     Only upload new galaxies by checking against previous subjects used
     Create calibration images with different rgb conversions to check if classifications are affected
 

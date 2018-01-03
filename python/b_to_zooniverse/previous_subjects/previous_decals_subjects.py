@@ -60,7 +60,7 @@ def get_previous_subjects_with_nsa(previous_subjects, nsa):
     # restack
     galaxy_zoo_with_nsa = pd.concat([galaxy_zoo_dr1_with_nsa, galaxy_zoo_dr2_with_nsa])
 
-    # note that some galaxies will appear twice, correctly, with dif. to_zooniverse ids
+    # note that some galaxies will appear twice, correctly, with dif. b_to_zooniverse ids
 
     return galaxy_zoo_with_nsa.set_index('zooniverse_id', drop=True)
 

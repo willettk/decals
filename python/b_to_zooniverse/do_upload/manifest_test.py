@@ -1,8 +1,7 @@
 import pytest
-
 from astropy.table import Table
 
-from manifest import *
+from do_upload.manifest import *
 
 TEST_EXAMPLES_DIR = 'python/test_examples'
 

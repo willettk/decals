@@ -1,7 +1,7 @@
 import pytest
-
-from make_decals_metadata import *
 from astropy.units import Quantity
+
+from do_upload.make_decals_metadata import *
 
 
 @pytest.fixture()

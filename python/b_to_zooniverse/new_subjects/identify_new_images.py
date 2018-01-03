@@ -1,8 +1,8 @@
 # from astropy.io import fits
 from astropy.table import Table
 
-from download_decals.get_images.download_images_threaded import get_fits_loc
-from find_new_subjects import find_new_catalog_images
+from a_download_decals.get_images.download_images_threaded import get_fits_loc
+from new_subjects.find_new_subjects import find_new_catalog_images
 from previous_decals_subjects import get_previous_subjects_with_nsa
 
 

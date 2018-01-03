@@ -134,7 +134,7 @@ def raw_classifications(raw_annotations_a, raw_annotations_b):
 
 
 def test_clean_annotation(raw_annotations_a):
-    cleaned = get_clean_annotations(raw_annotations_a)
+    cleaned = remove_markdown(raw_annotations_a)
     assert cleaned[0]['value'] == 'features or disk'
     assert cleaned[1]['value'] == 'no'
     assert cleaned[2]['value'] == 'no bar'
@@ -152,13 +152,13 @@ def test_clean_annotation(raw_annotations_a):
 
 
 def test_flatten_classifications(raw_classifications):
-    flat_classifications = flatten_classifications(raw_classifications)
+    flat_classifications = classifications_to_table(raw_classifications)
 #     TODO assert statements
 
-
-def test_get_aggregated_classifications(flat_classifications):
-    aggregated = get_aggregate_classifications(flat_classifications)
-    print(aggregated.iloc[0])
+#
+# def test_get_aggregated_classifications(flat_classifications):
+#     aggregated = get_aggregate_classifications(flat_classifications)
+#     print(aggregated.iloc[0])
 
 #
 # def test_aggregate_responses(responses):

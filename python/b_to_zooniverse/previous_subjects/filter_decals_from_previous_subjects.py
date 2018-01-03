@@ -15,7 +15,6 @@ def get_decals_subjects_from_all_subjects(all_subjects):
     return data_df[data_df['survey'] == 'decals']
 
 
-
 def split_json_str_to_columns(input_df, json_column_name):
     """
     Expand Dataframe column of json string into many columns
