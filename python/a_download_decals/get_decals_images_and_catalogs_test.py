@@ -7,19 +7,14 @@ from PIL import Image
 from get_decals_images_and_catalogs import *
 
 
-# @pytest.fixture()
-# def data_release():
-#     return '3'
-
-
 @pytest.fixture()
 def fits_dir(tmpdir):
     return tmpdir.mkdir('fits_dir').strpath
 
 
 @pytest.fixture()
-def jpeg_dir(tmpdir):
-    return tmpdir.mkdir('jpeg_dir').strpath
+def png_dir(tmpdir):
+    return tmpdir.mkdir('png_dir').strpath
 
 
 @pytest.fixture()
@@ -74,28 +69,6 @@ def nsa():
             'z': .01
         },
 
-        # {
-        #     'iauname': 'iau_previous_dr1_subject',
-        #     'nsa_id': '4',
-        #     'ra': 10.,
-        #     'dec': -1.,
-        #     'petrotheta': 4.,
-        #     'petroth50': 3.5,
-        #     'petroth90': 10.,
-        #     'z': .01
-        # },
-        #
-        # {
-        #     'iauname': 'iau_previous_dr2_subject',
-        #     'nsa_id': '5',
-        #     'ra': 10.,
-        #     'dec': -1.,
-        #     'petrotheta': 4.,
-        #     'petroth50': 3.5,
-        #     'petroth90': 10.,
-        #     'z': .01
-        # },
-
         {
             'iauname': 'iau_good_subject',
             'nsa_id': '5',
@@ -107,16 +80,6 @@ def nsa():
             'z': .01
         },
 
-        # {
-        #     'iauname': 'iau_new_subject',
-        #     'nsa_id': '6',
-        #     'ra': 10.,
-        #     'dec': -1.,
-        #     'petrotheta': 4.,
-        #     'petroth50': 3.5,
-        #     'petroth90': 10.,
-        #     'z': 0.01
-        # }
     ])
 
 
@@ -178,12 +141,12 @@ def previous_subjects():
 
 
 @pytest.fixture()
-def settings(catalog_dir, fits_dir, jpeg_dir):
+def settings(catalog_dir, fits_dir, png_dir):
 
     nondefault_params = {
         'catalog_dir': catalog_dir,
         'fits_dir': fits_dir,
-        'jpeg_dir': jpeg_dir,
+        'png_dir': png_dir,
         'data_release': '3'
     }
     return Settings(**nondefault_params)
@@ -195,7 +158,7 @@ def test_get_decals(nsa, bricks, settings):
     settings.new_catalog = True
     settings.new_images = True
     settings.overwrite_fits = True
-    settings.overwrite_jpeg = True
+    settings.overwrite_png = True
     settings.run_to = None
 
     catalog = get_decals(nsa, bricks, settings)
@@ -204,8 +167,6 @@ def test_get_decals(nsa, bricks, settings):
     assert 'iau_small' not in remaining_names
     assert 'iau_below_bricks' not in remaining_names
     assert 'iau_outside_bricks' not in remaining_names
-    # assert 'iau_previous_dr1_subject' not in remaining_names
-    # assert 'iau_previous_dr2_subject' not in remaining_names
     assert 'iau_good_subject' in remaining_names
     assert 'iau_far' in remaining_names  # redshift filtering is currently off
 
@@ -219,10 +180,10 @@ def test_get_decals(nsa, bricks, settings):
     assert new_subject['fits_ready']
     assert new_subject['fits_filled']
 
-    # jpeg downloaded, has values
-    assert os.path.exists(new_subject['jpeg_loc'])
-    jpeg = Image.open(new_subject['jpeg_loc'])
-    jpeg_matrix = np.array(jpeg)
-    assert np.max(jpeg_matrix) > 0
-    assert np.min(jpeg_matrix) <= 0
-    assert new_subject['jpeg_ready']
+    # png downloaded, has values
+    assert os.path.exists(new_subject['png_loc'])
+    png = Image.open(new_subject['png_loc'])
+    png_matrix = np.array(png)
+    assert np.max(png_matrix) > 0
+    assert np.min(png_matrix) <= 0
+    assert new_subject['png_ready']

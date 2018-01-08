@@ -11,8 +11,8 @@ from get_images import image_utils
 def make_calibration_images(calibration_catalog, calibration_dir, new_images=True):
 
     # make images with top 2 options selected from mosaic experiment
-    calibration_catalog['dr2_jpeg_loc'] = [get_dr2_jpeg_loc(calibration_dir, galaxy) for galaxy in calibration_catalog]
-    calibration_catalog['colour_jpeg_loc'] = [get_colour_jpeg_loc(calibration_dir, galaxy) for galaxy in calibration_catalog]
+    calibration_catalog['dr2_png_loc'] = [get_dr2_png_loc(calibration_dir, galaxy) for galaxy in calibration_catalog]
+    calibration_catalog['colour_png_loc'] = [get_colour_png_loc(calibration_dir, galaxy) for galaxy in calibration_catalog]
 
     if new_images:
         pbar = tqdm(total=len(calibration_catalog), unit=' image sets created')
@@ -41,8 +41,8 @@ def save_calibration_images_of_galaxy(galaxy, pbar=None):
     dr2_img = get_dr2_style_image(img_data)
     colour_img = get_colour_style_image(img_data)
 
-    plt.imsave(galaxy['dr2_jpeg_loc'], dr2_img, origin='lower')
-    plt.imsave(galaxy['colour_jpeg_loc'], colour_img, origin='lower')
+    plt.imsave(galaxy['dr2_png_loc'], dr2_img, origin='lower')
+    plt.imsave(galaxy['colour_png_loc'], colour_img, origin='lower')
 
     if pbar:
         pbar.update()
@@ -73,9 +73,9 @@ def get_colour_style_image(img_data):
     return image_utils.lupton_rgb(img_bands, **kwargs)
 
 
-def get_dr2_jpeg_loc(jpeg_dir, galaxy):
-    return '{}/{}_dr2.jpeg'.format(jpeg_dir, galaxy['iauname'])
+def get_dr2_png_loc(png_dir, galaxy):
+    return '{}/{}_dr2.png'.format(png_dir, galaxy['iauname'])
 
 
-def get_colour_jpeg_loc(jpeg_dir, galaxy):
-    return '{}/{}_colour.jpeg'.format(jpeg_dir, galaxy['iauname'])
+def get_colour_png_loc(png_dir, galaxy):
+    return '{}/{}_colour.png'.format(png_dir, galaxy['iauname'])
