@@ -981,7 +981,7 @@ def colortests():
                 # Does the JPEG image made with Dustin's RGB technique exist?
                 filename = "%s_%.3fg_%.3fr_%.3fz.jpeg" % (IAUNAME,g,r,z)
                 jpeg_filename = '%s/decals/imagetests/colortests/%s' % (gzpath,filename)
-                rgb_img = dstn_rgb((img[0,:,:],img[1,:,:],img[2,:,:]), 'grz', mnmx=(-0.5,100.), arcsinh=1., scales=myscales, desaturate=True)
+                rgb_img = dr2_style_rgb((img[0,:,:],img[1,:,:],img[2,:,:]), 'grz', mnmx=(-0.5,100.), arcsinh=1., scales=myscales, desaturate=True)
                 plt.imsave(jpeg_filename, rgb_img, origin='lower')
 
                 # Add to HTML comparison page
