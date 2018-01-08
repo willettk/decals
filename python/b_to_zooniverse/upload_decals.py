@@ -4,7 +4,7 @@ from astropy.table import Table
 
 import settings
 from a_download_decals.get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog
-from a_download_decals.get_images.download_images_threaded import get_fits_loc, get_jpeg_loc
+# from a_download_decals.get_images.download_images_threaded import get_fits_loc, get_png_loc
 from do_upload.create_subject_set import create_prototype_subject_set
 from previous_subjects.previous_decals_subjects import get_previous_decals_subjects
 from get_calibration_catalog import get_expert_catalog, get_expert_catalog_joined_with_decals
@@ -47,11 +47,8 @@ if __name__ == '__main__':
     else:
         previous_subjects = pd.read_csv(settings.subject_loc)  # previously extracted decals subjects
 
-    # TODO temporary fix, catalog being used has incorrect fits loc
-    fits_dir = '/Volumes/external/decals/fits/dr5'
-    joint_catalog['fits_loc'] = [get_fits_loc(fits_dir, galaxy) for galaxy in joint_catalog]
-    jpeg_dir = '/Volumes/external/decals/jpeg/dr5'
-    joint_catalog['jpeg_loc'] = [get_jpeg_loc(jpeg_dir, galaxy) for galaxy in joint_catalog]
+    print(previous_subjects.columns.values)
+    print(nsa_catalog.colnames)
 
     upload_decals_to_panoptes(
         joint_catalog,

@@ -73,7 +73,6 @@ class Settings():
             return '{}/survey-bricks-dr5.fits'.format(self.catalog_dir)
 
     def derive_file_paths(self):
-        # TODO consider rewriting away from 'get' methods
         self.nsa_catalog_loc = self.get_nsa_catalog_loc()
         self.joint_catalog_loc = self.get_joint_catalog_loc()
         self.brick_coordinates_loc = self.get_brick_coordinates_loc()
@@ -86,19 +85,21 @@ class Settings():
     def __init__(self,
                  # must specify these for safety
                  fits_dir,
-                 jpeg_dir,
+                 png_dir,
                  data_release,
                  # these rarely change and are set as default
                  nsa_version='1_0_0',
                  catalog_dir='/data/galaxy_zoo/decals/catalogs',
-                 subject_loc='/data/galaxy_zoo/decals/subjects/decals_dr1_and_dr2.csv'):
+                 subject_loc='/data/galaxy_zoo/decals/subjects/decals_dr1_and_dr2.csv',
+                 run_to=-1):
 
         self.data_release = data_release
         self.nsa_version = nsa_version
         self.catalog_dir = catalog_dir
         self.fits_dir = fits_dir
-        self.jpeg_dir = jpeg_dir
+        self.png_dir = png_dir
         self.subject_loc = subject_loc
+        self.run_to = run_to
 
         self.derive_file_paths()
 
@@ -127,7 +128,7 @@ def setup_tables(s):
 
 def get_decals(nsa, bricks, s):
     """
-    Find NSA galaxies imaged by DECALS. Download fits. Create RGB jpegs. Return catalog of new galaxies.
+    Find NSA galaxies imaged by DECALS. Download fits. Create RGB pngs. Return catalog of new galaxies.
 
     Args:
         nsa (astropy.Table): catalog of NSA galaxies
@@ -153,9 +154,9 @@ def get_decals(nsa, bricks, s):
             joint_catalog[:s.run_to],
             s.data_release,
             s.fits_dir,
-            s.jpeg_dir,
+            s.png_dir,
             overwrite_fits=s.overwrite_fits,
-            overwrite_jpeg=s.overwrite_jpeg)
+            overwrite_png=s.overwrite_png)
         joint_catalog.write(s.joint_catalog_loc, overwrite=True)
 
     return joint_catalog
@@ -163,7 +164,7 @@ def get_decals(nsa, bricks, s):
 
 def main():
     """
-    Create the NSA-DECaLS-GZ catalog, download fits, produce jpeg, and identify new subjects
+    Create the NSA-DECaLS-GZ catalog, download fits, produce png, and identify new subjects
 
     Returns:
         None
@@ -172,13 +173,14 @@ def main():
     data_release = '5'
     nsa_version = '1_0_0'
     fits_dir = '/Volumes/external/decals/fits/dr{}'.format(data_release)
-    jpeg_dir = '/Volumes/external/decals/jpeg/dr{}'.format(data_release)
+    png_dir = '/Volumes/external/decals/png/dr{}'.format(data_release)
+    new_bricks_table = False
 
     nondefault_params = {
         'nsa_version': nsa_version,
         'data_release': data_release,
         'fits_dir': fits_dir,
-        'jpeg_dir': jpeg_dir,
+        'png_dir': png_dir,
     }
     s = Settings(**nondefault_params)
 
@@ -187,14 +189,15 @@ def main():
 
     # Setup tasks generate the 'bricks' data table used later.
     # They need only be completed once after downloading the required files
-    setup_tables(s)
+    if new_bricks_table:
+        setup_tables(s)
 
     # specify execution options
-    s.new_catalog = False
+    s.new_catalog = True
     s.new_images = True
     s.overwrite_fits = False
-    s.overwrite_jpeg = False
-    s.run_to = -1
+    s.overwrite_png = False
+    s.run_to = 1000  # TODO temporary
 
     nsa = get_nsa_catalog(s.nsa_catalog_loc, nsa_version)
     bricks = get_decals_bricks(s.bricks_loc, s.data_release)
