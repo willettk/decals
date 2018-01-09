@@ -197,7 +197,7 @@ def main():
     s.new_images = True
     s.overwrite_fits = False
     s.overwrite_png = False
-    s.run_to = 1000  # TODO temporary
+    s.run_to = -1
 
     nsa = get_nsa_catalog(s.nsa_catalog_loc, nsa_version)
     bricks = get_decals_bricks(s.bricks_loc, s.data_release)

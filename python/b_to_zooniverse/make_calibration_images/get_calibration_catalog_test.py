@@ -7,13 +7,15 @@ from get_calibration_catalog import *
 def expert_catalog():
     # expert catalog uses iau name at 2dp (originally 'sdss')
     return Table([
-        {'iauname': 'J100000.00-000000.00',
-         'iauname_1dp': 'J100000.00-000000.0',  # loading helper adds this column
+        {'iauname': 'gz_a_2dp',
+         'ra': 10.,
+         'dec': 10.,
          'bar': 2 ** 5,
          'ring': 2 ** 3},
 
-        {'iauname': 'J200000.00-000000.00',
-         'iauname_1dp': 'J200000.00-000000.0',  # loading helper adds this column
+        {'iauname': 'gz_b_2dp',
+         'ra': 20.,
+         'dec': 20.,
          'bar': 2 ** 3,
          'ring': 2 ** 1}
     ])
@@ -23,10 +25,14 @@ def expert_catalog():
 def joint_catalog():
     # joint catalog uses iau name at 1dp
     return Table([
-        {'iauname': 'J100000.00-000000.0',
+        {'iauname': 'gz_a_1dp',
+         'ra': 10.,
+         'dec': 10.,
          'feature': 'value_1'},
 
-        {'iauname': 'J900000.00-000000.0',
+        {'iauname': 'gz_b_1dp',
+         'ra': 90.,
+         'dec': 90.,
          'feature': 'value_2'}
     ])
 
@@ -60,25 +66,30 @@ def test_decode_ring_ints():
     assert nuclear_and_outer == ['nuclear', 'outer']
 
 
-def test_round_iauname_to_1dp():
-    initial_name = 'J000000.00-000000.00'
-    assert round_iauname_to_1dp(initial_name) == 'J000000.00-000000.0'
-
-
 def test_get_expert_catalog_joined_with_decals(joint_catalog, expert_catalog):
     joined_catalog = get_expert_catalog_joined_with_decals(joint_catalog, expert_catalog)
     assert len(joined_catalog) == 1
 
     expected_catalog = Table([{
-        'iauname': 'J100000.00-000000.00',
-        'iauname_1dp': 'J100000.00-000000.0',
+        'iauname': 'gz_a_1dp',
+        'iauname_expert': 'gz_a_2dp',
         'feature': 'value_1',
+        'ra': 10.,
+        'ra_expert': 10.,
+        'dec': 10.,
+        'dec_expert': 10.,
         'bar': 2 ** 5,
         'ring': 2 ** 3,
         'has_bar': True,
         'has_ring': True,
         'bar_types': ['peanut'],
-        'ring_types': ['outer']
+        'ring_types': ['outer'],
+        'best_match': 0,
+        'sky_separation': 0.0
     }])
 
-    assert joined_catalog == expected_catalog
+    for col in set(expected_catalog.colnames + joined_catalog.colnames):
+        # print(col)
+        # print(joined_catalog[0][col])
+        # print(expected_catalog[0][col])
+        assert joined_catalog[col] == expected_catalog[col]  # more descriptive than assert Table equal
