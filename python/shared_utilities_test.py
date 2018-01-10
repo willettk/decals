@@ -50,16 +50,16 @@ def test_match_galaxies_to_catalog(galaxies, catalog):
     assert set(unmatched.colnames) == {'dec', 'name', 'ra', 'z', 'best_match', 'sky_separation', 'galaxy_data'}
 
 
-@pytest.fixture()
-def nsa():
-    nsa_v1_0_0_catalog_loc = '/data/galaxy_zoo/decals/catalogs/nsa_v1_0_0.fits'
-    return Table(fits.getdata(nsa_v1_0_0_catalog_loc, 1))[:1000]
-
-
-def test_astropy_table_to_pandas(nsa):
-    df = astropy_table_to_pandas(nsa)
-    assert len(df) == len(nsa)
-    assert len(df.columns.values) == len(nsa.colnames)
+# @pytest.fixture()
+# def nsa():
+#     nsa_v1_0_0_catalog_loc = '/data/galaxy_zoo/decals/catalogs/nsa_v1_0_0.fits'
+#     return Table(fits.getdata(nsa_v1_0_0_catalog_loc, 1))[:1000]
+#
+#
+# def test_astropy_table_to_pandas(nsa):
+#     df = astropy_table_to_pandas(nsa)
+#     assert len(df) == len(nsa)
+#     assert len(df.columns.values) == len(nsa.colnames)
     # df.to_csv('temp.csv')
     #
     # df = pd.read_csv('temp.csv')
