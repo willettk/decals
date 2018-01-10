@@ -88,6 +88,10 @@ def upload_manifest_to_galaxy_zoo(subject_set_name, manifest, galaxy_zoo_id='573
         None
     """
 
+    if 'TEST' in subject_set_name:
+        warnings.warn('Testing mode detected - not uploading!')
+        return manifest
+
     # Important - don't commit the password!
     zooniverse_login = read_data_from_txt('/data/repos/decals/python/b_to_zooniverse/do_upload/zooniverse_login.txt')
     Panoptes.connect(**zooniverse_login)
@@ -99,11 +103,8 @@ def upload_manifest_to_galaxy_zoo(subject_set_name, manifest, galaxy_zoo_id='573
     subject_set.links.project = galaxy_zoo
     subject_set.display_name = subject_set_name
 
-    if 'TEST' in subject_set_name:
-        warnings.warn('Testing mode detected - not uploading!')
-        return manifest
-    else:
-        subject_set.save()
+
+    subject_set.save()
 
     pbar = tqdm(total=len(manifest), unit=' subjects uploaded')
 
