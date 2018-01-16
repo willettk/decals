@@ -1,5 +1,7 @@
 import pytest
 
+from astropy.table import Table
+
 from setup.join_brick_tables import *
 
 
