@@ -13,12 +13,11 @@ def get_previous_decals_subjects(all_subjects, nsa_v1_0_0):
 
     Args:
         all_subjects (pd.DataFrame): subject data dump from Galaxy Zoo complete dump zip (pinned on Slack)
+        nsa_v1_0_0 (astropy.Table): NASA-Sloan Atlas of SDSS galaxies. Must be version 1_0_0 to fix metadata
 
     Returns:
         (astropy.Table): all decals subjects classified by Galaxy Zoo prior to DR5, as a flat table, joined to NSA
     """
-
-    # TODO this could be done with sky position matching instead, allowing any NSA catalog
     if any(nsa_v1_0_0['nsa_version'] != '1_0_0'):
         raise Exception('Fatal error: using previous subjects requires NSA catalog version 1_0_0')
 
@@ -102,5 +101,4 @@ def link_previous_subjects_with_nsa(previous_subjects, nsa):
     galaxy_zoo_with_nsa = pd.concat([galaxy_zoo_dr1_with_nsa, galaxy_zoo_dr2_with_nsa])
 
     # note that some galaxies will appear twice, correctly, with dif. b_to_zooniverse ids
-
     return galaxy_zoo_with_nsa.set_index('zooniverse_id', drop=True)
