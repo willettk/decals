@@ -193,7 +193,7 @@ def main():
         setup_tables(s)
 
     # specify execution options
-    s.new_catalog = True
+    s.new_catalog = False
     s.new_images = True
     s.overwrite_fits = False
     s.overwrite_png = False

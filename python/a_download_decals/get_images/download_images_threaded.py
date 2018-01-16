@@ -3,12 +3,18 @@ import os
 import urllib.parse
 import urllib.request
 import warnings
-from multiprocessing.dummy import Pool as ThreadPool
+import logging
+import multiprocessing
+
+import threading
+from queue import Queue
 
 import numpy as np
 from astropy.io import fits
 from matplotlib import pyplot as plt
 from tqdm import tqdm
+
+import time
 
 from get_images.image_utils import dr2_style_rgb
 
@@ -30,25 +36,100 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
         (astropy.Table) catalog with new columns for fits/png locations and quality checks
     '''
 
+    catalog = catalog[-10000:]
+
     # Table does not support .apply - use list comprehension instead
     catalog['fits_loc'] = [get_fits_loc(fits_dir, catalog[index]) for index in range(len(catalog))]
     catalog['png_loc'] = [get_png_loc(png_dir, catalog[index]) for index in range(len(catalog))]
 
-    pbar = tqdm(total=len(catalog), unit=' images created')
+    # pbar = tqdm(total=len(catalog), unit=' images created')
 
     download_params = {
         'data_release': data_release,
         'overwrite_fits': overwrite_fits,
         'overwrite_png': overwrite_png,
-        'pbar': pbar
+        'pbar': None
+        # 'pbar': pbar
     }
     download_images_partial = functools.partial(download_images, **download_params)
 
-    pool = ThreadPool(30)
-    pool.map(download_images_partial, catalog)
-    pbar.close()
-    pool.close()
-    pool.join()
+    queue = Queue()
+    [queue.put(galaxy) for galaxy in catalog]
+
+    n_threads = 100
+    worker_params = {
+        'function_to_apply': download_images_partial,
+        'queue': queue
+    }
+
+    worker_partial = functools.partial(worker, **worker_params)
+    for i in range(n_threads):
+        t = threading.Thread(target=worker_partial)
+        t.daemon = True  # kill once program exits
+        t.start()
+
+    wait_time = 10
+    previous_num_left = queue.qsize()
+    while not queue.empty():
+        num_left = queue.qsize()
+        print("Images left: {}, Rate: {}".format(num_left, (previous_num_left - num_left) / wait_time))
+        previous_num_left = num_left
+        time.sleep(wait_time)
+
+    queue.join()
+
+    # threads = [threading.Thread(target=download_images_partial, args=(queue,)) for i in range(n_threads)]
+    #
+    #
+    # for thread in threads:
+    #     thread.start()
+    # for thread in tqdm(threads):
+    #     thread.join()
+
+    # multiprocessing.log_to_stderr()
+    # logger = multiprocessing.get_logger()
+    # logger.setLevel(logging.INFO)
+
+    # pool = multiprocessing.Pool()  # number of processes = CPU cores available
+
+    """
+    map is just like the normal map. It distributes tasks to threads, which act immediately. Wraps map_async.
+    """
+    # pool.map(download_images_partial, catalog_partial)
+
+    """
+    again like functools, imap is map but returning a lazy iterator. Results are calculated when the iterator is called.
+    """
+
+    # for _ in tqdm(pool.imap(download_images_partial, catalog[250000:]), total=len(catalog[250000:]), unit=' images created'):
+    #     pass
+
+    """
+    each apply_async call will give a process a single task. apply_async is non-blocking: the whole list starts running.
+    apply_async returns a result object with .get(timeout=n), .ready(), etc.
+    """
+    # multiple_results = [pool.apply_async(download_images_partial, (catalog, )) for i in range(len(catalog))]
+    # print(multiple_results)
+    # print(multiple_results[0])
+    # tqdm([res.get() for res in multiple_results])
+
+    """
+    map_async will distribute ALL tasks to workers, and return a single result object
+    """
+    # multiple_results = pool.map_async(download_images_partial, catalog, chunksize=1)
+    # previous_num_left = multiple_results._number_left
+    # wait_time = 10
+    # while not multiple_results.ready():
+    #     num_left = multiple_results._number_left
+    #     print("Images left: {}, Rate: {}".format(num_left, (previous_num_left - num_left) / wait_time))
+    #     previous_num_left = num_left
+    #     time.sleep(wait_time)
+
+    # pool.map_async(download_images_partial, catalog)
+    # pbar.close()
+
+    # pool.close()
+    # pool.join()
 
     catalog = check_images_are_downloaded(catalog)
 
@@ -58,6 +139,13 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
     print("{} fits have many bad pixels".format(len(catalog) - np.sum(catalog['fits_filled'])))
 
     return catalog
+
+
+def worker(function_to_apply, queue):
+    while True:
+        item = queue.get()
+        function_to_apply(item)
+        queue.task_done()
 
 
 def download_images(galaxy, data_release, overwrite_fits=False, overwrite_png=False, pbar=None, max_attempts=5):
@@ -76,36 +164,51 @@ def download_images(galaxy, data_release, overwrite_fits=False, overwrite_png=Fa
     Returns:
         None
     """
-    pixscale = max(min(galaxy['petroth50'] * 0.04, galaxy['petroth50'] * 0.02), min_pixelscale)
+    print('download triggered', flush=True)
 
-    # For convenience
-    fits_loc = galaxy['fits_loc']
-    png_loc = galaxy['png_loc']
+    try:
 
-    # Download multi-band fits images
-    if not fits_downloaded_correctly(fits_loc) or overwrite_fits:
+        pixscale = max(min(galaxy['petroth50'] * 0.04, galaxy['petroth50'] * 0.02), min_pixelscale)
 
-        attempt = 0
-        while attempt < max_attempts:
+        # For convenience
+        fits_loc = galaxy['fits_loc']
+        png_loc = galaxy['png_loc']
+
+        # Download multi-band fits images
+        # if not fits_downloaded_correctly(fits_loc) or overwrite_fits: TODO removed for speed
+        if not os.path.exists(fits_loc) or overwrite_fits:
+            # print(galaxy)
+            print('begin downloading {}'.format(galaxy['iauname']), flush=True)
+            attempt = 0
+            while attempt < max_attempts:
+                # print('making attempt, thread {}'.format(os.getpid()))
+                try:
+                    # print('doing the download, thread {}'.format(os.getpid()))
+                    download_fits_cutout(fits_loc, data_release, galaxy['ra'], galaxy['dec'], pixscale, 424)
+                    assert fits_downloaded_correctly(fits_loc)
+                    # print('yay, downloaded, thread {}'.format(os.getpid()))
+                    break
+                except Exception as err:
+                    print(err, 'on galaxy {}, attempt {}'.format(galaxy['iauname'], attempt), flush=True)
+                    attempt += 1
+                if attempt == max_attempts:
+                    warnings.warn('Failed to download {} after three attempts. No fits at {}'.format(
+                        galaxy['iauname'], galaxy['fits_loc']))
+
+        # print('moving on to png, thread {}'.format(os.getpid()))
+        if not os.path.exists(png_loc) or overwrite_png:
             try:
-                download_fits_cutout(fits_loc, data_release, galaxy['ra'], galaxy['dec'], pixscale, 424)
-                assert fits_downloaded_correctly(fits_loc)
-                break
-            except Exception as err:
-                print(err, 'on galaxy {}, attempt {}'.format(galaxy['iauname'], attempt))
-                attempt += 1
+                # Create artistic png for Galaxy Zoo from the new FITS
+                make_png_from_fits(fits_loc, png_loc)
+            except:
+                warnings.warn('Error creating png from {}'.format(fits_loc), flush=True)
 
-    if not os.path.exists(png_loc) or overwrite_png:
-        try:
-            # Create artistic png for Galaxy Zoo from the new FITS
-            make_png_from_fits(fits_loc, png_loc)
-        except:
-            warnings.warn('Error creating png from {}'.format(fits_loc))
-    else:
-        warnings.warn('Failed to download {} after three attempts. No fits or png'.format(galaxy['iauname']))
+        if pbar:
+            pbar.update()
 
-    if pbar:
-        pbar.update()
+    except Exception:
+        warnings.warn('FATAL THREAD ERROR: {}'.format(Exception), flush=True)
+        exit(1)
 
 
 def fits_downloaded_correctly(fits_loc):
@@ -184,7 +287,9 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixsc
     else:
         raise ValueError('Data release "{}" not recognised'.format(data_release))
 
+    # print('urlib request {}, thread {}'.format(url, os.getpid()))
     urllib.request.urlretrieve(url, fits_loc)
+    # print('done, thread {}'.format(os.getpid()))
 
 
 def make_png_from_fits(fits_loc, png_loc):

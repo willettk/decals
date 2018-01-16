@@ -40,6 +40,7 @@ def fits_image_params(fits_loc):
 @pytest.fixture()
 def new_galaxy(fits_loc, png_loc):
     return {
+        'iauname': 'new_galaxy',
         'fits_loc': fits_loc,
         'png_loc': png_loc,
         'ra': 146.714208787,
@@ -180,7 +181,6 @@ def test_download_images_creates_fits_and_png(new_galaxy, fits_dir, png_dir):
 
 
 def test_check_images_are_downloaded(nsa_decals):
-    # TODO currently correctly broken - there really aren't test pngs ready yet
     checked_catalog = check_images_are_downloaded(nsa_decals)  # directly on test_examples directory
     print(checked_catalog[['iauname', 'fits_ready', 'fits_filled', 'png_ready']])
     assert np.array_equal(checked_catalog['fits_ready'], np.array([False, False, True, True, True, True]))
