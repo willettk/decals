@@ -1,17 +1,21 @@
 import numpy as np
-from astropy.table import Table, join
+from astropy.table import Table
 from astropy.io import fits
+from astropy import units as u
 import pandas as pd
 
 import matplotlib.pyplot as plt
 
+from shared_utilities import match_galaxies_to_catalog
+
 
 def get_expert_catalog_joined_with_decals(joint_catalog, expert_catalog, plot=False):
 
-    joint_catalog['iauname_1dp'] = joint_catalog['iauname']
-    del joint_catalog['iauname']
-
-    output_catalog = join(joint_catalog, expert_catalog, keys='iauname_1dp', join_type='inner', table_names=['joint', 'expert'])
+    output_catalog, _ = match_galaxies_to_catalog(
+        galaxies=expert_catalog,
+        catalog=joint_catalog,
+        matching_radius=5 * u.arcsec,
+        galaxy_suffix='_expert')
 
     output_catalog['has_bar'] = output_catalog['bar'] != 0
     output_catalog['has_ring'] = output_catalog['ring'] != 0
@@ -33,11 +37,6 @@ def get_expert_catalog(expert_catalog_loc):
     for column_name in catalog.colnames:
         catalog.rename_column(column_name, column_name.lower())
     catalog.rename_column('sdss', 'iauname')
-
-    # nsa/decals catalog uses 1dp precision in galaxy names - round expert catalog to match this
-    catalog['iauname_1dp'] = 'J000000.00-000000.0'
-    for galaxy_n, galaxy in enumerate(catalog):
-        catalog['iauname_1dp'][galaxy_n] = round_iauname_to_1dp(galaxy['iauname'])
 
     return catalog
 
@@ -113,11 +112,3 @@ def save_output_catalog_statistics(output_catalog):
 def column_value_counts_as_dataframe(data, column):
     counts = pd.Series(data[column]).value_counts()
     return pd.DataFrame({column: counts.index, 'count': counts.values})
-
-
-def round_iauname_to_1dp(iauname, debug=False):
-
-    # simple cut
-    iauname_1dp = iauname[:-1]
-
-    return iauname_1dp

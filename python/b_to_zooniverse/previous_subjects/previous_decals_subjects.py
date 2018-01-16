@@ -2,28 +2,35 @@
 import pandas as pd
 import json
 
+from astropy.table import Table
 
-def get_previous_decals_subjects(all_subjects, nsa):
+
+def get_previous_decals_subjects(all_subjects, nsa_v1_0_0):
     """
     Extract decals subjects from galaxy zoo (Ouroborous) subject data dump
+    Make the metadata consistent
     Requires loading all subjects, hence slow.
 
     Args:
         all_subjects (pd.DataFrame): subject data dump from Galaxy Zoo complete dump zip (pinned on Slack)
+        nsa_v1_0_0 (astropy.Table): NASA-Sloan Atlas of SDSS galaxies. Must be version 1_0_0 to fix metadata
 
     Returns:
-        (pd.DataFrame): all decals subjects classified by Galaxy Zoo prior to DR5, as a flat table, joined to NSA
+        (astropy.Table): all decals subjects classified by Galaxy Zoo prior to DR5, as a flat table, joined to NSA
     """
-
-    # TODO this could be done with sky position matching instead, allowing any NSA catalog
-    if any(nsa['nsa_version'] != '1_0_0'):
+    if any(nsa_v1_0_0['nsa_version'] != '1_0_0'):
         raise Exception('Fatal error: using previous subjects requires NSA catalog version 1_0_0')
 
     data_df = split_json_str_to_columns(all_subjects, 'metadata')
     decals_df = data_df[data_df['survey'] == 'decals']
 
     # now we would like to clean up the inconsistent metadata and join the decals subjects with the NSA catalog
-    decals_and_nsa = link_previous_subjects_with_nsa(decals_df, nsa)
+    decals_and_nsa = link_previous_subjects_with_nsa(decals_df, nsa_v1_0_0)
+
+    #  convert to astropy.Table
+    decals_and_nsa = [row.to_dict() for _, row in decals_and_nsa.iterrows()]
+    decals_and_nsa = Table(decals_and_nsa)
+
     return decals_and_nsa
 
 
@@ -66,9 +73,6 @@ def link_previous_subjects_with_nsa(previous_subjects, nsa):
     assert all(nsa['iauname'].duplicated() == False)
     assert all(nsa['nsa_id'].duplicated() == False)
 
-    # galaxy_zoo_id_columns = ['nsa_id', 'data_release', 'iauname', 'sdss_id', 'sdss_dr7_id', 'sdss_dr8_id', 'sdss_dr12_objid']
-    # print(previous_subjects[galaxy_zoo_id_columns].sample(20))
-
     # split into DR1 (IAU name as ID) and DR2 (NSA ID as ID)
     galaxy_zoo_dr1 = previous_subjects.dropna(subset=['iauname'])
     galaxy_zoo_dr2 = previous_subjects.dropna(subset=['nsa_id'])
@@ -97,5 +101,4 @@ def link_previous_subjects_with_nsa(previous_subjects, nsa):
     galaxy_zoo_with_nsa = pd.concat([galaxy_zoo_dr1_with_nsa, galaxy_zoo_dr2_with_nsa])
 
     # note that some galaxies will appear twice, correctly, with dif. b_to_zooniverse ids
-
     return galaxy_zoo_with_nsa.set_index('zooniverse_id', drop=True)
