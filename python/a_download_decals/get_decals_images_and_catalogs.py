@@ -143,13 +143,16 @@ def get_decals(nsa, bricks, s):
     nsa_after_cuts = apply_selection_cuts(nsa)
 
     if s.new_catalog:
+        print('get new catalog')
         joint_catalog = create_joint_catalog(nsa_after_cuts, bricks, s.data_release, s.nsa_version, run_to=s.run_to)
+        print('writing new catalog')
         joint_catalog.write(s.joint_catalog_loc, overwrite=True)
-        # TODO still need to apply broken PETRO check (small number of cases)
     else:
+        print('get joint catalog')
         joint_catalog = Table(fits.getdata(s.joint_catalog_loc))
 
     if s.new_images:
+        print('get new images')
         joint_catalog = download_images_multithreaded(
             joint_catalog[:s.run_to],
             s.data_release,
@@ -191,6 +194,7 @@ def main():
     # They need only be completed once after downloading the required files
     if new_bricks_table:
         setup_tables(s)
+        print('setup complete')
 
     # specify execution options
     s.new_catalog = False
@@ -201,6 +205,7 @@ def main():
 
     nsa = get_nsa_catalog(s.nsa_catalog_loc, nsa_version)
     bricks = get_decals_bricks(s.bricks_loc, s.data_release)
+    print('catalogs loaded')
 
     joint_catalog = get_decals(nsa, bricks, s)
 
