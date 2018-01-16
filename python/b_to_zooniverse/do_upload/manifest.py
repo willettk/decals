@@ -9,6 +9,7 @@ from panoptes_client import Panoptes, Project, SubjectSet, Subject
 from tqdm import tqdm
 
 from do_upload.make_decals_metadata import get_key_astrophysical_columns
+from settings import zooniverse_login_loc
 
 
 def create_manifest_from_calibration_catalog(catalog, image_columns):
@@ -93,7 +94,7 @@ def upload_manifest_to_galaxy_zoo(subject_set_name, manifest, galaxy_zoo_id='573
         return manifest
 
     # Important - don't commit the password!
-    zooniverse_login = read_data_from_txt('/data/repos/decals/python/b_to_zooniverse/do_upload/zooniverse_login.txt')
+    zooniverse_login = read_data_from_txt(zooniverse_login_loc)
     Panoptes.connect(**zooniverse_login)
 
     galaxy_zoo = Project.find(galaxy_zoo_id)
