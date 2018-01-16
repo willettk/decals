@@ -1,6 +1,4 @@
 import astropy.table
-from astropy.io import fits
-from astropy.table import Table
 
 
 def merge_bricks_catalogs(coordinate_catalog, exposure_catalog, test_mode=False):
@@ -26,15 +24,16 @@ def merge_bricks_catalogs(coordinate_catalog, exposure_catalog, test_mode=False)
     for colname in coordinate_catalog.colnames:
         coordinate_catalog.rename_column(colname, colname.lower())
 
-    # merge on brickname, ra, dec by default
+    # merge on brickname
+    assert len(coordinate_catalog['brickname']) == len(set(coordinate_catalog['brickname']))  # names must be unique
     bricks_catalog = astropy.table.join(
         coordinate_catalog,
         exposure_catalog,
-        keys=['brickname', 'ra', 'dec'],
+        keys='brickname',  # also works with [brickname, ra, dec] but this avoids rounding errors
         join_type='inner')
 
     # check that all exposed bricks were 1-1 matched
-    if not test_mode:
+    if not test_mode:  # avoid this check with some unit tests
         assert len(bricks_catalog) == len(exposure_catalog)
 
     return bricks_catalog

@@ -20,25 +20,25 @@ This repo collects the code related to the DECaLS classification project on Gala
 4. Identifying galaxies not yet uploaded from DECaLS DR1 and DR2
 5. Aggregating and interpreting the volunteer classifications
 
-Currently (11.12.2017) aggregation (5) is only partially implemented
+Currently (01.01.2018) aggregation (5) is only partially implemented
 
 ### Structure
 
 The code is organised under /python into folders with the following aims:
 
-+ download_decals
++ a_download_decals
     - create a joint NSA/DECaLS catalog
     - save fits from the DECaLS cut-out server and create artistic jpeg
-+ make_calibration_images
++ b_to_zooniverse
+    - find previously uploaded DECaLS subjects
     - create a calibration catalog using Nair (2010)
     - create two jpeg versions of a fits image with different colouring
-+ to_zooniverse
-    - find previously uploaded DECaLS subjects
     - upload a catalog to Zooniverse Panoptes
-+ get_classifications
++ c_from_zooniverse
     - download and aggregate Zooniverse Panoptes classifications
     - WIP!
 
+Please see the README in each folder for instructions specific to each aim.
 
 #### Files Required
 
