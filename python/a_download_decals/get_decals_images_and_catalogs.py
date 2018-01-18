@@ -175,8 +175,10 @@ def main():
 
     data_release = '5'
     nsa_version = '1_0_0'
-    fits_dir = '/Volumes/external/decals/fits/dr{}'.format(data_release)
-    png_dir = '/Volumes/external/decals/png/dr{}'.format(data_release)
+    fits_dir = '/data/temp'
+    png_dir = '/data/temp'
+    # fits_dir = '/Volumes/external/decals/fits/dr{}'.format(data_release)
+    # png_dir = '/Volumes/external/decals/png/dr{}'.format(data_release)
     new_bricks_table = False
 
     nondefault_params = {
@@ -197,11 +199,11 @@ def main():
         print('setup complete')
 
     # specify execution options
-    s.new_catalog = False
+    s.new_catalog = True
     s.new_images = True
     s.overwrite_fits = False
     s.overwrite_png = False
-    s.run_to = -1
+    s.run_to = 1000
 
     nsa = get_nsa_catalog(s.nsa_catalog_loc, nsa_version)
     bricks = get_decals_bricks(s.bricks_loc, s.data_release)
@@ -209,7 +211,7 @@ def main():
 
     joint_catalog = get_decals(nsa, bricks, s)
 
-    joint_catalog.write(s.upload_catalog_loc)
+    joint_catalog.write(s.upload_catalog_loc, overwrite=True)
 
 
 if __name__ == '__main__':

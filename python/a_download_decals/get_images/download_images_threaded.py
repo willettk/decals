@@ -9,7 +9,10 @@ import multiprocessing
 from subprocess import call
 
 import threading
-from queue import Queue
+from queue import Empty
+
+import wget
+
 
 import numpy as np
 from astropy.io import fits
@@ -19,8 +22,6 @@ from tqdm import tqdm
 import time
 
 from get_images.image_utils import dr2_style_rgb
-
-min_pixelscale = 0.10
 
 
 def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, overwrite_fits, overwrite_png):
@@ -38,47 +39,55 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
         (astropy.Table) catalog with new columns for fits/png locations and quality checks
     '''
 
-    catalog = catalog[-10000:]
-
     # Table does not support .apply - use list comprehension instead
     catalog['fits_loc'] = [get_fits_loc(fits_dir, catalog[index]) for index in range(len(catalog))]
     catalog['png_loc'] = [get_png_loc(png_dir, catalog[index]) for index in range(len(catalog))]
+
+    assert len(catalog['fits_loc']) == len(set(catalog['fits_loc']))
+
+    pbar = tqdm(total=len(catalog), unit=' images/sec')
 
     download_params = {
         'data_release': data_release,
         'overwrite_fits': overwrite_fits,
         'overwrite_png': overwrite_png,
-        'pbar': None
+        'pbar': pbar,
+        # 'pbar': None
     }
     download_images_partial = functools.partial(download_images, **download_params)
+    #
+    # lock = multiprocessing.Lock()
+    # q = multiprocessing.JoinableQueue(maxsize=len(catalog))
+    # [q.put(catalog[n]) for n in range(len(catalog))]
+    #
+    # n_threads = 1
+    # processes = []
+    # for i in range(n_threads):
+    #     p = multiprocessing.Process(target=download_worker, args=(q, download_images_partial, lock, pbar))
+    #     print('created process {}, alive {}, exit state {}'.format(p.name, p.is_alive(), p.exitcode))
+    #     p.daemon = True
+    #     processes.append(p)
+    #     p.start()
+    #
+    # wait_time = 5
+    # while True:
+    #     for p in processes:
+    #         print('process {}, alive {}, exit state {}'.format(p.name, p.is_alive(), p.exitcode))
+    #     time.sleep(wait_time)
+    #
+    # time.sleep(500)
+    # print('pausing')
+    # q.join()
+    # print('continuing')
 
-    queue = Queue()
-    [queue.put(galaxy) for galaxy in catalog]
-
-    n_threads = 10
-    for i in range(n_threads):
-        t = threading.Thread(target=download_worker, args=(queue, download_images_partial))
-        t.daemon = True  # kill once program exits
-        t.start()
-
-    wait_time = 40
-    previous_num_left = queue.qsize() * 2.
-    while not queue.empty():
-        num_left = queue.qsize()
-        rate = (previous_num_left - num_left) / wait_time
-        print("Images left: {}, Rate: {}".format(num_left, rate))
-        previous_num_left = num_left
-        # if rate < 0.001:
-        #     print('rate 0, breaking')
-        #     break
-        time.sleep(wait_time)
+    list(map(download_images_partial, catalog))
+    # pool = multiprocessing.Pool(processes=1)
+    # pool.map(download_images_partial, catalog)
 
     # blocked_galaxies = [queue.get() for n in range(queue.qsize())]
     # import pandas as pd
     # pd.DataFrame(blocked_galaxies).to_csv('blocked_galaxies.csv')
     # exit(0)
-
-    queue.join()
 
     catalog = check_images_are_downloaded(catalog)
 
@@ -89,15 +98,36 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
 
     return catalog
 
+#
+# def download_worker(q, downloader, lock, pbar):
+#     time.sleep(5)
+#     while True:
+#         lock.acquire()
+#         try:
+#             galaxy = q.get(block=False)  # impatiently raise Error if queue empty (hopefully, tasks complete)
+#         except Empty:
+#             print('blocked by empty queue, exiting')
+#             break
+#         downloader(galaxy)
+#         print('yay, task complete')
+#         q.task_done()
+#         # lock.acquire()  # block all other threads from passing this point
+#         pbar.update()
+#         lock.release()  # other threads can now proceed to update pbar
+#         time.sleep(10)
+#
+#     print('queue empty: {}, closing and joining'.format(q.empty()))
+#     q.close()
+#     q.join_thread()
 
-def download_worker(queue, downloader):
-    while True:
-        galaxy = queue.get(timeout=30)
-        downloader(galaxy)
-        queue.task_done()
 
-
-def download_images(galaxy, data_release, overwrite_fits=False, overwrite_png=False, pbar=None, max_attempts=5):
+def download_images(galaxy,
+                    data_release,
+                    overwrite_fits=False,
+                    overwrite_png=False,
+                    pbar=None,
+                    max_attempts=5,
+                    min_pixelscale=0.1):
     """
     Download a multi-plane FITS image from the DECaLS skyserver
     Write multi-plane FITS images to separate files for each band
@@ -109,11 +139,11 @@ def download_images(galaxy, data_release, overwrite_fits=False, overwrite_png=Fa
         overwrite_png (bool): download png even if png file already exists in target location
         pbar (tqdm): progress bar shared between processes, to be updated. If None, no progress bar will be shown.
         max_attempts (int): max number of fits download attempts per file
+        min_pixelscale(float): minimum pixel scale to request from server, if object is tiny
 
     Returns:
         None
     """
-    print('download triggered', flush=True)
 
     try:
 
@@ -240,14 +270,34 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixsc
     else:
         raise ValueError('Data release "{}" not recognised'.format(data_release))
 
-    print('urlib request {}'.format(url))
+    # url = 'https://www.google.co.uk/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png'
+    print('urlib request {}'.format(url), flush=True)
 
-    # urllib.request.urlretrieve(url, fits_loc)
     # result = urllib.request.urlretrieve(url, fits_loc)
     # print(result)
-    open(fits_loc, 'wb').write(requests.get(url, stream=True).content)
-    # call('wget {} {}'.format(url, fits_loc), shell=True)
-    print('done {}'.format(fits_loc))
+    print(fits_loc, data_release, ra, dec, pixscale, size)
+
+    # fits_loc = '~/google.png'
+    urllib.request.urlretrieve(url, fits_loc)
+
+    # data = requests.get(url)
+    # print('got data', flush=True)
+    # result = data.content
+    # print('got content', flush=True)
+    # time.sleep(15)
+    #
+    # result = requests.get(url, stream=True).content
+    #
+    # open(fits_loc, 'wb').write(result)
+
+    # wget.download(url, fits_loc)
+    # call(['wget', url, fits_loc])
+    # os.system('wget {} {}'.format(url, fits_loc))
+    # time.sleep(10)
+
+    print('fits acquired - saving to {}'.format(fits_loc), flush=True)
+
+    print('done {}'.format(fits_loc), flush=True)
 
 
 def make_png_from_fits(fits_loc, png_loc):
