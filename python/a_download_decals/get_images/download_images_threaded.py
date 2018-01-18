@@ -6,13 +6,11 @@ import urllib.request
 import warnings
 import logging
 import multiprocessing
-from subprocess import call
 
 import threading
 from queue import Empty
 
-import wget
-
+from subprocess import call
 
 import numpy as np
 from astropy.io import fits
@@ -20,6 +18,8 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 import time
+
+import datetime
 
 from get_images.image_utils import dr2_style_rgb
 
@@ -45,44 +45,48 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
 
     assert len(catalog['fits_loc']) == len(set(catalog['fits_loc']))
 
-    pbar = tqdm(total=len(catalog), unit=' images/sec')
+    # pbar = tqdm(total=len(catalog), unit=' images/sec')
 
     download_params = {
         'data_release': data_release,
         'overwrite_fits': overwrite_fits,
         'overwrite_png': overwrite_png,
-        'pbar': pbar,
-        # 'pbar': None
+        # 'pbar': pbar,
+        'pbar': None
     }
     download_images_partial = functools.partial(download_images, **download_params)
-    #
-    # lock = multiprocessing.Lock()
-    # q = multiprocessing.JoinableQueue(maxsize=len(catalog))
-    # [q.put(catalog[n]) for n in range(len(catalog))]
-    #
-    # n_threads = 1
-    # processes = []
-    # for i in range(n_threads):
-    #     p = multiprocessing.Process(target=download_worker, args=(q, download_images_partial, lock, pbar))
-    #     print('created process {}, alive {}, exit state {}'.format(p.name, p.is_alive(), p.exitcode))
-    #     p.daemon = True
-    #     processes.append(p)
-    #     p.start()
-    #
-    # wait_time = 5
-    # while True:
-    #     for p in processes:
-    #         print('process {}, alive {}, exit state {}'.format(p.name, p.is_alive(), p.exitcode))
-    #     time.sleep(wait_time)
-    #
-    # time.sleep(500)
-    # print('pausing')
-    # q.join()
-    # print('continuing')
 
-    list(map(download_images_partial, catalog))
-    # pool = multiprocessing.Pool(processes=1)
+    lock = multiprocessing.Lock()
+    q = multiprocessing.JoinableQueue(maxsize=len(catalog))
+    [q.put(catalog[n]) for n in range(len(catalog))]
+
+    pbar = None
+    n_threads = 1
+    processes = []
+    for i in range(n_threads):
+        p = multiprocessing.Process(target=download_worker, args=(q, download_images_partial, lock, pbar))
+        print('created process {}, alive {}, exit state {}'.format(p.name, p.is_alive(), p.exitcode))
+        p.daemon = True
+        processes.append(p)
+        p.start()
+
+    wait_time = 5
+    while not q.empty():
+        for p in processes:
+            print('process {}, alive {}, exit state {}'.format(p.name, p.is_alive(), p.exitcode))
+        time.sleep(wait_time)
+
+    # time.sleep(500)
+    print('pausing')
+    q.join()
+    print('continuing')
+
+    # list(map(download_images_partial, catalog))
+    # pool = multiprocessing.Pool(processes=1, maxtasksperchild=1)
     # pool.map(download_images_partial, catalog)
+    # pbar.close()
+    # pool.close()
+    # pool.join()
 
     # blocked_galaxies = [queue.get() for n in range(queue.qsize())]
     # import pandas as pd
@@ -98,27 +102,27 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
 
     return catalog
 
-#
-# def download_worker(q, downloader, lock, pbar):
-#     time.sleep(5)
-#     while True:
-#         lock.acquire()
-#         try:
-#             galaxy = q.get(block=False)  # impatiently raise Error if queue empty (hopefully, tasks complete)
-#         except Empty:
-#             print('blocked by empty queue, exiting')
-#             break
-#         downloader(galaxy)
-#         print('yay, task complete')
-#         q.task_done()
-#         # lock.acquire()  # block all other threads from passing this point
-#         pbar.update()
-#         lock.release()  # other threads can now proceed to update pbar
-#         time.sleep(10)
-#
-#     print('queue empty: {}, closing and joining'.format(q.empty()))
-#     q.close()
-#     q.join_thread()
+
+def download_worker(q, downloader, lock, pbar):
+    time.sleep(5)
+    while True:
+        lock.acquire()
+        try:
+            galaxy = q.get(block=False)  # impatiently raise Error if queue empty (hopefully, tasks complete)
+        except Empty:
+            print('blocked by empty queue, exiting')
+            break
+        downloader(galaxy)
+        print('yay, task complete')
+        q.task_done()
+        # lock.acquire()  # block all other threads from passing this point
+        # pbar.update()
+        lock.release()  # other threads can now proceed to update pbar
+        time.sleep(10)
+
+    print('queue empty: {}, closing and joining'.format(q.empty()))
+    q.close()
+    q.join_thread()
 
 
 def download_images(galaxy,
@@ -144,6 +148,9 @@ def download_images(galaxy,
     Returns:
         None
     """
+
+    currentDT = datetime.datetime.now()
+    print(str(currentDT), flush=True)
 
     try:
 
@@ -257,16 +264,24 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixsc
     Returns:
         None
     '''
-    params = urllib.parse.urlencode({
+    # params = urllib.parse.urlencode({
+    #     'ra': ra,
+    #     'dec': dec,
+    #     'pixscale': pixscale,
+    #     'size': size,
+    #     'layer': 'decals-dr{}'.format(data_release)})
+    params = {
         'ra': ra,
         'dec': dec,
         'pixscale': pixscale,
         'size': size,
-        'layer': 'decals-dr{}'.format(data_release)})
+        'layer': 'decals-dr{}'.format(data_release)}
+    print('params', params)
     if data_release == '1':
         url = "http://imagine.legacysurvey.org/fits-cutout?{}".format(params)
     elif data_release == '2' or '3' or '5':
-        url = "http://legacysurvey.org/viewer/fits-cutout?{}".format(params)
+        # url = "http://legacysurvey.org/viewer/fits-cutout?{}".format(params)
+        url = "http://legacysurvey.org/viewer/fits-cutout?ra={}&dec={}&pixscale={}&size={}&layer={}".format(params['ra'], params['dec'], params['pixscale'], params['size'], params['layer'])
     else:
         raise ValueError('Data release "{}" not recognised'.format(data_release))
 
@@ -278,6 +293,7 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixsc
     print(fits_loc, data_release, ra, dec, pixscale, size)
 
     # fits_loc = '~/google.png'
+
     urllib.request.urlretrieve(url, fits_loc)
 
     # data = requests.get(url)
@@ -291,7 +307,8 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixsc
     # open(fits_loc, 'wb').write(result)
 
     # wget.download(url, fits_loc)
-    # call(['wget', url, fits_loc])
+    # returned_code = call(['wget', url, fits_loc])
+    # print(returned_code, 'returned code')
     # os.system('wget {} {}'.format(url, fits_loc))
     # time.sleep(10)
 

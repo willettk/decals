@@ -5,15 +5,25 @@ from get_images.download_images_threaded import *
 
 TEST_EXAMPLES_DIR = 'python/test_examples'
 
+#
+# @pytest.fixture
+# def fits_dir(tmpdir):
+#     return tmpdir.mkdir('fits_dir').strpath
+#
+#
+# @pytest.fixture
+# def png_dir(tmpdir):
+#     return tmpdir.mkdir('png_dir').strpath
 
-@pytest.fixture
-def fits_dir(tmpdir):
-    return tmpdir.mkdir('fits_dir').strpath
+
+@pytest.fixture()
+def fits_dir():
+    return '/home/walmsleym/temp_home'
 
 
-@pytest.fixture
-def png_dir(tmpdir):
-    return tmpdir.mkdir('png_dir').strpath
+@pytest.fixture()
+def png_dir():
+    return '/home/walmsleym/temp_home'
 
 
 @pytest.fixture
@@ -51,7 +61,7 @@ def new_galaxy(fits_loc, png_loc):
 
 
 @pytest.fixture
-def nsa_decals(fits_dir, png_dir):
+def joint_catalog(fits_dir, png_dir):
     # TODO bad practice: fits_loc is overwritten in some tests
     gal_missing = {
         'iauname': 'J0',
@@ -192,30 +202,30 @@ def test_download_images_creates_fits_and_png(new_galaxy, fits_dir, png_dir):
     assert os.path.exists(new_galaxy['png_loc'])
 
 
-def test_check_images_are_downloaded(nsa_decals):
-    checked_catalog = check_images_are_downloaded(nsa_decals)  # directly on test_examples directory
+def test_check_images_are_downloaded(joint_catalog):
+    checked_catalog = check_images_are_downloaded(joint_catalog)  # directly on test_examples directory
     print(checked_catalog[['iauname', 'fits_ready', 'fits_filled', 'png_ready']])
     assert np.array_equal(checked_catalog['fits_ready'], np.array([False, False, True, True, True, True]))
     assert np.array_equal(checked_catalog['fits_filled'], np.array([False, False, False, True, True, True]))
     assert np.array_equal(checked_catalog['png_ready'], np.array([False, False, True, True, True, True]))
 
 
-def test_download_images_multithreaded(nsa_decals, fits_dir, png_dir):
+def test_download_images_multithreaded(joint_catalog, fits_dir, png_dir):
     data_release = '5'
 
     # download to new temporary directory
-    nsa_decals['fits_loc'] = [get_fits_loc(fits_dir, galaxy) for galaxy in nsa_decals]
-    nsa_decals['png_loc'] = [get_fits_loc(png_dir, galaxy) for galaxy in nsa_decals]
+    joint_catalog['fits_loc'] = [get_fits_loc(fits_dir, galaxy) for galaxy in joint_catalog]
+    joint_catalog['png_loc'] = [get_fits_loc(png_dir, galaxy) for galaxy in joint_catalog]
 
-    print(nsa_decals['fits_loc'])
+    # print(nsa_decals['fits_loc'])
 
     # verify files are not already downloaded
-    for galaxy in nsa_decals:
+    for galaxy in joint_catalog:
         assert not os.path.exists(galaxy['fits_loc'])
         assert not os.path.exists(galaxy['png_loc'])
 
     # run download
-    output_catalog = download_images_multithreaded(nsa_decals, data_release, fits_dir, png_dir, overwrite_fits=False,
+    output_catalog = download_images_multithreaded(joint_catalog, data_release, fits_dir, png_dir, overwrite_fits=False,
                                                    overwrite_png=False)
 
     # verify files are now downloaded (to some unknown quality)
