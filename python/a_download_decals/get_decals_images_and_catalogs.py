@@ -11,97 +11,7 @@ from get_catalogs.selection_cuts import apply_selection_cuts
 from get_images.download_images_threaded import download_images_multithreaded
 from setup.join_brick_tables import merge_bricks_catalogs
 
-
-class Settings():
-    # Define parameters, file locations, etc.
-
-    def get_nsa_catalog_loc(self):
-        """
-        Returns:
-            (str) location of NASA-Sloan Atlas (NSA) catalog. Input file.
-        """
-        return '{}/nsa_v{}.fits'.format(self.catalog_dir, self.nsa_version)
-
-    def get_joint_catalog_loc(self):
-        """
-        Returns:
-            (str) location of catalog of all NSA galaxies imaged by DECALS DR{}. Output file.
-        """
-        return '{0}/nsa_v{1}_decals_dr{2}.fits'.format(
-            self.catalog_dir, self.nsa_version, self.data_release)
-
-    def get_upload_catalog_loc(self):
-        """
-        Returns:
-            (str) location of catalog of all NSA galaxies imaged by DECALS DR{} and not yet classified. Output file.
-        """
-        return '{}/dr{}_nsa{}_to_upload.fits'.format(self.catalog_dir, self.data_release, self.nsa_version)
-
-    def get_bricks_loc(self):
-        """
-        Returns:
-            (str) location of bricks catalog, including center and exposure counts.
-                Input file for DR1, DR2. Calculated from brick_coordinates_loc and brick_exposures_loc for DR5.
-        """
-        data_release = self.data_release
-        if data_release == '5' or data_release == '3':
-            bricks_filename = 'survey-bricks-dr{}-with-coordinates.fits'.format(data_release)
-        elif data_release == '2':
-            bricks_filename = 'decals-bricks-dr2.fits'
-        elif data_release == '1':
-            bricks_filename = 'decals-bricks-dr1.fits'
-        else:
-            raise ValueError('Data Release "{}" not recognised'.format(data_release))
-        return '{}/{}'.format(self.catalog_dir, bricks_filename)
-
-    def get_brick_coordinates_loc(self):
-        """
-        Returns:
-            (str) location of bricks coordinate catalog, including center and edges. Input file for DR5.
-                Named 'survey-bricks.fits' on DR5 website
-        """
-        if self.data_release == '5' or self.data_release == '3':
-            return '{}/survey-bricks.fits'.format(self.catalog_dir)
-
-    def get_brick_exposures_loc(self):
-        """
-        Returns:
-            (str) location of bricks exposure catalog, including brick centers and exposure counts.
-                Input file for DR5. Named 'survey-bricks-dr5.fits' on DR5 website
-        """
-        if self.data_release == '5' or self.data_release == '3':
-            return '{}/survey-bricks-dr5.fits'.format(self.catalog_dir)
-
-    def derive_file_paths(self):
-        self.nsa_catalog_loc = self.get_nsa_catalog_loc()
-        self.joint_catalog_loc = self.get_joint_catalog_loc()
-        self.brick_coordinates_loc = self.get_brick_coordinates_loc()
-        self.brick_exposures_loc = self.get_brick_exposures_loc()
-        self.bricks_loc = self.get_bricks_loc()
-        self.upload_catalog_loc = self.get_upload_catalog_loc()
-        self.brick_coordinates_loc = self.get_brick_coordinates_loc()
-        self.brick_exposures_loc = self.get_brick_exposures_loc()
-
-    def __init__(self,
-                 # must specify these for safety
-                 fits_dir,
-                 png_dir,
-                 data_release,
-                 # these rarely change and are set as default
-                 nsa_version='1_0_0',
-                 catalog_dir='/data/galaxy_zoo/decals/catalogs',
-                 subject_loc='/data/galaxy_zoo/decals/subjects/decals_dr1_and_dr2.csv',
-                 run_to=-1):
-
-        self.data_release = data_release
-        self.nsa_version = nsa_version
-        self.catalog_dir = catalog_dir
-        self.fits_dir = fits_dir
-        self.png_dir = png_dir
-        self.subject_loc = subject_loc
-        self.run_to = run_to
-
-        self.derive_file_paths()
+import settings
 
 
 def setup_tables(s):
@@ -115,15 +25,14 @@ def setup_tables(s):
     Returns:
         None
     """
-    if s.merge_bricks:
-        if s.data_release == '3' or s.data_release == '5':
-            coordinate_catalog = Table(fits.getdata(s.brick_coordinates_loc, 1))
-            exposure_catalog = Table(fits.getdata(s.brick_exposures_loc, 1))
-            bricks_catalog = merge_bricks_catalogs(coordinate_catalog, exposure_catalog)
-            bricks_catalog.write(s.brick_loc, overwrite=True)
+    if s.data_release == '3' or s.data_release == '5':
+        coordinate_catalog = Table(fits.getdata(s.brick_coordinates_loc, 1))
+        exposure_catalog = Table(fits.getdata(s.brick_exposures_loc, 1))
+        bricks_catalog = merge_bricks_catalogs(coordinate_catalog, exposure_catalog)
+        bricks_catalog.write(s.brick_loc, overwrite=True)
 
-        else:
-            warnings.warn('Data release "{}" does not require joining brick tables - skipping'.format(s.data_release))
+    else:
+        warnings.warn('Data release "{}" does not require joining brick tables - skipping'.format(s.data_release))
 
 
 def get_decals(nsa, bricks, s):
@@ -173,45 +82,30 @@ def main():
         None
     """
 
-    data_release = '5'
-    nsa_version = '1_0_0'
-    fits_dir = '/data/temp'
-    png_dir = '/data/temp'
-    # fits_dir = '/Volumes/external/decals/fits/dr{}'.format(data_release)
-    # png_dir = '/Volumes/external/decals/png/dr{}'.format(data_release)
-    new_bricks_table = False
-
-    nondefault_params = {
-        'nsa_version': nsa_version,
-        'data_release': data_release,
-        'fits_dir': fits_dir,
-        'png_dir': png_dir,
-    }
-    s = Settings(**nondefault_params)
-
     # specify setup options
-    s.merge_bricks = False
+    new_bricks_table = False
 
     # Setup tasks generate the 'bricks' data table used later.
     # They need only be completed once after downloading the required files
     if new_bricks_table:
-        setup_tables(s)
+        setup_tables(settings)
         print('setup complete')
 
     # specify execution options
-    s.new_catalog = True
-    s.new_images = True
-    s.overwrite_fits = False
-    s.overwrite_png = False
-    s.run_to = 1000
+    settings.new_catalog = True
+    settings.new_images = True
+    settings.overwrite_fits = False
+    settings.overwrite_png = False
+    settings.run_to = 1000
 
-    nsa = get_nsa_catalog(s.nsa_catalog_loc, nsa_version)
-    bricks = get_decals_bricks(s.bricks_loc, s.data_release)
+    nsa = get_nsa_catalog(settings.nsa_catalog_loc, settings.nsa_version)
+    print('nsa loaded')
+    bricks = get_decals_bricks(settings.bricks_loc, settings.data_release)
     print('catalogs loaded')
 
-    joint_catalog = get_decals(nsa, bricks, s)
+    joint_catalog = get_decals(nsa, bricks, settings)
 
-    joint_catalog.write(s.upload_catalog_loc, overwrite=True)
+    joint_catalog.write(settings.upload_catalog_loc, overwrite=True)
 
 
 if __name__ == '__main__':
