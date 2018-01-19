@@ -29,7 +29,7 @@ def setup_tables(s):
         coordinate_catalog = Table(fits.getdata(s.brick_coordinates_loc, 1))
         exposure_catalog = Table(fits.getdata(s.brick_exposures_loc, 1))
         bricks_catalog = merge_bricks_catalogs(coordinate_catalog, exposure_catalog)
-        bricks_catalog.write(s.brick_loc, overwrite=True)
+        bricks_catalog.write(s.bricks_loc, overwrite=True)
 
     else:
         warnings.warn('Data release "{}" does not require joining brick tables - skipping'.format(s.data_release))
@@ -83,7 +83,7 @@ def main():
     """
 
     # specify setup options
-    new_bricks_table = False
+    new_bricks_table = True  # if DR3+, run this on first use.
 
     # Setup tasks generate the 'bricks' data table used later.
     # They need only be completed once after downloading the required files

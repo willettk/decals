@@ -19,13 +19,15 @@ def get_bricks_loc(catalog_dir, data_release):
 
 nsa_version = '1_0_0'
 data_release = '5'
-catalog_dir = '/data/galaxy_zoo/decals/catalogs'
-subject_loc = '/data/galaxy_zoo/decals/subjects/decals_dr1_and_dr2.csv'
+catalog_dir = '/Volumes/external/decals/catalogs'
+# subject_loc = '/data/galaxy_zoo/decals/subjects/decals_dr1_and_dr2.csv'
 
-fits_dir = '/data/temp'
-png_dir = '/data/temp'
+# fits_dir = '/data/temp'
+# png_dir = '/data/temp'
 # fits_dir = '/Volumes/external/decals/fits/dr{}'.format(data_release)
 # png_dir = '/Volumes/external/decals/png/dr{}'.format(data_release)
+fits_dir = '/Volumes/external/decals/temp'
+png_dir = '/Volumes/external/decals/temp'
 
 # only needed for dr3+
 brick_coordinates_loc = '{}/survey-bricks.fits'.format(catalog_dir)
