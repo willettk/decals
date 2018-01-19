@@ -4,19 +4,25 @@ from astropy.io import fits
 
 from get_images.download_images_threaded import download_images_multithreaded, get_fits_loc
 
-import pytest
+# import pytest
 
 
-@pytest.fixture()
+# @pytest.fixture()
 def fake_joint_catalog():
 
     # fits_dir = '/data/temp'
     # png_dir = '/data/temp'
     # TEST_EXAMPLES_DIR = '/data/temp'
 
-    fits_dir = '/home/walmsleym/temp_home'
-    png_dir = '/home/walmsleym/temp_home'
-    TEST_EXAMPLES_DIR = '/home/walmsleym/temp_home'
+    # fits_dir = '/home/walmsleym/temp_home'
+    # png_dir = '/home/walmsleym/temp_home'
+    # TEST_EXAMPLES_DIR = '/home/walmsleym/temp_home'
+
+    fits_dir = '/home/mike/temp'
+    png_dir = '/home/mike/temp'
+    TEST_EXAMPLES_DIR = '/home/mike/temp'
+
+
 
     # TODO bad practice: fits_loc is overwritten in some tests
     gal_missing = {
@@ -96,8 +102,9 @@ def test(fake_joint_catalog):
     """
 
     data_release = '5'
-    fits_dir = '/home/walmsleym/temp_home'
-    png_dir = '/home/walmsleym/temp_home'
+    fits_dir = '/home/mike/temp'
+    png_dir = '/home/mike/temp'
+    # TEST_EXAMPLES_DIR = '/home/mike/temp'
     overwrite_fits = False
     overwrite_png = False
 
@@ -115,6 +122,6 @@ def test(fake_joint_catalog):
         png_dir,
         overwrite_fits=overwrite_fits,
         overwrite_png=overwrite_png)
-
+#
 if __name__ == '__main__':
     test(fake_joint_catalog())
