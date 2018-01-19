@@ -45,7 +45,7 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
 
     assert len(catalog['fits_loc']) == len(set(catalog['fits_loc']))
 
-    # pbar = tqdm(total=len(catalog), unit=' images/sec')
+    pbar = tqdm(total=len(catalog), unit=' images/sec')
 
     download_params = {
         'data_release': data_release,
@@ -60,7 +60,7 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
     q = multiprocessing.JoinableQueue(maxsize=len(catalog))
     [q.put(catalog[n]) for n in range(len(catalog))]
 
-    pbar = None
+    # pbar = None
     n_threads = 1
     processes = []
     for i in range(n_threads):
@@ -104,9 +104,8 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
 
 
 def download_worker(q, downloader, lock, pbar):
-    time.sleep(5)
+    time.sleep(1)
     while True:
-        lock.acquire()
         try:
             galaxy = q.get(block=False)  # impatiently raise Error if queue empty (hopefully, tasks complete)
         except Empty:
@@ -115,10 +114,10 @@ def download_worker(q, downloader, lock, pbar):
         downloader(galaxy)
         print('yay, task complete')
         q.task_done()
-        # lock.acquire()  # block all other threads from passing this point
-        # pbar.update()
+        lock.acquire()  # block all other threads from passing this point
+        pbar.update()
         lock.release()  # other threads can now proceed to update pbar
-        time.sleep(10)
+        # time.sleep(10)
 
     print('queue empty: {}, closing and joining'.format(q.empty()))
     q.close()
