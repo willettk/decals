@@ -2,7 +2,7 @@
 from astropy.table import Table
 from astropy.io import fits
 
-from get_images.download_images_threaded import download_images_multithreaded, get_fits_loc
+from a_download_decals.get_images.download_images_threaded import download_images_multithreaded, get_fits_loc
 
 # import pytest
 
