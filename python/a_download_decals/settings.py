@@ -19,13 +19,16 @@ def get_bricks_loc(catalog_dir, data_release):
 
 nsa_version = '1_0_0'
 data_release = '5'
-catalog_dir = '/media/mike/EXTERNAL/decals/catalogs'
+# catalog_dir = '/media/mike/EXTERNAL/decals/catalogs'
+catalog_dir = '/Volumes/EXTERNAL/decals/catalogs'
 # subject_loc = '/data/galaxy_zoo/decals/subjects/decals_dr1_and_dr2.csv'
 
-# fits_dir = '/data/temp'
-# png_dir = '/data/temp'
-fits_dir = '/media/mike/EXTERNAL/decals/fits/dr{}'.format(data_release)
-png_dir = '/media/mike/EXTERNAL/decals/png/dr{}'.format(data_release)
+fits_dir = '/data/temp'
+png_dir = '/data/temp'
+# fits_dir = '/media/mike/EXTERNAL/decals/fits/dr{}'.format(data_release)
+# png_dir = '/media/mike/EXTERNAL/decals/png/dr{}'.format(data_release)
+# fits_dir = '/Volumes/EXTERNAL/decals/fits/dr{}'.format(data_release)
+# png_dir = '/Volumes/EXTERNAL/decals/png/dr{}'.format(data_release)
 # fits_dir = '/media/mike/EXTERNAL/decals/temp'
 # png_dir = '/media/mike/EXTERNAL/decals/temp'
 

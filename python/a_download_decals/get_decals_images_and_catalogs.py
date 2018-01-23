@@ -49,17 +49,29 @@ def get_decals(nsa=None, bricks=None, s=None):
         (pd.DataFrame) catalog of DECaLS galaxies not previously classified in Galaxy Zoo
     """
 
-
+    include_names = [
+        'iauname',
+        'nsa_id',
+        'ra',
+        'dec',
+        'petrotheta',
+        'petroth50',
+        'petroth90',
+        'z'
+    ]
 
     if s.new_catalog:
         print('get new catalog')
         nsa_after_cuts = apply_selection_cuts(nsa)
         joint_catalog = create_joint_catalog(nsa_after_cuts, bricks, s.data_release, s.nsa_version, run_to=s.run_to)
+        joint_catalog = joint_catalog[include_names]
         print('writing new catalog')
         joint_catalog.write(s.joint_catalog_loc, overwrite=True)
     else:
         print('get joint catalog')
-        joint_catalog = Table(fits.getdata(s.joint_catalog_loc))
+
+        joint_catalog = Table(fits.getdata(s.joint_catalog_loc))[include_names]
+        # joint_catalog = Table.read(s.joint_catalog_loc, data_end=1000, include_names=include_names)
 
     if s.new_images:
         print('get new images')
@@ -100,13 +112,13 @@ def main():
     # settings.run_to = 1000
     settings.run_to = None
 
-    nsa = get_nsa_catalog(settings.nsa_catalog_loc, settings.nsa_version)
-    print('nsa loaded')
-    bricks = get_decals_bricks(settings.bricks_loc, settings.data_release)
-    print('catalogs loaded')
-
-    # nsa = None
-    # bricks = None
+    # nsa = get_nsa_catalog(settings.nsa_catalog_loc, settings.nsa_version)
+    # print('nsa loaded')
+    # bricks = get_decals_bricks(settings.bricks_loc, settings.data_release)
+    # print('catalogs loaded')
+    #
+    nsa = None
+    bricks = None
     joint_catalog = get_decals(nsa, bricks, settings)
 
     joint_catalog.write(settings.upload_catalog_loc, overwrite=True)
