@@ -61,7 +61,7 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
     [q.put(catalog[n]) for n in range(len(catalog))]
 
     # pbar = None
-    n_threads = 1
+    n_threads = 10
     processes = []
     for i in range(n_threads):
         p = multiprocessing.Process(target=download_worker, args=(q, download_images_partial, lock, pbar))
@@ -104,15 +104,15 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
 
 
 def download_worker(q, downloader, lock, pbar):
-    time.sleep(1)
+
     while True:
         try:
-            galaxy = q.get(block=False)  # impatiently raise Error if queue empty (hopefully, tasks complete)
+            galaxy = q.get(timeout=10)  # impatiently raise Error if queue empty (hopefully, tasks complete)
         except Empty:
             print('blocked by empty queue, exiting')
             break
         downloader(galaxy)
-        print('yay, task complete')
+        # print('yay, task complete')
         q.task_done()
         lock.acquire()  # block all other threads from passing this point
         pbar.update()
@@ -148,8 +148,8 @@ def download_images(galaxy,
         None
     """
 
-    currentDT = datetime.datetime.now()
-    print(str(currentDT), flush=True)
+    # currentDT = datetime.datetime.now()
+    # print(str(currentDT), flush=True)
 
     try:
 
@@ -160,14 +160,15 @@ def download_images(galaxy,
         png_loc = galaxy['png_loc']
 
         # Download multi-band fits images
-        # if not fits_downloaded_correctly(fits_loc) or overwrite_fits: TODO removed for speed
-        print('checking existence {}'.format(fits_loc), flush=True)
-        print('path', os.path.exists(fits_loc), flush=True)
-        print('overwrite', overwrite_fits, flush=True)
-        print('both', os.path.exists(fits_loc) or overwrite_fits, flush=True)
-        print('png', os.path.exists(png_loc))
-        if (not os.path.exists(fits_loc)) or overwrite_fits:
-            print('begin downloading {}'.format(galaxy['iauname']), flush=True)
+
+        # print('checking existence {}'.format(fits_loc), flush=True)
+        # print('path', os.path.exists(fits_loc), flush=True)
+        # print('overwrite', overwrite_fits, flush=True)
+        # print('both', os.path.exists(fits_loc) or overwrite_fits, flush=True)
+        # print('png', os.path.exists(png_loc))
+        if not fits_downloaded_correctly(fits_loc) or overwrite_fits:
+        # if (not os.path.exists(fits_loc)) or overwrite_fits:
+            # print('begin downloading {}'.format(galaxy['iauname']), flush=True)
             attempt = 0
             while attempt < max_attempts:
                 # print('making attempt, thread {}'.format(os.getpid()))
@@ -275,7 +276,7 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixsc
         'pixscale': pixscale,
         'size': size,
         'layer': 'decals-dr{}'.format(data_release)}
-    print('params', params)
+    # print('params', params)
     if data_release == '1':
         url = "http://imagine.legacysurvey.org/fits-cutout?{}".format(params)
     elif data_release == '2' or '3' or '5':
@@ -285,11 +286,11 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixsc
         raise ValueError('Data release "{}" not recognised'.format(data_release))
 
     # url = 'https://www.google.co.uk/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png'
-    print('urlib request {}'.format(url), flush=True)
+    # print('urlib request {}'.format(url), flush=True)
 
     # result = urllib.request.urlretrieve(url, fits_loc)
     # print(result)
-    print(fits_loc, data_release, ra, dec, pixscale, size)
+    # print(fits_loc, data_release, ra, dec, pixscale, size)
 
     # fits_loc = '~/google.png'
 
@@ -311,9 +312,9 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixsc
     # os.system('wget {} {}'.format(url, fits_loc))
     # time.sleep(10)
 
-    print('fits acquired - saving to {}'.format(fits_loc), flush=True)
+    # print('fits acquired - saving to {}'.format(fits_loc), flush=True)
 
-    print('done {}'.format(fits_loc), flush=True)
+    # print('done {}'.format(fits_loc), flush=True)
 
 
 def make_png_from_fits(fits_loc, png_loc):

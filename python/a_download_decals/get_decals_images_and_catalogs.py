@@ -35,7 +35,7 @@ def setup_tables(s):
         warnings.warn('Data release "{}" does not require joining brick tables - skipping'.format(s.data_release))
 
 
-def get_decals(nsa, bricks, s):
+def get_decals(nsa=None, bricks=None, s=None):
     """
     Find NSA galaxies imaged by DECALS. Download fits. Create RGB pngs. Return catalog of new galaxies.
 
@@ -49,10 +49,11 @@ def get_decals(nsa, bricks, s):
         (pd.DataFrame) catalog of DECaLS galaxies not previously classified in Galaxy Zoo
     """
 
-    nsa_after_cuts = apply_selection_cuts(nsa)
+
 
     if s.new_catalog:
         print('get new catalog')
+        nsa_after_cuts = apply_selection_cuts(nsa)
         joint_catalog = create_joint_catalog(nsa_after_cuts, bricks, s.data_release, s.nsa_version, run_to=s.run_to)
         print('writing new catalog')
         joint_catalog.write(s.joint_catalog_loc, overwrite=True)
@@ -83,7 +84,7 @@ def main():
     """
 
     # specify setup options
-    new_bricks_table = True  # if DR3+, run this on first use.
+    new_bricks_table = False  # if DR3+, run this on first use.
 
     # Setup tasks generate the 'bricks' data table used later.
     # They need only be completed once after downloading the required files
@@ -92,17 +93,20 @@ def main():
         print('setup complete')
 
     # specify execution options
-    settings.new_catalog = True
+    settings.new_catalog = False
     settings.new_images = True
     settings.overwrite_fits = False
     settings.overwrite_png = False
-    settings.run_to = 1000
+    # settings.run_to = 1000
+    settings.run_to = None
 
     nsa = get_nsa_catalog(settings.nsa_catalog_loc, settings.nsa_version)
     print('nsa loaded')
     bricks = get_decals_bricks(settings.bricks_loc, settings.data_release)
     print('catalogs loaded')
 
+    # nsa = None
+    # bricks = None
     joint_catalog = get_decals(nsa, bricks, settings)
 
     joint_catalog.write(settings.upload_catalog_loc, overwrite=True)
