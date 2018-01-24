@@ -44,56 +44,61 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
 
     catalog['fits_loc'] = [get_fits_loc(fits_dir, catalog[index]) for index in range(len(catalog))]
     catalog['png_loc'] = [get_png_loc(png_dir, catalog[index]) for index in range(len(catalog))]
-
     assert len(catalog['fits_loc']) == len(set(catalog['fits_loc']))
 
     # pbar = tqdm(total=int(np.around(len(catalog)/n_processes)), unit='image/process')
     pbar = None
+    # pbar = tqdm(total=len(catalog), unit='image/process')
 
     download_params = {
         'data_release': data_release,
         'overwrite_fits': overwrite_fits,
         'overwrite_png': overwrite_png,
         # 'pbar': pbar,
-        'pbar': None
     }
     download_images_partial = functools.partial(download_images, **download_params)
 
-    lock = multiprocessing.Lock()
-    # q = multiprocessing.JoinableQueue(maxsize=len(catalog))
-    q = multiprocessing.JoinableQueue()
-    # q = multiprocessing.Queue()
+    # lock = multiprocessing.Lock()
+    # # q = multiprocessing.JoinableQueue(maxsize=len(catalog))
+    # q = multiprocessing.JoinableQueue()
+    # # q = multiprocessing.Queue()
+
+    pool = multiprocessing.Pool(10)
+    # pool.map(download_images_partial, catalog[:1000], chunksize=100)
+    list(tqdm(pool.imap(download_images_partial, catalog[:1000]), total=len(catalog)))
+    pool.close()
+    pool.join()
 
     # pbar = None
-
-    [q.put(catalog[n]) for n in range(len(catalog))]
-    time.sleep(1)
-
-    processes = []
-    for i in range(n_processes):
-        p = multiprocessing.Process(target=download_worker, args=(q, download_images_partial, lock, pbar))
-        print('created process {}, alive {}, exit state {}'.format(p.name, p.is_alive(), p.exitcode))
-        p.daemon = True
-        processes.append(p)
-        p.start()
-
-    # periodically add chunks of data to queue
-    chunksize = 50
-    print('copying catalog')
-    catalog_to_chunk = catalog.copy()
-    while True:
-        for p in processes:
-            print('process {}, alive {}, exit state {}'.format(p.name, p.is_alive(), p.exitcode))
-        # print('Queue is empty? {}'.format(q.empty()))
-        # if q.empty():
-        #     print('adding new chunk'.upper())
-        #     new_chunk = catalog_to_chunk[-chunksize:]
-        #     catalog_to_chunk = catalog_to_chunk[:-chunksize]
-        #     [q.put(new_chunk[n]) for n in range(len(new_chunk))]
-        #     if len(catalog_to_chunk) == 0:
-        #         print('catalog has been completely processed - breaking')
-        #         break
-        time.sleep(5)
+    #
+    # [q.put(catalog[n]) for n in range(1000)]
+    # time.sleep(1)
+    #
+    # processes = []
+    # for i in range(n_processes):
+    #     p = multiprocessing.Process(target=download_worker, args=(q, download_images_partial, lock, pbar))
+    #     print('created process {}, alive {}, exit state {}'.format(p.name, p.is_alive(), p.exitcode))
+    #     p.daemon = True
+    #     processes.append(p)
+    #     p.start()
+    #
+    # # periodically add chunks of data to queue
+    # chunksize = 50
+    # print('copying catalog')
+    # catalog_to_chunk = catalog.copy()
+    # while True:
+    #     for p in processes:
+    #         print('process {}, alive {}, exit state {}'.format(p.name, p.is_alive(), p.exitcode))
+    #     # print('Queue is empty? {}'.format(q.empty()))
+    #     # if q.empty():
+    #     #     print('adding new chunk'.upper())
+    #     #     new_chunk = catalog_to_chunk[-chunksize:]
+    #     #     catalog_to_chunk = catalog_to_chunk[:-chunksize]
+    #     #     [q.put(new_chunk[n]) for n in range(len(new_chunk))]
+    #     #     if len(catalog_to_chunk) == 0:
+    #     #         print('catalog has been completely processed - breaking')
+    #     #         break
+    #     time.sleep(5)
 
     # wait_time = 5
     # print('queue empty {}'.format(q.empty()))
@@ -127,34 +132,34 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
 
     return catalog
 
-
-def download_worker(q, downloader, lock, pbar):
-    name = multiprocessing.current_process().name
-    while True:
-        # acquired_galaxy = False
-        # while not acquired_galaxy:
-        #     try:
-        #         galaxy = q.get(block=False)
-        #         # galaxy = q.get_nowait()
-        #         acquired_galaxy = True
-        #     except Empty:
-        #         print('{} blocked by empty queue, repeating'.format(name), flush=True)
-        #         time.sleep(1)
-        galaxy = q.get()
-        # lock.acquire()
-        print('{} running downloader'.format(name), flush=True)
-        downloader(galaxy)
-        # lock.release()
-        print('{} completed task'.format(name), flush=True)
-        q.task_done()
-        # lock.acquire()  # block all other threads from passing this point
-        # pbar.update()
-        # lock.release()  # other threads can now proceed to update pbar
-        # time.sleep(10)
-
-    # print('queue empty: {}, closing and joining'.format(q.empty()), flush=True)
-    # q.close()
-    # q.join_thread()
+#
+# def download_worker(q, downloader, lock, pbar):
+#     name = multiprocessing.current_process().name
+#     while True:
+#         # acquired_galaxy = False
+#         # while not acquired_galaxy:
+#         #     try:
+#         #         galaxy = q.get(block=False)
+#         #         # galaxy = q.get_nowait()
+#         #         acquired_galaxy = True
+#         #     except Empty:
+#         #         print('{} blocked by empty queue, repeating'.format(name), flush=True)
+#         #         time.sleep(1)
+#         galaxy = q.get()
+#         # lock.acquire()
+#         print('{} running downloader'.format(name), flush=True)
+#         downloader(galaxy)
+#         # lock.release()
+#         print('{} completed task'.format(name), flush=True)
+#         q.task_done()
+#         # lock.acquire()  # block all other threads from passing this point
+#         # pbar.update()
+#         # lock.release()  # other threads can now proceed to update pbar
+#         # time.sleep(10)
+#
+#     # print('queue empty: {}, closing and joining'.format(q.empty()), flush=True)
+#     # q.close()
+#     # q.join_thread()
 
 
 def download_images(galaxy,
@@ -193,23 +198,13 @@ def download_images(galaxy,
         png_loc = galaxy['png_loc']
 
         # Download multi-band fits images
-
-        # print('checking existence {}'.format(fits_loc), flush=True)
-        # print('path', os.path.exists(fits_loc), flush=True)
-        # print('overwrite', overwrite_fits, flush=True)
-        # print('both', os.path.exists(fits_loc) or overwrite_fits, flush=True)
-        # print('png', os.path.exists(png_loc))
-        # if not fits_downloaded_correctly(fits_loc) or overwrite_fits:
-        if (not os.path.exists(fits_loc)) or overwrite_fits:
-            # print('begin downloading {}'.format(galaxy['iauname']), flush=True)
+        if not fits_downloaded_correctly(fits_loc) or overwrite_fits:
+        # if (not os.path.exists(fits_loc)) or overwrite_fits:
             attempt = 0
             while attempt < max_attempts:
-                # print('making attempt, thread {}'.format(os.getpid()))
                 try:
-                    # print('doing the download, thread {}'.format(os.getpid()))
                     download_fits_cutout(fits_loc, data_release, galaxy['ra'], galaxy['dec'], pixscale, 424)
                     assert fits_downloaded_correctly(fits_loc)
-                    # print('yay, downloaded, thread {}'.format(os.getpid()))
                     break
                 except Exception as err:
                     print(err, 'on galaxy {}, attempt {}'.format(galaxy['iauname'], attempt), flush=True)
@@ -303,19 +298,12 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixsc
     Returns:
         None
     '''
-    # params = urllib.parse.urlencode({
-    #     'ra': ra,
-    #     'dec': dec,
-    #     'pixscale': pixscale,
-    #     'size': size,
-    #     'layer': 'decals-dr{}'.format(data_release)})
     params = {
         'ra': ra,
         'dec': dec,
         'pixscale': pixscale,
         'size': size,
         'layer': 'decals-dr{}'.format(data_release)}
-    # print('params', params)
     if data_release == '1':
         url = "http://imagine.legacysurvey.org/fits-cutout?{}".format(params)
     elif data_release == '2' or '3' or '5':
@@ -324,66 +312,9 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixsc
     else:
         raise ValueError('Data release "{}" not recognised'.format(data_release))
 
-    # url = 'https://www.google.co.uk/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png'
-
-    # result = urllib.request.urlretrieve(url, fits_loc)
-    # print(result)
-    # print(fits_loc, data_release, ra, dec, pixscale, size)
-
-    # fits_loc = '~/google.png'
-
-    # urllib.request.urlretrieve(url, fits_loc)
-
-    # data = requests.get(url)
-    # print('got data', flush=True)
-    # result = data.content
-    # print('got content', flush=True)
-    # time.sleep(15)
-    #
-
-    """
-    An EXTREMELy annoying bug:
-    multiprocessing with 'requests' module fails because urllib has a proxy-check that causes segfault on macOSX.
-    This causes each process to die silently with exit status = -11 i.e. segfault signal
-    To resolve, disable proxies
-    For more details, see:
-    https://bugs.python.org/issue30385
-    https://blog.yimingliu.com/2015/07/22/python-multiprocessing-code-crashes-on-os-x-under-ipython/
-    https://stackoverflow.com/questions/28521535/requests-how-to-disable-bypass-proxy
-    """
-    # os.environ["no_proxy"] = "*"
-    # session = requests.Session()  # disable proxies
-    # session.trust_env = True
-    # # proxies = {
-    # #     "http": None,
-    # #     "https": None,
-    # # }
-    # proxies = None
-    # print('environ ' + os.environ['no_proxy'])
-    # print('ENVIRON ' + os.environ['NO_PROXY'])
-    # print('urlib request {}'.format(url), flush=True)
-    # result = session.get(url, stream=True, proxies=proxies).content
-    # print('writing', flush=True)
-    # open(fits_loc, 'wb').write(result)  # download and write to file
-
-    # open(fits_loc, 'wb').write(session.get(url, stream=True).content)  # download and write to file
-
-    # wget.download(url, fits_loc)
-    # returned_code = call(['wget', url, fits_loc])
-    # print(returned_code, 'returned code')
-    download_command = '/opt/local/bin/wget --no-verbose --tries=5 -O "{}" "{}"'.format(fits_loc, url)  # path from 'which wget'
-    # print(download_command, flush=True)
-    # shell_command(download_command, executable='/bin/bash')
-    # shell_command(download_command, executable='/bin/sh')
+    download_command = '/opt/local/bin/wget --no-verbose --tries=5 -o logfile.txt -O "{}" "{}"'.format(fits_loc, url)  # path from 'which wget'
     result = shell_command(download_command, executable='/bin/tcsh')
-    print(result, flush=True)
-    # manual_path =
-
-    # time.sleep(10)
-
-    # print('fits acquired - saving to {}'.format(fits_loc), flush=True)
-
-    print('done {}'.format(fits_loc), flush=True)
+    # print(result, flush=True)
 
 
 def make_png_from_fits(fits_loc, png_loc):
@@ -434,7 +365,10 @@ def check_images_are_downloaded(catalog):
     catalog['fits_filled'] = np.zeros(len(catalog), dtype=bool)
     catalog['png_ready'] = np.zeros(len(catalog), dtype=bool)
 
+    # TODO refactor so this is multiprocessed
+
     for row_index, galaxy in tqdm(enumerate(catalog), total=len(catalog), unit=' images checked'):
+
         downloaded, complete = get_download_quality_of_fits(galaxy['fits_loc'])
         catalog['fits_ready'][row_index] = downloaded
         catalog['fits_filled'][row_index] = complete

@@ -73,6 +73,7 @@ def get_decals(nsa=None, bricks=None, s=None):
         joint_catalog = Table(fits.getdata(s.joint_catalog_loc))[include_names]
         # joint_catalog = Table.read(s.joint_catalog_loc, data_end=1000, include_names=include_names)
 
+    joint_catalog = joint_catalog[:1000]
     if s.new_images:
         print('get new images')
         joint_catalog = download_images_multithreaded(
