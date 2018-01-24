@@ -5,25 +5,15 @@ from get_images.download_images_threaded import *
 
 TEST_EXAMPLES_DIR = 'python/test_examples'
 
-#
-# @pytest.fixture
-# def fits_dir(tmpdir):
-#     return tmpdir.mkdir('fits_dir').strpath
-#
-#
-# @pytest.fixture
-# def png_dir(tmpdir):
-#     return tmpdir.mkdir('png_dir').strpath
+
+@pytest.fixture
+def fits_dir(tmpdir):
+    return tmpdir.mkdir('fits_dir').strpath
 
 
-@pytest.fixture()
-def fits_dir():
-    return '/home/walmsleym/temp_home'
-
-
-@pytest.fixture()
-def png_dir():
-    return '/home/walmsleym/temp_home'
+@pytest.fixture
+def png_dir(tmpdir):
+    return tmpdir.mkdir('png_dir').strpath
 
 
 @pytest.fixture
@@ -198,6 +188,8 @@ def test_download_images_creates_fits_and_png(new_galaxy, fits_dir, png_dir):
     assert not os.path.exists(new_galaxy['fits_loc'])
     assert not os.path.exists(new_galaxy['png_loc'])
     download_images(new_galaxy, data_release=data_release, overwrite_fits=False, overwrite_png=False)
+    import time
+    time.sleep(10)
     assert fits_downloaded_correctly(new_galaxy['fits_loc'])
     assert os.path.exists(new_galaxy['png_loc'])
 

@@ -11,6 +11,7 @@ import threading
 from queue import Empty
 
 from subprocess import call
+import subprocess
 
 import numpy as np
 from astropy.io import fits
@@ -24,10 +25,7 @@ import datetime
 from get_images.image_utils import dr2_style_rgb
 
 
-os.environ['NO_PROXY'] = 'legacysurvey.org'
-
-
-def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, overwrite_fits, overwrite_png, n_processes=5):
+def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, overwrite_fits, overwrite_png, n_processes=10):
     '''
     Download fits of catalog, create png images. Update catalog with fits and png locations. Run multithreaded.
 
@@ -49,7 +47,7 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
 
     assert len(catalog['fits_loc']) == len(set(catalog['fits_loc']))
 
-    pbar = tqdm(total=int(np.around(len(catalog)/n_processes)), unit='image/process')
+    # pbar = tqdm(total=int(np.around(len(catalog)/n_processes)), unit='image/process')
     pbar = None
 
     download_params = {
@@ -68,9 +66,9 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
 
     # pbar = None
 
-    [q.put(catalog[n]) for n in range(1000)]
-
+    [q.put(catalog[n]) for n in range(len(catalog))]
     time.sleep(1)
+
     processes = []
     for i in range(n_processes):
         p = multiprocessing.Process(target=download_worker, args=(q, download_images_partial, lock, pbar))
@@ -131,19 +129,18 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
 
 
 def download_worker(q, downloader, lock, pbar):
-    # env no_proxy = '*' python3.6
-    time.sleep(5)
     name = multiprocessing.current_process().name
     while True:
-        acquired_galaxy = False
-        while not acquired_galaxy:
-            try:
-                galaxy = q.get(block=False)
-                # galaxy = q.get_nowait()
-                acquired_galaxy = True
-            except Empty:
-                print('{} blocked by empty queue, repeating'.format(name), flush=True)
-                time.sleep(1)
+        # acquired_galaxy = False
+        # while not acquired_galaxy:
+        #     try:
+        #         galaxy = q.get(block=False)
+        #         # galaxy = q.get_nowait()
+        #         acquired_galaxy = True
+        #     except Empty:
+        #         print('{} blocked by empty queue, repeating'.format(name), flush=True)
+        #         time.sleep(1)
+        galaxy = q.get()
         # lock.acquire()
         print('{} running downloader'.format(name), flush=True)
         downloader(galaxy)
@@ -286,6 +283,12 @@ def get_png_loc(png_dir, galaxy):
     return '{0}/{1}.png'.format(png_dir, galaxy['iauname'])
 
 
+def shell_command(cmd, executable='/bin/bash'):  # default /bin/sh does not have homebrew e.g. wget
+    result = subprocess.Popen(cmd, shell=True, executable=executable)
+    result.wait()
+    return result
+
+
 def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixscale=0.262, size=424):
     '''
     Retrieve fits image from DECALS server and save to disk
@@ -345,28 +348,37 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixsc
     To resolve, disable proxies
     For more details, see:
     https://bugs.python.org/issue30385
+    https://blog.yimingliu.com/2015/07/22/python-multiprocessing-code-crashes-on-os-x-under-ipython/
     https://stackoverflow.com/questions/28521535/requests-how-to-disable-bypass-proxy
     """
-    session = requests.Session()  # disable proxies
-    session.trust_env = False
-
-    proxies = {
-        "http": None,
-        "https": None,
-    }
-
-    print('urlib request {}'.format(url), flush=True)
-    result = session.get(url, proxies=proxies).content
+    # os.environ["no_proxy"] = "*"
+    # session = requests.Session()  # disable proxies
+    # session.trust_env = True
+    # # proxies = {
+    # #     "http": None,
+    # #     "https": None,
+    # # }
+    # proxies = None
+    # print('environ ' + os.environ['no_proxy'])
+    # print('ENVIRON ' + os.environ['NO_PROXY'])
+    # print('urlib request {}'.format(url), flush=True)
     # result = session.get(url, stream=True, proxies=proxies).content
-    print('writing')
-    open(fits_loc, 'wb').write(result)  # download and write to file
+    # print('writing', flush=True)
+    # open(fits_loc, 'wb').write(result)  # download and write to file
 
     # open(fits_loc, 'wb').write(session.get(url, stream=True).content)  # download and write to file
 
     # wget.download(url, fits_loc)
     # returned_code = call(['wget', url, fits_loc])
     # print(returned_code, 'returned code')
-    # os.system('wget {} {}'.format(url, fits_loc))
+    download_command = '/opt/local/bin/wget --no-verbose --tries=5 -O "{}" "{}"'.format(fits_loc, url)  # path from 'which wget'
+    # print(download_command, flush=True)
+    # shell_command(download_command, executable='/bin/bash')
+    # shell_command(download_command, executable='/bin/sh')
+    result = shell_command(download_command, executable='/bin/tcsh')
+    print(result, flush=True)
+    # manual_path =
+
     # time.sleep(10)
 
     # print('fits acquired - saving to {}'.format(fits_loc), flush=True)
