@@ -226,7 +226,7 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixsc
             wget_location = 'wget'
     except KeyError:
         pass
-    download_command = '{} --tries=5 --no - verbose -O "{}" "{}"'.format(wget_location, fits_loc, url)
+    download_command = '{} --tries=5 --no-verbose -O "{}" "{}"'.format(wget_location, fits_loc, url)
     print(download_command)
     _ = shell_command(download_command)
 
