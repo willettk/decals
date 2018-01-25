@@ -40,6 +40,7 @@ def fits_image_params(fits_loc):
 @pytest.fixture()
 def new_galaxy(fits_loc, png_loc):
     return {
+        'iauname': 'new_galaxy',
         'fits_loc': fits_loc,
         'png_loc': png_loc,
         'ra': 146.714208787,
@@ -50,10 +51,10 @@ def new_galaxy(fits_loc, png_loc):
 
 
 @pytest.fixture
-def nsa_decals(fits_dir, png_dir):
-
+def joint_catalog(fits_dir, png_dir):
+    # TODO bad practice: fits_loc is overwritten in some tests
     gal_missing = {
-        'iauname': 'J094651.45-010228.5',
+        'iauname': 'J0',
         'fits_loc': '{}/example_missing.fits'.format(fits_dir),
         'png_loc': '{}/example_missing.png'.format(png_dir),
         'ra': 146.714208787,
@@ -62,7 +63,7 @@ def nsa_decals(fits_dir, png_dir):
         'petroth90': 10.4538}
 
     gal_incomplete = {
-        'iauname': 'J094651.45-010228.5',
+        'iauname': 'J1',
         'fits_loc': '{}/example_incomplete.fits'.format(TEST_EXAMPLES_DIR),
         'png_loc': '{}/example_incomplete.png'.format(TEST_EXAMPLES_DIR),
         'ra': 146.714208787,
@@ -71,7 +72,7 @@ def nsa_decals(fits_dir, png_dir):
         'petroth90': 10.4538}
 
     gal_bad_pix = {
-        'iauname': 'J094651.45-010258.5',
+        'iauname': 'J2',
         'fits_loc': '{}/example_bad_pix.fits'.format(TEST_EXAMPLES_DIR),
         'png_loc': '{}/example_bad_pix.png'.format(TEST_EXAMPLES_DIR),
         'ra': 146.714208787,
@@ -80,7 +81,7 @@ def nsa_decals(fits_dir, png_dir):
         'petroth90': 10.4538}
 
     gal_a = {
-        'iauname': 'J094651.40-010228.5',
+        'iauname': 'J3',
         'fits_loc': '{}/example_a.fits'.format(TEST_EXAMPLES_DIR),
         'png_loc': '{}/example_a.png'.format(TEST_EXAMPLES_DIR),
         'ra': 146.714208787,
@@ -89,7 +90,7 @@ def nsa_decals(fits_dir, png_dir):
         'petroth90': 10.4538}
 
     gal_b = {
-        'iauname': 'J094631.60-005917.7',
+        'iauname': 'J4',
         'fits_loc': '{}/example_b.fits'.format(TEST_EXAMPLES_DIR),
         'png_loc': '{}/example_b.png'.format(TEST_EXAMPLES_DIR),
         'ra': 146.631735209,
@@ -98,11 +99,11 @@ def nsa_decals(fits_dir, png_dir):
         'petroth90': 5.20297}
 
     gal_c = {
-        'iauname': 'J094842.33-002114.4',
+        'iauname': 'J5',
         'fits_loc': '{}/example_c.fits'.format(TEST_EXAMPLES_DIR),
         'png_loc': '{}/example_c.png'.format(TEST_EXAMPLES_DIR),
-        'ra': 147.176446949,
-        'dec': -0.354030416643,
+        'ra': 146.631735209,
+        'dec': -0.988354858412,
         'petroth50': 7.16148,
         'petroth90': 24.7535}
 
@@ -179,29 +180,28 @@ def test_download_images_creates_fits_and_png(new_galaxy, fits_dir, png_dir):
     assert os.path.exists(new_galaxy['png_loc'])
 
 
-def test_check_images_are_downloaded(nsa_decals):
-    # TODO currently correctly broken - there really aren't test pngs ready yet
-    checked_catalog = check_images_are_downloaded(nsa_decals)  # directly on test_examples directory
+def test_check_images_are_downloaded(joint_catalog):
+    checked_catalog = check_images_are_downloaded(joint_catalog)  # directly on test_examples directory
     print(checked_catalog[['iauname', 'fits_ready', 'fits_filled', 'png_ready']])
     assert np.array_equal(checked_catalog['fits_ready'], np.array([False, False, True, True, True, True]))
     assert np.array_equal(checked_catalog['fits_filled'], np.array([False, False, False, True, True, True]))
     assert np.array_equal(checked_catalog['png_ready'], np.array([False, False, True, True, True, True]))
 
 
-def test_download_images_multithreaded(nsa_decals, fits_dir, png_dir):
+def test_download_images_multithreaded(joint_catalog, fits_dir, png_dir):
     data_release = '5'
 
     # download to new temporary directory
-    nsa_decals['fits_loc'] = [get_fits_loc(fits_dir, galaxy) for galaxy in nsa_decals]
-    nsa_decals['png_loc'] = [get_fits_loc(png_dir, galaxy) for galaxy in nsa_decals]
+    joint_catalog['fits_loc'] = [get_loc(fits_dir, galaxy, 'fits') for galaxy in joint_catalog]
+    joint_catalog['png_loc'] = [get_loc(png_dir, galaxy, 'png') for galaxy in joint_catalog]
 
     # verify files are not already downloaded
-    for galaxy in nsa_decals:
+    for galaxy in joint_catalog:
         assert not os.path.exists(galaxy['fits_loc'])
         assert not os.path.exists(galaxy['png_loc'])
 
     # run download
-    output_catalog = download_images_multithreaded(nsa_decals, data_release, fits_dir, png_dir, overwrite_fits=False,
+    output_catalog = download_images_multithreaded(joint_catalog, data_release, fits_dir, png_dir, overwrite_fits=False,
                                                    overwrite_png=False)
 
     # verify files are now downloaded (to some unknown quality)

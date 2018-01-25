@@ -11,3 +11,4 @@ coverage
 python-coveralls
 pytest-cov
 codecov
+requests

@@ -1,9 +1,9 @@
 import functools
 import os
-import urllib.parse
-import urllib.request
 import warnings
-from multiprocessing.dummy import Pool as ThreadPool
+import multiprocessing
+import subprocess
+import time
 
 import numpy as np
 from astropy.io import fits
@@ -12,10 +12,8 @@ from tqdm import tqdm
 
 from get_images.image_utils import dr2_style_rgb
 
-min_pixelscale = 0.10
 
-
-def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, overwrite_fits, overwrite_png):
+def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, overwrite_fits, overwrite_png, n_processes=10):
     '''
     Download fits of catalog, create png images. Update catalog with fits and png locations. Run multithreaded.
 
@@ -31,26 +29,38 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
     '''
 
     # Table does not support .apply - use list comprehension instead
-    catalog['fits_loc'] = [get_fits_loc(fits_dir, catalog[index]) for index in range(len(catalog))]
-    catalog['png_loc'] = [get_png_loc(png_dir, catalog[index]) for index in range(len(catalog))]
-
-    pbar = tqdm(total=len(catalog), unit=' images created')
+    catalog['fits_loc'] = [get_loc(fits_dir, catalog[index], 'fits') for index in range(len(catalog))]
+    catalog['png_loc'] = [get_loc(png_dir, catalog[index], 'png') for index in range(len(catalog))]
+    assert len(catalog['fits_loc']) == len(set(catalog['fits_loc']))
 
     download_params = {
         'data_release': data_release,
         'overwrite_fits': overwrite_fits,
         'overwrite_png': overwrite_png,
-        'pbar': pbar
     }
     download_images_partial = functools.partial(download_images, **download_params)
 
-    pool = ThreadPool(30)
-    pool.map(download_images_partial, catalog)
-    pbar.close()
-    pool.close()
-    pool.join()
+    chunksize = 1
+    # TODO manual chunking
+    # if len(catalog) > 1000:
+    #     chunksize = 1000
 
-    catalog = check_images_are_downloaded(catalog)
+    manual_chunksize = 20000
+    remaining_catalog = catalog.copy()
+    while True:
+        print('Images left: {}'.format(len(remaining_catalog)))
+        chunk = remaining_catalog[-manual_chunksize:]
+        remaining_catalog = remaining_catalog[:-manual_chunksize]
+        pool = multiprocessing.Pool(10)
+        list(tqdm(
+            pool.imap(download_images_partial, chunk),  total=len(chunk),
+            unit='downloaded'))
+        pool.close()
+        pool.join()
+        if len(remaining_catalog) == 0:
+            break
+
+    catalog = check_images_are_downloaded(catalog, chunksize=chunksize)
 
     print("\n{} total galaxies".format(len(catalog)))
     print("{} fits are downloaded".format(np.sum(catalog['fits_ready'])))
@@ -60,7 +70,12 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
     return catalog
 
 
-def download_images(galaxy, data_release, overwrite_fits=False, overwrite_png=False, pbar=None, max_attempts=5):
+def download_images(galaxy,
+                    data_release,
+                    overwrite_fits=False,
+                    overwrite_png=False,
+                    max_attempts=5,
+                    min_pixelscale=0.1):
     """
     Download a multi-plane FITS image from the DECaLS skyserver
     Write multi-plane FITS images to separate files for each band
@@ -72,40 +87,46 @@ def download_images(galaxy, data_release, overwrite_fits=False, overwrite_png=Fa
         overwrite_png (bool): download png even if png file already exists in target location
         pbar (tqdm): progress bar shared between processes, to be updated. If None, no progress bar will be shown.
         max_attempts (int): max number of fits download attempts per file
+        min_pixelscale(float): minimum pixel scale to request from server, if object is tiny
 
     Returns:
         None
     """
-    pixscale = max(min(galaxy['petroth50'] * 0.04, galaxy['petroth50'] * 0.02), min_pixelscale)
 
-    # For convenience
-    fits_loc = galaxy['fits_loc']
-    png_loc = galaxy['png_loc']
+    try:
 
-    # Download multi-band fits images
-    if not fits_downloaded_correctly(fits_loc) or overwrite_fits:
+        pixscale = max(min(galaxy['petroth50'] * 0.04, galaxy['petroth50'] * 0.02), min_pixelscale)
 
-        attempt = 0
-        while attempt < max_attempts:
+        # For convenience
+        fits_loc = galaxy['fits_loc']
+        png_loc = galaxy['png_loc']
+
+        # Download multi-band fits images
+        # if not fits_downloaded_correctly(fits_loc) or overwrite_fits:
+        if (not os.path.exists(fits_loc)) or overwrite_fits:   # lazy mode
+            attempt = 0
+            while attempt < max_attempts:
+                try:
+                    download_fits_cutout(fits_loc, data_release, galaxy['ra'], galaxy['dec'], pixscale, 424)
+                    assert fits_downloaded_correctly(fits_loc)
+                    break
+                except Exception as err:
+                    print(err, 'on galaxy {}, attempt {}'.format(galaxy['iauname'], attempt), flush=True)
+                    attempt += 1
+                if attempt == max_attempts:
+                    warnings.warn('Failed to download {} after three attempts. No fits at {}'.format(
+                        galaxy['iauname'], galaxy['fits_loc']))
+
+        if not os.path.exists(png_loc) or overwrite_png:
             try:
-                download_fits_cutout(fits_loc, data_release, galaxy['ra'], galaxy['dec'], pixscale, 424)
-                assert fits_downloaded_correctly(fits_loc)
-                break
-            except Exception as err:
-                print(err, 'on galaxy {}, attempt {}'.format(galaxy['iauname'], attempt))
-                attempt += 1
+                # Create artistic png from the new FITS
+                make_png_from_fits(fits_loc, png_loc)
+            except:
+                print('Error creating png from {}'.format(fits_loc))
 
-    if not os.path.exists(png_loc) or overwrite_png:
-        try:
-            # Create artistic png for Galaxy Zoo from the new FITS
-            make_png_from_fits(fits_loc, png_loc)
-        except:
-            warnings.warn('Error creating png from {}'.format(fits_loc))
-    else:
-        warnings.warn('Failed to download {} after three attempts. No fits or png'.format(galaxy['iauname']))
-
-    if pbar:
-        pbar.update()
+    except Exception as err:  # necessary to (sometimes) avoid threads dying silently
+        print('FATAL THREAD ERROR: {}'.format(err))
+        exit(1)
 
 
 def fits_downloaded_correctly(fits_loc):
@@ -127,34 +148,39 @@ def fits_downloaded_correctly(fits_loc):
         return False
 
 
-def get_fits_loc(fits_dir, galaxy):
+def get_loc(dir, galaxy, extension):
     '''
-    Get full path where fits file of galaxy should be saved, given directory
-    Defines standard naming convention for fits images
+    Get full path where image file of galaxy should be saved, given directory
+    Defines standard location convention for images
+    Places into subdirectories based on first 4 characters of iauname to avoid filesystem problems with 300k+ files
 
     Args:
-        fits_dir (str): target directory for fits files
+        dir (str): target directory for image files
         galaxy (astropy.TableRecord): row of NSA/DECALS catalog with galaxy info e.g. name
+        extension (str): file extension to use e.g. fits, png
 
     Returns:
-        (str) full path of where galaxy fits should be saved
+        (str) full path of where galaxy file should be saved
     '''
-    return '{0}/{1}.fits'.format(fits_dir, galaxy['iauname'])
+    target_dir = '{}/{}'.format(dir, galaxy['iauname'][:4])
+    if not os.path.isdir(target_dir):  # place each galaxy in a directory with first 3 letters of iauname (i.e. RA)
+        try:
+            os.mkdir(target_dir)
+        except FileExistsError:  # when running multithreaded, another thread could make directory between checks
+            if os.path.isdir(target_dir):
+                pass
+    return '{}/{}.{}'.format(target_dir, galaxy['iauname'], extension)
 
 
-def get_png_loc(png_dir, galaxy):
-    '''
-    Get full path where png file of galaxy should be saved, given directory
-    Defines standard naming convention for png images
-
-    Args:
-        png_dir (str): target directory for png files
-        galaxy (astropy.TableRecord): row of NSA/DECALS catalog with galaxy info e.g. name
-
-    Returns:
-        (str) full path of where galaxy png should be saved
-    '''
-    return '{0}/{1}.png'.format(png_dir, galaxy['iauname'])
+def shell_command(cmd, executable=None, timeout=10):
+    result = subprocess.Popen(cmd, shell=True, executable=executable)
+    name = result.pid
+    try:
+        result.wait(timeout=timeout)
+    except TimeoutError:
+        result.kill()
+        print('{} killed'.format(name))
+    return result
 
 
 def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixscale=0.262, size=424):
@@ -171,20 +197,29 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixsc
     Returns:
         None
     '''
-    params = urllib.parse.urlencode({
+    params = {
         'ra': ra,
         'dec': dec,
         'pixscale': pixscale,
         'size': size,
-        'layer': 'decals-dr{}'.format(data_release)})
+        'layer': 'decals-dr{}'.format(data_release)}
     if data_release == '1':
         url = "http://imagine.legacysurvey.org/fits-cutout?{}".format(params)
     elif data_release == '2' or '3' or '5':
-        url = "http://legacysurvey.org/viewer/fits-cutout?{}".format(params)
+        # url = "http://legacysurvey.org/viewer/fits-cutout?{}".format(params)
+        url = "http://legacysurvey.org/viewer/fits-cutout?ra={}&dec={}&pixscale={}&size={}&layer={}".format(params['ra'], params['dec'], params['pixscale'], params['size'], params['layer'])
     else:
         raise ValueError('Data release "{}" not recognised'.format(data_release))
 
-    urllib.request.urlretrieve(url, fits_loc)
+    wget_location = '/opt/local/bin/wget'
+    try:
+        if os.environ['ON_TRAVIS'] == 'True':
+            wget_location = 'wget'
+    except KeyError:
+        pass
+    download_command = '{} --tries=5 --no-verbose -O "{}" "{}"'.format(wget_location, fits_loc, url)
+    print(download_command)
+    _ = shell_command(download_command)
 
 
 def make_png_from_fits(fits_loc, png_loc):
@@ -210,19 +245,18 @@ def make_png_from_fits(fits_loc, png_loc):
         img, hdr = fits.getdata(fits_loc, 0, header=True)
     except Exception:
         warnings.warn('Invalid fits at {}'.format(fits_loc))
+    else:  # if no exception getting image
+        rgbimg = dr2_style_rgb(
+            (img[0, :, :], img[1, :, :], img[2, :, :]),
+            'grz',
+            mnmx=_mnmx,
+            arcsinh=1.,
+            scales=_scales,
+            desaturate=True)
+        plt.imsave(png_loc, rgbimg, origin='lower')
 
-    rgbimg = dr2_style_rgb(
-        (img[0, :, :], img[1, :, :], img[2, :, :]),
-        'grz',
-        mnmx=_mnmx,
-        arcsinh=1.,
-        scales=_scales,
-        desaturate=True)
 
-    plt.imsave(png_loc, rgbimg, origin='lower')
-
-
-def check_images_are_downloaded(catalog):
+def check_images_are_downloaded(catalog, chunksize=1):
     """
     Record if images are downloaded. Add 'fits_ready', 'png_ready' and 'fits_complete' columns to catalog.
 
@@ -232,18 +266,28 @@ def check_images_are_downloaded(catalog):
     Returns:
         (astropy.Table) catalog with image quality check columns added
     """
-    catalog['fits_ready'] = np.zeros(len(catalog), dtype=bool)
-    catalog['fits_filled'] = np.zeros(len(catalog), dtype=bool)
-    catalog['png_ready'] = np.zeros(len(catalog), dtype=bool)
+    pool = multiprocessing.Pool(10)
+    result = list(tqdm(
+        pool.imap(check_image_is_downloaded, catalog, chunksize=chunksize),
+        total=len(catalog),
+        unit='checked'))
+    pool.close()
+    pool.join()
 
-    for row_index, galaxy in tqdm(enumerate(catalog), total=len(catalog), unit=' images checked'):
-        downloaded, complete = get_download_quality_of_fits(galaxy['fits_loc'])
-        catalog['fits_ready'][row_index] = downloaded
-        catalog['fits_filled'][row_index] = complete
-        if downloaded:  # fits must be ready for png to be ready
-            if os.path.exists(galaxy['png_loc']):
-                catalog['png_ready'][row_index] = True
+    catalog['fits_ready'] = [result[n][0] for n in range(len(catalog))]
+    catalog['fits_filled'] = [result[n][1] for n in range(len(catalog))]
+    catalog['png_ready'] = [result[n][2] for n in range(len(catalog))]
+
     return catalog
+
+
+def check_image_is_downloaded(galaxy):
+    downloaded, complete = get_download_quality_of_fits(galaxy['fits_loc'])
+    if downloaded:  # fits must be ready for png to be ready
+        png_ready = os.path.exists(galaxy['png_loc'])
+    else:
+        png_ready = False
+    return downloaded, complete, png_ready
 
 
 def get_download_quality_of_fits(fits_loc, badmax_limit=0.2):

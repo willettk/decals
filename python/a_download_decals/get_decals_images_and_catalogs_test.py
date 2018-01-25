@@ -23,6 +23,11 @@ def catalog_dir(tmpdir):
 
 
 @pytest.fixture()
+def joint_catalog_loc(catalog_dir):
+    return '{}/joint_catalog.fits'.format(catalog_dir)
+
+
+@pytest.fixture()
 def nsa():
     return Table([
         {
@@ -140,21 +145,30 @@ def previous_subjects():
     ])
 
 
-@pytest.fixture()
-def settings(catalog_dir, fits_dir, png_dir):
+class SettingsMockObject():
+    # settings is imported as a file ('import settings.py'). Mirror that behaviour (e.g. dot access) with a class.
+    def __init__(self, catalog_dir, fits_dir, png_dir, data_release, nsa_version, joint_catalog_loc):
+        self.catalog_dir = catalog_dir
+        self.fits_dir = fits_dir
+        self.png_dir = png_dir
+        self.data_release = data_release
+        self.nsa_version = nsa_version
+        self.joint_catalog_loc = joint_catalog_loc
 
-    nondefault_params = {
-        'catalog_dir': catalog_dir,
-        'fits_dir': fits_dir,
-        'png_dir': png_dir,
-        'data_release': '3'
-    }
-    return Settings(**nondefault_params)
+
+@pytest.fixture()
+def settings(catalog_dir, fits_dir, png_dir, joint_catalog_loc):
+    return SettingsMockObject(
+        catalog_dir=catalog_dir,
+        fits_dir=fits_dir,
+        png_dir=png_dir,
+        data_release='3',
+        nsa_version='1_0_0',
+        joint_catalog_loc=joint_catalog_loc)
 
 
 def test_get_decals(nsa, bricks, settings):
-
-    # for safety, these settings must be separately specified
+    # these settings are specified separately
     settings.new_catalog = True
     settings.new_images = True
     settings.overwrite_fits = True
@@ -163,12 +177,16 @@ def test_get_decals(nsa, bricks, settings):
 
     catalog = get_decals(nsa, bricks, settings)
 
+    assert os.path.exists(settings.joint_catalog_loc)
+    # saved_catalog = Table.read(settings.joint_catalog_loc)
+    # assert catalog == saved_catalog
+
     remaining_names = set(catalog['iauname'])
     assert 'iau_small' not in remaining_names
     assert 'iau_below_bricks' not in remaining_names
     assert 'iau_outside_bricks' not in remaining_names
     assert 'iau_good_subject' in remaining_names
-    assert 'iau_far' in remaining_names  # redshift filtering is currently off
+    assert 'iau_far' in remaining_names  # no redshift filtering
 
     new_subject = catalog[0]
 
