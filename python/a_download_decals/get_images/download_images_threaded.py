@@ -177,7 +177,7 @@ def get_loc(fits_dir, galaxy, extension):
     return '{}/{}.{}'.format(target_dir, galaxy['iauname'], extension)
 
 
-def shell_command(cmd, executable='/bin/sh'):
+def shell_command(cmd, executable=None):
     result = subprocess.Popen(cmd, shell=True, executable=executable)
     name = result.pid
     print('waiting for {}, {}'.format(cmd, name))
@@ -220,7 +220,11 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixsc
     else:
         raise ValueError('Data release "{}" not recognised'.format(data_release))
 
-    download_command = '/opt/local/bin/wget --tries=5 --no - verbose -O "{}" "{}"'.format(fits_loc, url)
+    wget_location = 'wget'
+    if os.environ['ON_TRAVIS'] != 'True':
+        wget_location = '/opt/local/bin/wget'
+    download_command = '{} --tries=5 --no - verbose -O "{}" "{}"'.format(wget_location, fits_loc, url)
+    print(download_command)
     _ = shell_command(download_command)
 
 

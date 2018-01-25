@@ -1,3 +1,5 @@
+env:
+  - On_Travis="True"
 language: python
 python:
   - "3.6"
