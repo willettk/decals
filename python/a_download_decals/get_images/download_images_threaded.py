@@ -1,26 +1,13 @@
 import functools
 import os
-import requests
-import urllib.parse
-import urllib.request
 import warnings
-import logging
 import multiprocessing
-
-import threading
-from queue import Empty
-
-from subprocess import call
 import subprocess
 
 import numpy as np
 from astropy.io import fits
 from matplotlib import pyplot as plt
 from tqdm import tqdm
-
-import time
-
-import datetime
 
 from get_images.image_utils import dr2_style_rgb
 
@@ -46,84 +33,22 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
     catalog['png_loc'] = [get_png_loc(png_dir, catalog[index]) for index in range(len(catalog))]
     assert len(catalog['fits_loc']) == len(set(catalog['fits_loc']))
 
-    # pbar = tqdm(total=int(np.around(len(catalog)/n_processes)), unit='image/process')
-    pbar = None
-    # pbar = tqdm(total=len(catalog), unit='image/process')
-
     download_params = {
         'data_release': data_release,
         'overwrite_fits': overwrite_fits,
         'overwrite_png': overwrite_png,
-        # 'pbar': pbar,
     }
     download_images_partial = functools.partial(download_images, **download_params)
 
-    # lock = multiprocessing.Lock()
-    # # q = multiprocessing.JoinableQueue(maxsize=len(catalog))
-    # q = multiprocessing.JoinableQueue()
-    # # q = multiprocessing.Queue()
-
     pool = multiprocessing.Pool(10)
-    # pool.map(download_images_partial, catalog[:1000], chunksize=100)
-    list(tqdm(pool.imap(download_images_partial, catalog[:1000]), total=len(catalog)))
+    chunksize = None
+    if len(catalog) > 1000:
+        chunksize = 1000
+    list(tqdm(pool.imap(download_images_partial, catalog, chunksize=chunksize), total=len(catalog), unit='downloaded'))
     pool.close()
     pool.join()
 
-    # pbar = None
-    #
-    # [q.put(catalog[n]) for n in range(1000)]
-    # time.sleep(1)
-    #
-    # processes = []
-    # for i in range(n_processes):
-    #     p = multiprocessing.Process(target=download_worker, args=(q, download_images_partial, lock, pbar))
-    #     print('created process {}, alive {}, exit state {}'.format(p.name, p.is_alive(), p.exitcode))
-    #     p.daemon = True
-    #     processes.append(p)
-    #     p.start()
-    #
-    # # periodically add chunks of data to queue
-    # chunksize = 50
-    # print('copying catalog')
-    # catalog_to_chunk = catalog.copy()
-    # while True:
-    #     for p in processes:
-    #         print('process {}, alive {}, exit state {}'.format(p.name, p.is_alive(), p.exitcode))
-    #     # print('Queue is empty? {}'.format(q.empty()))
-    #     # if q.empty():
-    #     #     print('adding new chunk'.upper())
-    #     #     new_chunk = catalog_to_chunk[-chunksize:]
-    #     #     catalog_to_chunk = catalog_to_chunk[:-chunksize]
-    #     #     [q.put(new_chunk[n]) for n in range(len(new_chunk))]
-    #     #     if len(catalog_to_chunk) == 0:
-    #     #         print('catalog has been completely processed - breaking')
-    #     #         break
-    #     time.sleep(5)
-
-    # wait_time = 5
-    # print('queue empty {}'.format(q.empty()))
-    # while not q.empty():
-
-    #     time.sleep(wait_time)
-
-    # time.sleep(500)
-    # print('pausing')
-    # q.join()
-    # print('continuing')
-
-    # list(map(download_images_partial, catalog))
-    # pool = multiprocessing.Pool(processes=1, maxtasksperchild=1)
-    # pool.map(download_images_partial, catalog)
-    # pbar.close()
-    # pool.close()
-    # pool.join()
-
-    # blocked_galaxies = [queue.get() for n in range(queue.qsize())]
-    # import pandas as pd
-    # pd.DataFrame(blocked_galaxies).to_csv('blocked_galaxies.csv')
-    # exit(0)
-
-    catalog = check_images_are_downloaded(catalog)
+    catalog = check_images_are_downloaded(catalog, chunksize=chunksize)
 
     print("\n{} total galaxies".format(len(catalog)))
     print("{} fits are downloaded".format(np.sum(catalog['fits_ready'])))
@@ -131,35 +56,6 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
     print("{} fits have many bad pixels".format(len(catalog) - np.sum(catalog['fits_filled'])))
 
     return catalog
-
-#
-# def download_worker(q, downloader, lock, pbar):
-#     name = multiprocessing.current_process().name
-#     while True:
-#         # acquired_galaxy = False
-#         # while not acquired_galaxy:
-#         #     try:
-#         #         galaxy = q.get(block=False)
-#         #         # galaxy = q.get_nowait()
-#         #         acquired_galaxy = True
-#         #     except Empty:
-#         #         print('{} blocked by empty queue, repeating'.format(name), flush=True)
-#         #         time.sleep(1)
-#         galaxy = q.get()
-#         # lock.acquire()
-#         print('{} running downloader'.format(name), flush=True)
-#         downloader(galaxy)
-#         # lock.release()
-#         print('{} completed task'.format(name), flush=True)
-#         q.task_done()
-#         # lock.acquire()  # block all other threads from passing this point
-#         # pbar.update()
-#         # lock.release()  # other threads can now proceed to update pbar
-#         # time.sleep(10)
-#
-#     # print('queue empty: {}, closing and joining'.format(q.empty()), flush=True)
-#     # q.close()
-#     # q.join_thread()
 
 
 def download_images(galaxy,
@@ -260,7 +156,7 @@ def get_fits_loc(fits_dir, galaxy):
     Returns:
         (str) full path of where galaxy fits should be saved
     '''
-    return '{0}/{1}.fits'.format(fits_dir, galaxy['iauname'])
+    return '{}/{}.fits'.format(fits_dir, galaxy['iauname'])
 
 
 def get_png_loc(png_dir, galaxy):
@@ -312,7 +208,7 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixsc
     else:
         raise ValueError('Data release "{}" not recognised'.format(data_release))
 
-    download_command = '/opt/local/bin/wget --no-verbose --tries=5 -o logfile.txt -O "{}" "{}"'.format(fits_loc, url)  # path from 'which wget'
+    download_command = '/opt/local/bin/wget --no-verbose --tries=5 -O "{}" "{}"'.format(fits_loc, url)  # path from 'which wget'
     result = shell_command(download_command, executable='/bin/tcsh')
     # print(result, flush=True)
 
@@ -351,7 +247,7 @@ def make_png_from_fits(fits_loc, png_loc):
         plt.imsave(png_loc, rgbimg, origin='lower')
 
 
-def check_images_are_downloaded(catalog):
+def check_images_are_downloaded(catalog, chunksize=None):
     """
     Record if images are downloaded. Add 'fits_ready', 'png_ready' and 'fits_complete' columns to catalog.
 
@@ -361,21 +257,26 @@ def check_images_are_downloaded(catalog):
     Returns:
         (astropy.Table) catalog with image quality check columns added
     """
-    catalog['fits_ready'] = np.zeros(len(catalog), dtype=bool)
-    catalog['fits_filled'] = np.zeros(len(catalog), dtype=bool)
-    catalog['png_ready'] = np.zeros(len(catalog), dtype=bool)
+    # TODO manual chunking? Seems to slow down a LOT for full 350k vs 1k
+    pool = multiprocessing.Pool(10)
+    result = list(tqdm(pool.imap(check_image_is_downloaded, catalog, chunksize=chunksize), total=len(catalog), unit='checked'))
+    pool.close()
+    pool.join()
 
-    # TODO refactor so this is multiprocessed
+    catalog['fits_ready'] = [result[n][0] for n in range(len(catalog))]
+    catalog['fits_filled'] = [result[n][1] for n in range(len(catalog))]
+    catalog['png_ready'] = [result[n][2] for n in range(len(catalog))]
 
-    for row_index, galaxy in tqdm(enumerate(catalog), total=len(catalog), unit=' images checked'):
-
-        downloaded, complete = get_download_quality_of_fits(galaxy['fits_loc'])
-        catalog['fits_ready'][row_index] = downloaded
-        catalog['fits_filled'][row_index] = complete
-        if downloaded:  # fits must be ready for png to be ready
-            if os.path.exists(galaxy['png_loc']):
-                catalog['png_ready'][row_index] = True
     return catalog
+
+
+def check_image_is_downloaded(galaxy):
+    downloaded, complete = get_download_quality_of_fits(galaxy['fits_loc'])
+    if downloaded:  # fits must be ready for png to be ready
+        png_ready = os.path.exists(galaxy['png_loc'])
+    else:
+        png_ready = False
+    return downloaded, complete, png_ready
 
 
 def get_download_quality_of_fits(fits_loc, badmax_limit=0.2):

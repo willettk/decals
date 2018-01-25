@@ -102,24 +102,12 @@ def joint_catalog(fits_dir, png_dir):
         'iauname': 'J5',
         'fits_loc': '{}/example_c.fits'.format(TEST_EXAMPLES_DIR),
         'png_loc': '{}/example_c.png'.format(TEST_EXAMPLES_DIR),
-        # 'ra': 147.176446949,
-        # 'dec': -0.354030416643,
         'ra': 146.631735209,
         'dec': -0.988354858412,
         'petroth50': 7.16148,
         'petroth90': 24.7535}
 
-    gal_mystery = {
-        'iauname': 'J121457.39-002412.7',
-        'fits_loc': '/data/temp/J121457.39-002412.7.fits',
-        'png_loc': '/data/temp/J121457.39-002412.7.png',
-        'ra': 183.73974251,
-        'dec': -0.403807422075,
-        'petroth50': 7.16148,
-        'petroth90': 24.7535}
-        # http: // legacysurvey.org / viewer / fits - cutout?ra =  & dec =  & pixscale = 0.1 & size = 424 & layer = decals - dr5
-
-    return Table([gal_missing, gal_incomplete, gal_bad_pix, gal_a, gal_b, gal_c, gal_mystery])
+    return Table([gal_missing, gal_incomplete, gal_bad_pix, gal_a, gal_b, gal_c])
 
 
 @pytest.fixture()

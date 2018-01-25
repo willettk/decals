@@ -2,7 +2,7 @@ import pandas as pd
 from astropy.io import fits
 from astropy.table import Table
 
-import settings
+import download_decals_settings
 from a_download_decals.get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog
 from do_upload.create_subject_set import create_prototype_subject_set
 from previous_subjects.previous_decals_subjects import get_previous_decals_subjects
@@ -35,22 +35,22 @@ def upload_decals_to_panoptes(joint_catalog, previous_subjects, expert_catalog, 
 
 if __name__ == '__main__':
 
-    joint_catalog = Table(fits.getdata(settings.joint_catalog_loc))
-    expert_catalog = get_expert_catalog(settings.expert_catalog_loc)
+    joint_catalog = Table(fits.getdata(download_decals_settings.joint_catalog_loc))
+    expert_catalog = get_expert_catalog(download_decals_settings.expert_catalog_loc)
 
-    if settings.new_previous_subjects:
-        all_subjects = pd.read_csv(settings.previous_subjects_loc)
-        nsa_v1_0_0 = get_nsa_catalog(settings.nsa_v1_0_0_catalog_loc, settings.nsa_version)
+    if download_decals_settings.new_previous_subjects:
+        all_subjects = pd.read_csv(download_decals_settings.previous_subjects_loc)
+        nsa_v1_0_0 = get_nsa_catalog(download_decals_settings.nsa_v1_0_0_catalog_loc, download_decals_settings.nsa_version)
         previous_subjects = get_previous_decals_subjects(all_subjects, nsa_v1_0_0)
         # save for next run
-        previous_subjects.write(settings.subject_loc)
+        previous_subjects.write(download_decals_settings.subject_loc)
         print('new: ', type(previous_subjects))
     else:
-        previous_subjects = Table(fits.getdata(settings.subject_loc))  # previously extracted decals subjects
+        previous_subjects = Table(fits.getdata(download_decals_settings.subject_loc))  # previously extracted decals subjects
 
     upload_decals_to_panoptes(
         joint_catalog,
         previous_subjects,
         expert_catalog,
-        settings.calibration_dir,
-        settings.new_calibration_images)
+        download_decals_settings.calibration_dir,
+        download_decals_settings.new_calibration_images)

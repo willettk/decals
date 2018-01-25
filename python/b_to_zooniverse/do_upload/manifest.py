@@ -9,7 +9,7 @@ from panoptes_client import Panoptes, Project, SubjectSet, Subject
 from tqdm import tqdm
 
 from do_upload.make_decals_metadata import get_key_astrophysical_columns
-from settings import zooniverse_login_loc
+from to_zooniverse_settings import zooniverse_login_loc
 
 
 def create_manifest_from_calibration_catalog(catalog, image_columns):
