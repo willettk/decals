@@ -220,9 +220,12 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixsc
     else:
         raise ValueError('Data release "{}" not recognised'.format(data_release))
 
-    wget_location = 'wget'
-    if os.environ['ON_TRAVIS'] != 'True':
-        wget_location = '/opt/local/bin/wget'
+    wget_location = '/opt/local/bin/wget'
+    try:
+        if os.environ['ON_TRAVIS'] == 'True':
+            wget_location = 'wget'
+    except KeyError:
+        pass
     download_command = '{} --tries=5 --no - verbose -O "{}" "{}"'.format(wget_location, fits_loc, url)
     print(download_command)
     _ = shell_command(download_command)
