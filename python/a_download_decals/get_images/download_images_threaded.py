@@ -3,6 +3,7 @@ import os
 import warnings
 import multiprocessing
 import subprocess
+import time
 
 import numpy as np
 from astropy.io import fits
@@ -29,8 +30,8 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
 
     # Table does not support .apply - use list comprehension instead
 
-    catalog['fits_loc'] = [get_fits_loc(fits_dir, catalog[index]) for index in range(len(catalog))]
-    catalog['png_loc'] = [get_png_loc(png_dir, catalog[index]) for index in range(len(catalog))]
+    catalog['fits_loc'] = [get_loc(fits_dir, catalog[index], 'fits') for index in range(len(catalog))]
+    catalog['png_loc'] = [get_loc(png_dir, catalog[index], 'png') for index in range(len(catalog))]
     assert len(catalog['fits_loc']) == len(set(catalog['fits_loc']))
 
     download_params = {
@@ -40,13 +41,24 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
     }
     download_images_partial = functools.partial(download_images, **download_params)
 
-    pool = multiprocessing.Pool(10)
-    chunksize = None
-    if len(catalog) > 1000:
-        chunksize = 1000
-    list(tqdm(pool.imap(download_images_partial, catalog, chunksize=chunksize), total=len(catalog), unit='downloaded'))
-    pool.close()
-    pool.join()
+    chunksize = 1
+    # if len(catalog) > 1000:
+    #     chunksize = 1000
+
+    manual_chunksize = 20000
+    remaining_catalog = catalog.copy()
+    while True:
+        print('Images left: {}'.format(len(remaining_catalog)))
+        chunk = remaining_catalog[-manual_chunksize:]
+        remaining_catalog = remaining_catalog[:-manual_chunksize]
+        pool = multiprocessing.Pool(10)
+        list(tqdm(
+            pool.imap(download_images_partial, chunk),  total=len(chunk),
+            unit='downloaded'))
+        pool.close()
+        pool.join()
+        if len(remaining_catalog) == 0:
+            break
 
     catalog = check_images_are_downloaded(catalog, chunksize=chunksize)
 
@@ -82,9 +94,6 @@ def download_images(galaxy,
         None
     """
 
-    # currentDT = datetime.datetime.now()
-    # print(str(currentDT), flush=True)
-
     try:
 
         pixscale = max(min(galaxy['petroth50'] * 0.04, galaxy['petroth50'] * 0.02), min_pixelscale)
@@ -94,8 +103,8 @@ def download_images(galaxy,
         png_loc = galaxy['png_loc']
 
         # Download multi-band fits images
-        if not fits_downloaded_correctly(fits_loc) or overwrite_fits:
-        # if (not os.path.exists(fits_loc)) or overwrite_fits:
+        # if not fits_downloaded_correctly(fits_loc) or overwrite_fits:
+        if (not os.path.exists(fits_loc)) or overwrite_fits:   # lazy mode
             attempt = 0
             while attempt < max_attempts:
                 try:
@@ -112,16 +121,16 @@ def download_images(galaxy,
         # print('moving on to png, thread {}'.format(os.getpid()))
         if not os.path.exists(png_loc) or overwrite_png:
             try:
-                # Create artistic png for Galaxy Zoo from the new FITS
+                # Create artistic png from the new FITS
                 make_png_from_fits(fits_loc, png_loc)
             except:
-                warnings.warn('Error creating png from {}'.format(fits_loc))
+                print('Error creating png from {}'.format(fits_loc))
 
         if pbar:
             pbar.update()
 
-    except Exception:
-        warnings.warn('FATAL THREAD ERROR: {}'.format(Exception), flush=True)
+    except Exception as err:
+        print('FATAL THREAD ERROR: {}'.format(err))
         exit(1)
 
 
@@ -144,39 +153,42 @@ def fits_downloaded_correctly(fits_loc):
         return False
 
 
-def get_fits_loc(fits_dir, galaxy):
+def get_loc(fits_dir, galaxy, extension):
     '''
-    Get full path where fits file of galaxy should be saved, given directory
-    Defines standard naming convention for fits images
+    Get full path where image file of galaxy should be saved, given directory
+    Defines standard location convention for images
+    Places into subdirectories based on first 4 characters of iauname to avoid filesystem problems with 300k+ files
 
     Args:
-        fits_dir (str): target directory for fits files
+        fits_dir (str): target directory for image files
         galaxy (astropy.TableRecord): row of NSA/DECALS catalog with galaxy info e.g. name
+        extension (str): file extension to use e.g. fits, png
 
     Returns:
-        (str) full path of where galaxy fits should be saved
+        (str) full path of where galaxy file should be saved
     '''
-    return '{}/{}.fits'.format(fits_dir, galaxy['iauname'])
+    target_dir = '{}/{}'.format(fits_dir, galaxy['iauname'][:4])
+    if not os.path.isdir(target_dir):  # place each galaxy in a directory with first 3 letters of iauname (i.e. RA)
+        try:
+            os.mkdir(target_dir)
+        except FileExistsError:  # when running multithreaded, another thread could make directory between checks
+            if os.path.isdir(target_dir):
+                pass
+    return '{}/{}.{}'.format(target_dir, galaxy['iauname'], extension)
 
 
-def get_png_loc(png_dir, galaxy):
-    '''
-    Get full path where png file of galaxy should be saved, given directory
-    Defines standard naming convention for png images
-
-    Args:
-        png_dir (str): target directory for png files
-        galaxy (astropy.TableRecord): row of NSA/DECALS catalog with galaxy info e.g. name
-
-    Returns:
-        (str) full path of where galaxy png should be saved
-    '''
-    return '{0}/{1}.png'.format(png_dir, galaxy['iauname'])
-
-
-def shell_command(cmd, executable='/bin/bash'):  # default /bin/sh does not have homebrew e.g. wget
+def shell_command(cmd, executable='/bin/sh'):
     result = subprocess.Popen(cmd, shell=True, executable=executable)
-    result.wait()
+    name = result.pid
+    print('waiting for {}, {}'.format(cmd, name))
+    time.sleep(1)
+    try:
+        print(result.communicate(timeout=5), flush=True)
+        result.wait(timeout=5)
+    except TimeoutError:
+        result.kill()
+        print('{} killed'.format(name))
+    print('returning result from {}'.format(name))
     return result
 
 
@@ -208,9 +220,8 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixsc
     else:
         raise ValueError('Data release "{}" not recognised'.format(data_release))
 
-    download_command = '/opt/local/bin/wget --no-verbose --tries=5 -O "{}" "{}"'.format(fits_loc, url)  # path from 'which wget'
-    result = shell_command(download_command, executable='/bin/tcsh')
-    # print(result, flush=True)
+    download_command = '/opt/local/bin/wget --tries=5 --no - verbose -O "{}" "{}"'.format(fits_loc, url)
+    _ = shell_command(download_command)
 
 
 def make_png_from_fits(fits_loc, png_loc):
@@ -247,7 +258,7 @@ def make_png_from_fits(fits_loc, png_loc):
         plt.imsave(png_loc, rgbimg, origin='lower')
 
 
-def check_images_are_downloaded(catalog, chunksize=None):
+def check_images_are_downloaded(catalog, chunksize=1):
     """
     Record if images are downloaded. Add 'fits_ready', 'png_ready' and 'fits_complete' columns to catalog.
 

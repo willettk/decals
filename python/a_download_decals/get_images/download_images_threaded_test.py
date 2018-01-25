@@ -194,8 +194,8 @@ def test_download_images_multithreaded(joint_catalog, fits_dir, png_dir):
     data_release = '5'
 
     # download to new temporary directory
-    joint_catalog['fits_loc'] = [get_fits_loc(fits_dir, galaxy) for galaxy in joint_catalog]
-    joint_catalog['png_loc'] = [get_fits_loc(png_dir, galaxy) for galaxy in joint_catalog]
+    joint_catalog['fits_loc'] = [get_loc(fits_dir, galaxy, 'fits') for galaxy in joint_catalog]
+    joint_catalog['png_loc'] = [get_loc(png_dir, galaxy, 'png') for galaxy in joint_catalog]
 
     # print(nsa_decals['fits_loc'])
 
