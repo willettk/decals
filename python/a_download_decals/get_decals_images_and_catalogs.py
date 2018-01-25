@@ -69,9 +69,7 @@ def get_decals(nsa=None, bricks=None, s=None):
         joint_catalog.write(s.joint_catalog_loc, overwrite=True)
     else:
         print('get joint catalog')
-
-        joint_catalog = Table(fits.getdata(s.joint_catalog_loc))[include_names]
-        # joint_catalog = Table.read(s.joint_catalog_loc, data_end=1000, include_names=include_names)
+        joint_catalog = Table.read(s.joint_catalog_loc)[include_names]
 
     if s.new_images:
         print('get new images')
@@ -110,15 +108,16 @@ def main():
     download_decals_settings.overwrite_png = False
     download_decals_settings.run_to = None
 
-    nsa = get_nsa_catalog(download_decals_settings.nsa_catalog_loc, download_decals_settings.nsa_version)
-    print('nsa loaded')
-    bricks = get_decals_bricks(download_decals_settings.bricks_loc, download_decals_settings.data_release)
-    print('catalogs loaded')
+    if download_decals_settings.new_catalog:
+        nsa = get_nsa_catalog(download_decals_settings.nsa_catalog_loc, download_decals_settings.nsa_version)
+        print('nsa loaded')
+        bricks = get_decals_bricks(download_decals_settings.bricks_loc, download_decals_settings.data_release)
+        print('bricks loaded')
+    else:
+        nsa = None
+        bricks = None
 
-    # nsa = None
-    # bricks = None
     joint_catalog = get_decals(nsa, bricks, download_decals_settings)
-
     joint_catalog.write(download_decals_settings.upload_catalog_loc, overwrite=True)
 
 

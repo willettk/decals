@@ -29,7 +29,6 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
     '''
 
     # Table does not support .apply - use list comprehension instead
-
     catalog['fits_loc'] = [get_loc(fits_dir, catalog[index], 'fits') for index in range(len(catalog))]
     catalog['png_loc'] = [get_loc(png_dir, catalog[index], 'png') for index in range(len(catalog))]
     assert len(catalog['fits_loc']) == len(set(catalog['fits_loc']))
@@ -42,6 +41,7 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
     download_images_partial = functools.partial(download_images, **download_params)
 
     chunksize = 1
+    # TODO manual chunking
     # if len(catalog) > 1000:
     #     chunksize = 1000
 
@@ -74,7 +74,6 @@ def download_images(galaxy,
                     data_release,
                     overwrite_fits=False,
                     overwrite_png=False,
-                    pbar=None,
                     max_attempts=5,
                     min_pixelscale=0.1):
     """
@@ -118,7 +117,6 @@ def download_images(galaxy,
                     warnings.warn('Failed to download {} after three attempts. No fits at {}'.format(
                         galaxy['iauname'], galaxy['fits_loc']))
 
-        # print('moving on to png, thread {}'.format(os.getpid()))
         if not os.path.exists(png_loc) or overwrite_png:
             try:
                 # Create artistic png from the new FITS
@@ -126,10 +124,7 @@ def download_images(galaxy,
             except:
                 print('Error creating png from {}'.format(fits_loc))
 
-        if pbar:
-            pbar.update()
-
-    except Exception as err:
+    except Exception as err:  # necessary to (sometimes) avoid threads dying silently
         print('FATAL THREAD ERROR: {}'.format(err))
         exit(1)
 
@@ -153,21 +148,21 @@ def fits_downloaded_correctly(fits_loc):
         return False
 
 
-def get_loc(fits_dir, galaxy, extension):
+def get_loc(dir, galaxy, extension):
     '''
     Get full path where image file of galaxy should be saved, given directory
     Defines standard location convention for images
     Places into subdirectories based on first 4 characters of iauname to avoid filesystem problems with 300k+ files
 
     Args:
-        fits_dir (str): target directory for image files
+        dir (str): target directory for image files
         galaxy (astropy.TableRecord): row of NSA/DECALS catalog with galaxy info e.g. name
         extension (str): file extension to use e.g. fits, png
 
     Returns:
         (str) full path of where galaxy file should be saved
     '''
-    target_dir = '{}/{}'.format(fits_dir, galaxy['iauname'][:4])
+    target_dir = '{}/{}'.format(dir, galaxy['iauname'][:4])
     if not os.path.isdir(target_dir):  # place each galaxy in a directory with first 3 letters of iauname (i.e. RA)
         try:
             os.mkdir(target_dir)
@@ -177,18 +172,14 @@ def get_loc(fits_dir, galaxy, extension):
     return '{}/{}.{}'.format(target_dir, galaxy['iauname'], extension)
 
 
-def shell_command(cmd, executable=None):
+def shell_command(cmd, executable=None, timeout=10):
     result = subprocess.Popen(cmd, shell=True, executable=executable)
     name = result.pid
-    print('waiting for {}, {}'.format(cmd, name))
-    time.sleep(1)
     try:
-        print(result.communicate(timeout=5), flush=True)
-        result.wait(timeout=5)
+        result.wait(timeout=timeout)
     except TimeoutError:
         result.kill()
         print('{} killed'.format(name))
-    print('returning result from {}'.format(name))
     return result
 
 
@@ -275,9 +266,11 @@ def check_images_are_downloaded(catalog, chunksize=1):
     Returns:
         (astropy.Table) catalog with image quality check columns added
     """
-    # TODO manual chunking? Seems to slow down a LOT for full 350k vs 1k
     pool = multiprocessing.Pool(10)
-    result = list(tqdm(pool.imap(check_image_is_downloaded, catalog, chunksize=chunksize), total=len(catalog), unit='checked'))
+    result = list(tqdm(
+        pool.imap(check_image_is_downloaded, catalog, chunksize=chunksize),
+        total=len(catalog),
+        unit='checked'))
     pool.close()
     pool.join()
 

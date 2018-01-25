@@ -176,8 +176,6 @@ def test_download_images_creates_fits_and_png(new_galaxy, fits_dir, png_dir):
     assert not os.path.exists(new_galaxy['fits_loc'])
     assert not os.path.exists(new_galaxy['png_loc'])
     download_images(new_galaxy, data_release=data_release, overwrite_fits=False, overwrite_png=False)
-    import time
-    time.sleep(10)
     assert fits_downloaded_correctly(new_galaxy['fits_loc'])
     assert os.path.exists(new_galaxy['png_loc'])
 
@@ -196,8 +194,6 @@ def test_download_images_multithreaded(joint_catalog, fits_dir, png_dir):
     # download to new temporary directory
     joint_catalog['fits_loc'] = [get_loc(fits_dir, galaxy, 'fits') for galaxy in joint_catalog]
     joint_catalog['png_loc'] = [get_loc(png_dir, galaxy, 'png') for galaxy in joint_catalog]
-
-    # print(nsa_decals['fits_loc'])
 
     # verify files are not already downloaded
     for galaxy in joint_catalog:
