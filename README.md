@@ -42,8 +42,8 @@ Please see the README in each folder for instructions specific to each aim.
 
 #### Files Required
 
-1. The NASA-Sloan Atlas (NSA) catalog v1_0_1. Available from
-SDSS DR13 [here](http://skyserver.sdss.org/dr13/en/help/browser/browser.aspx#&&history=description+nsatlas+U).
+1. The NASA-Sloan Atlas (NSA) catalog e.g. v1_0_1. Available from
+SDSS DR13 [here](http://www.sdss.org/dr13/manga/manga-target-selection/nsa/) with schema [here](http://skyserver.sdss.org/dr13/en/help/browser/browser.aspx#&&history=description+nsatlas+U).
 2. Brick (image tile) catalogs for DECaLS DR5. Available as two separate tables:
 [survey-bricks.fits](http://portal.nersc.gov/project/cosmo/data/legacysurvey/dr5/survey-bricks.fits.gz) (all bricks) and [survey-bricks-dr5.fits](http://portal.nersc.gov/project/cosmo/data/legacysurvey/dr5/survey-bricks-dr5.fits.gz) (imaged bricks).
 These tables are combined during setup.
