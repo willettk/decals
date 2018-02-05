@@ -60,6 +60,22 @@ def create_manifest_from_joint_catalog(catalog):
         (dict) of form {png_loc: img.png, key_data: {metadata_col: metadata_value}}
     """
 
+    import b_to_zooniverse.to_zooniverse_settings as settings
+    from a_download_decals.get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog
+    from shared_utilities import match_galaxies_to_catalog
+
+    # TODO SQL magic will go here to attach the specific values we want, rather than load whole table?
+    # NSA catalog should already be available as SQL database from SDSS website
+    print('catalog before matching', len(catalog))
+    nsa = get_nsa_catalog(settings.nsa_v1_0_0_catalog_loc, '1_0_0')
+    # exclude columns not already included
+    catalog_cols = catalog.colnames
+    nsa_cols = nsa.colnames
+    nsa = nsa[list(set(nsa_cols) - set(catalog_cols)) + ['ra', 'dec']]
+    catalog, _ = match_galaxies_to_catalog(catalog, nsa)  # should now have the required data
+    print('columns after matching', catalog.colnames)
+    print('catalog after matching', len(catalog))
+
     key_data = get_key_astrophysical_columns(catalog).to_pandas()
     # calibration catalog can have 'selected image' column
     try:

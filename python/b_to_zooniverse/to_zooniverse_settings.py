@@ -11,6 +11,3 @@ data_release = '5'
 joint_catalog_loc = '/data/galaxy_zoo/decals/catalogs/dr{}_nsa{}_to_upload.fits'.format(data_release, nsa_version)
 expert_catalog_loc = '/data/galaxy_zoo/decals/catalogs/nair_sdss_catalog.fit'
 calibration_dir = '/Volumes/external/decals/png/calibration'
-
-new_previous_subjects = False
-new_calibration_images = True

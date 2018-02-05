@@ -16,15 +16,16 @@ def create_prototype_subject_set(catalog_of_new, calibration_catalog, subject_se
     Returns:
 
     """
+    catalog_of_new = catalog_of_new[catalog_of_new['png_ready'] == True]
+    calibration_catalog = calibration_catalog[calibration_catalog['png_ready'] == True]
 
     # get 1000 new galaxies
-    new_galaxies = catalog_of_new[:2500]
+    new_galaxies = catalog_of_new[:50]
 
     image_columns = ['dr2_png_loc', 'colour_png_loc']
 
     # get all calibration bar and ring galaxies
     featured_galaxies = calibration_catalog[calibration_catalog['has_bar'] | calibration_catalog['has_ring']]
-
     other_galaxies = calibration_catalog[~calibration_catalog['has_bar'] & ~calibration_catalog['has_ring']][:500]
 
     calibration_galaxies = astropy.table.vstack([featured_galaxies, other_galaxies])

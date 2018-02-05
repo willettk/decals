@@ -40,6 +40,9 @@ def upload_decals_to_panoptes(joint_catalog, previous_subjects, expert_catalog, 
 
 if __name__ == '__main__':
 
+    settings.new_previous_subjects = False
+    settings.new_calibration_images = False
+
     joint_catalog = Table(fits.getdata(settings.joint_catalog_loc))
     expert_catalog = get_expert_catalog(settings.expert_catalog_loc)
 
