@@ -80,6 +80,8 @@ from astropy import table
 def match_galaxies_to_catalog(galaxies, catalog, matching_radius=10 * u.arcsec,
                               galaxy_suffix='_subject', catalog_suffix=''):
 
+    print(galaxies.colnames)
+
     galaxies_coord = SkyCoord(ra=galaxies['ra'] * u.degree, dec=galaxies['dec'] * u.degree)
     catalog_coord = SkyCoord(ra=catalog['ra'] * u.degree, dec=catalog['dec'] * u.degree)
 
@@ -103,8 +105,16 @@ def match_galaxies_to_catalog(galaxies, catalog, matching_radius=10 * u.arcsec,
 
 
 def astropy_table_to_pandas(table):
-    print(table.colnames)
+    """
+    Convert astropy table to pandas
+    Wrapper for table.to_pandas() that automatically avoids multidimensional columns
+    Note that the reverse is already implemented: Table.from_pandas(df)
+    Args:
+        table (astropy.Table): table to be converted to pandas
 
+    Returns:
+        (pd.DataFrame) original table as DataFrame, excluding multi-dim columns
+    """
     for col in table.colnames:
         # if it has a shape
         try:
