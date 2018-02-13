@@ -105,7 +105,7 @@ def main():
     download_decals_settings.new_catalog = False
     download_decals_settings.new_images = True
     download_decals_settings.overwrite_fits = False
-    download_decals_settings.overwrite_png = False
+    download_decals_settings.overwrite_png = True
     download_decals_settings.run_to = None
 
     if download_decals_settings.new_catalog:

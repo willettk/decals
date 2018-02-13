@@ -31,9 +31,10 @@ def create_prototype_subject_set(catalog_of_new, calibration_catalog, subject_se
     calibration_galaxies = astropy.table.vstack([featured_galaxies, other_galaxies])
 
     new_galaxies_manifest = create_manifest_from_joint_catalog(new_galaxies)
-    calibration_galaxies_manifest = create_manifest_from_calibration_catalog(calibration_galaxies, image_columns)
+    # calibration_galaxies_manifest = create_manifest_from_calibration_catalog(calibration_galaxies, image_columns)
 
     main_subject_set = upload_manifest_to_galaxy_zoo(subject_set_name, new_galaxies_manifest)
-    calibration_subject_set = upload_manifest_to_galaxy_zoo('{}_calibration'.format(subject_set_name), calibration_galaxies_manifest)
+    # calibration_subject_set = upload_manifest_to_galaxy_zoo('{}_calibration'.format(subject_set_name), calibration_galaxies_manifest)
+    # return main_subject_set, calibration_subject_set  # for debugging
 
-    return main_subject_set, calibration_subject_set  # for debugging
+    return main_subject_set

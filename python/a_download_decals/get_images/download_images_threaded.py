@@ -95,7 +95,7 @@ def download_images(galaxy,
 
     try:
 
-        pixscale = max(min(galaxy['petroth50'] * 0.04, galaxy['petroth50'] * 0.02), min_pixelscale)
+        pixscale = max(min(galaxy['petroth50'] * 0.04, galaxy['petroth90'] * 0.02), min_pixelscale)
 
         # For convenience
         fits_loc = galaxy['fits_loc']
@@ -144,7 +144,7 @@ def fits_downloaded_correctly(fits_loc):
     try:
         img, _ = fits.getdata(fits_loc, 0, header=True)
         return True
-    except:  # image fails to open
+    except Exception:  # image fails to open
         return False
 
 
