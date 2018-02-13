@@ -2,27 +2,38 @@ import pandas as pd
 from astropy.io import fits
 from astropy.table import Table
 
-import to_zooniverse_settings as settings
 from a_download_decals.get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog
-from do_upload.create_subject_set import create_prototype_subject_set
-from previous_subjects.previous_decals_subjects import get_previous_decals_subjects
-from make_calibration_images.get_calibration_catalog import get_expert_catalog, get_expert_catalog_joined_with_decals
-from make_calibration_images.get_calibration_images import make_calibration_images
-from new_subjects.find_new_subjects import find_new_catalog_images
+import b_to_zooniverse.to_zooniverse_settings as settings
+from b_to_zooniverse.do_upload.create_subject_set import create_prototype_subject_set
+from b_to_zooniverse.previous_subjects.previous_decals_subjects import get_previous_decals_subjects
+from b_to_zooniverse.make_calibration_images.get_calibration_catalog import get_expert_catalog, get_expert_catalog_joined_with_decals
+from b_to_zooniverse.make_calibration_images.get_calibration_images import make_calibration_images
+from b_to_zooniverse.new_subjects.find_new_subjects import find_new_catalog_images
 
 
-def upload_decals_to_panoptes(joint_catalog, previous_subjects, expert_catalog, calibration_dir, subject_set_name, new_calibration_images=False):
+def upload_decals_to_panoptes(joint_catalog,
+                              previous_subjects,
+                              expert_catalog,
+                              calibration_dir,
+                              subject_set_name,
+                              new_calibration_images=False):
     """
     Using the DECALS joint catalog created by a_download_decals, upload DECALS sets to Panoptes
     Only upload new galaxies by checking against previous subjects used
     Create calibration images with different rgb conversions to check if classifications are affected
+    Upload the calibration images
 
-    etc
+    Args:
+        joint_catalog (astropy.Table): NSA subjects imaged by DECALS. Includes png_loc, png_ready columns.
+        previous_subjects (astropy.Table):
+        expert_catalog (astropy.Table): Nair 2010 (human expert) catalog of rings, bars, etc.
+        calibration_dir (str): directory to save calibration images
+        subject_set_name (str): name to give subject set on Panoptes. Must not already exist.
+        new_calibration_images (bool): if True, remake calibration images. If False, do not.
 
     Returns:
         None
     """
-
     catalog_of_new = find_new_catalog_images(new_catalog=joint_catalog, old_catalog=previous_subjects)
     print('New galaxies: {}'.format(len(catalog_of_new)))
 

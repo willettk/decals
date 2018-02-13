@@ -72,13 +72,13 @@ def fake_metadata():
 
 @pytest.fixture()
 def joint_catalog(fits_dir, png_dir, fake_metadata):
-    # saved from downloader, which adds fits_loc and png_loc to nsa_catalog + decals bricks
-
+    # saved from downloader, which adds fits_loc, png_loc and png_ready to nsa_catalog + decals bricks
     gal_a = {
         'iauname': 'gal_a',
         'nsa_id': 0,
         'fits_loc': '{}/gal_a.fits'.format(fits_dir),
         'png_loc': '{}/gal_a.png'.format(png_dir),
+        'png_ready': True,
         'ra': 146.,
         'dec': -1.,
         'petroth50': 2.,
@@ -90,6 +90,7 @@ def joint_catalog(fits_dir, png_dir, fake_metadata):
         'nsa_id': 1,
         'fits_loc': '{}/gal_b.fits'.format(fits_dir),
         'png_loc': '{}/gal_b.png'.format(png_dir),
+        'png_ready': True,
         'ra': 14.,
         'dec': -1.,
         'petroth50': 2.,
@@ -101,6 +102,7 @@ def joint_catalog(fits_dir, png_dir, fake_metadata):
         'nsa_id': 2,
         'fits_loc': '{}/gal_c.fits'.format(fits_dir),
         'png_loc': '{}/gal_c.png'.format(png_dir),
+        'png_ready': True,
         'ra': 1.,
         'dec': -1.,
         'petroth50': 2.,
@@ -111,7 +113,7 @@ def joint_catalog(fits_dir, png_dir, fake_metadata):
 
 
 @pytest.fixture()
-def previous_subjects(fits_dir, png_dir):
+def previous_subjects():
     # loaded from GZ data dump. Metadata already corrected in setup (name = main stage).
     return Table([
 

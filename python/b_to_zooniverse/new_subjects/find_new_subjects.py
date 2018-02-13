@@ -2,7 +2,6 @@
 
 import numpy as np
 from astropy.io import fits
-from tqdm import tqdm
 
 from shared_utilities import match_galaxies_to_catalog
 
@@ -32,7 +31,7 @@ def find_new_catalog_images(old_catalog, new_catalog):
 def fits_are_identical(fits_a_loc, fits_b_loc):
     """
     Given the location of two fits files, do they have identical pixels?
-    TODO move elsewhere
+    TODO move elsewhere - to shared utilities?
 
     Args:
         fits_a_loc (str): location of one fits file
