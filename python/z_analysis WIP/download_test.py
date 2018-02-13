@@ -8,8 +8,29 @@ import urllib.request
 
 from smoothing import get_lupton
 
+"""
+The box artifacts caused by skyserver pixel rescaling can be removed by always downloading in native pixel scale,
+and then applying a better upscaling (zoom) algorithm. This prototype script implements this solution.
+
+Files saved:
+- {name}_{cutout size}px_from_native_{resampling algorithm}.png, where 'nearest' is the same as the skyserver uses
+- {name}_{cutout size}px_from_native_internet.fits for the raw native pixel cutout
+"""
+
 
 def get_comparison_images(name, ra, dec):
+    """
+    Download the galaxy at ra, dec from skyserver. Save as 'name', with descriptive details appended.
+    Apply different rescaling algorithms to zoom in each image from a native fits.
+    Compare to the previous approach of downloading at a non-native pixscale (i.e. rescale serverside)
+    Args:
+        name ():
+        ra ():
+        dec ():
+
+    Returns:
+
+    """
     target_size = 424
     target_pixscale = 0.1
     native_pixscale = 0.262

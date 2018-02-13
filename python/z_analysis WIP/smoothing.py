@@ -1,28 +1,32 @@
-import matplotlib.pyplot as plt
 from astropy.io import fits
 import numpy as np
-from scipy.misc import imsave
 from PIL import Image
 
-from get_images.image_utils import dr2_style_rgb, decals_internal_rgb, lupton_rgb
-
-from scipy.signal import decimate
+from get_images.image_utils import dr2_style_rgb, lupton_rgb
 import png
 
 
 def save_aliasing_sample():
-    # Test save routines with J000150.59
+    """
+    Experiment with
+    - resizing images to reduce aliasing
+    - saving higher bit depth images
+    - png vs jpg
+    Returns:
+        None
+    """
+    # J000150.59
     # ra = 0.45966873923457313
     # dec = 1.0320259289150582
     # pixscale = 0.1
     # file_loc = '/Volumeas/external/decals/fits/dr5/J000/J000150.59+010157.1.fits'
     file_loc = '/Volumes/external/decals/fits/dr5/J000/J000001.85+004309.3.fits'
-    cutout_loc = '/Data/repos/decals/python/test_examples/sample/cutout_147.4958_1.0684.fits'
 
     # J000001.85
     # ra = 0.007753869567118207
     # dec = 0.7192492767595782
     # pixscale = 0.1
+    cutout_loc = '/Data/repos/decals/python/test_examples/sample/cutout_147.4958_1.0684.fits'
 
     files = [file_loc, cutout_loc]
 
@@ -109,20 +113,6 @@ def save_aliased_png_and_jpg(image, dir, name):
     jpg_save_loc = '{}/{}.jpg'.format(dir, name)
     resampled.save(jpg_save_loc)
 
-    # save_loc = '{}/temp_scipy.png'.format(TEST_EXAMPLES_DIR)
-    # imsave(save_loc, image)
-    # save_loc = '{}/temp_scipy.jpg'.format(TEST_EXAMPLES_DIR)
-    # imsave(save_loc, image)
-    #
-    # save_loc = '{}/temp_mpl.png'.format(TEST_EXAMPLES_DIR)
-    # plt.imshow(image)
-    # plt.savefig(save_loc)
-    # plt.clf()
-    # save_loc = '{}/temp_mpl.jpg'.format(TEST_EXAMPLES_DIR)
-    # plt.imshow(image)
-    # plt.savefig(save_loc)
-    # plt.clf()
-
 
 def write_16bit_png_pypng(float_image, dir, name):
     image = np.uint16(float_image * 65535.)
@@ -132,6 +122,19 @@ def write_16bit_png_pypng(float_image, dir, name):
         writer = png.Writer(width=image.shape[1], height=image.shape[0], bitdepth=16)
         z2list = image.reshape(-1, image.shape[1] * image.shape[2]).tolist()
         writer.write(f, z2list)
+    """
+    Normal RGB images (including default PNG) can only represent colour with 8-bit ints (aka bit depth)
+    https://photography.tutsplus.com/articles/bit-depth-explained-in-depth--photo-8514
+    That's why the int values are limited to 255
+    this gives 255 ^ 3 possible colours per pixel
+    This can cause color banding for smooth patches of similar colour:
+    https://photographylife.com/what-is-color-banding-and-how-to-fix-it
+    PNG support higher bit depths of 16+, which removes banding by allowing for more colours
+    (65535 ^ 3 possible colours)
+    However, it's a hassle to read and write as PIL does not support high bit depth colour images
+    After working out how to do it with the 'pypng' library, the final images look effectively identical
+    So let's not make life complicated - a million colours turns out to be plenty
+    """
 
 
 def write_16bit_png_mpl(float_image, dir, name):
