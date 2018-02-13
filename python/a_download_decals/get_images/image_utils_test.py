@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import pytest
 from astropy.io import fits
 
+
 from get_images.image_utils import dr2_style_rgb, decals_internal_rgb, lupton_rgb
 
 TEST_EXAMPLES_DIR = 'python/test_examples'

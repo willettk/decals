@@ -55,7 +55,7 @@ if __name__ == '__main__':
         previous_subjects_df = pd.read_csv(settings.subject_loc)
         previous_subjects = Table.from_pandas(previous_subjects_df)  # previously extracted decals subjects
 
-    subject_set_name = 'default'
+    subject_set_name = 'aliasing_test'
 
     upload_decals_to_panoptes(
         joint_catalog,
