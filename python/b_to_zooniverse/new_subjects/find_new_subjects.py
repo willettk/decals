@@ -26,20 +26,3 @@ def find_new_catalog_images(old_catalog, new_catalog):
         catalog_suffix='_dr1_2')  # if field exists in both catalogs
 
     return catalog_of_new_galaxies
-
-
-def fits_are_identical(fits_a_loc, fits_b_loc):
-    """
-    Given the location of two fits files, do they have identical pixels?
-    TODO move elsewhere - to shared utilities?
-
-    Args:
-        fits_a_loc (str): location of one fits file
-        fits_b_loc (str): location of other fits file
-
-    Returns:
-        (bool) True if both fits files have identical pixels (including shape), else False
-    """
-    pixels_a = fits.open(fits_a_loc)[0].data
-    pixels_b = fits.open(fits_b_loc)[0].data
-    return np.array_equal(pixels_a, pixels_b)

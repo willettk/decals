@@ -3,7 +3,7 @@ import pytest
 from astropy.io import fits
 from astropy.table import Table
 
-from shared_utilities import match_galaxies_to_catalog, astropy_table_to_pandas
+from shared_utilities import match_galaxies_to_catalog, astropy_table_to_pandas, fits_are_identical
 
 
 @pytest.fixture()
@@ -69,3 +69,12 @@ def test_match_galaxies_to_catalog(galaxies, catalog):
     # evaluated = ast.literal_eval(value)
     # print(evaluated)
     # print(type(evaluated))
+
+TEST_EXAMPLES_DIR = 'python/test_examples'
+
+
+def test_fits_are_identical():
+    fits_a_loc = '{}/example_a.fits'.format(TEST_EXAMPLES_DIR)
+    fits_b_loc = '{}/example_b.fits'.format(TEST_EXAMPLES_DIR)
+    assert fits_are_identical(fits_a_loc, fits_a_loc)
+    assert not fits_are_identical(fits_a_loc, fits_b_loc)

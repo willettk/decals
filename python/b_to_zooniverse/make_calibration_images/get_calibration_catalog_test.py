@@ -1,6 +1,9 @@
 import pytest
 
-from get_calibration_catalog import *
+from astropy.table import Table
+
+from b_to_zooniverse.make_calibration_images.get_calibration_catalog import decode_binary_mask, decode_bar_ints,\
+    decode_ring_ints, get_expert_catalog_joined_with_decals
 
 
 @pytest.fixture()

@@ -2,7 +2,7 @@ import pytest
 
 import os
 
-from get_calibration_images import *
+from b_to_zooniverse.make_calibration_images.get_calibration_images import save_calibration_images_of_galaxy
 
 
 TEST_EXAMPLES_DIR = 'python/test_examples'
