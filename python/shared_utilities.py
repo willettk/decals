@@ -2,8 +2,10 @@ import pandas as pd
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy import units as u
+from astropy.table import Table
 from astropy import table
 from astropy.io import fits
+import datetime
 
 # don't know how to install conda modules on travis
 # import datashader as ds
@@ -148,3 +150,27 @@ def fits_are_identical(fits_a_loc, fits_b_loc):
     pixels_a = fits.open(fits_a_loc)[0].data
     pixels_b = fits.open(fits_b_loc)[0].data
     return np.array_equal(pixels_a, pixels_b)
+
+
+def cache_table(table_loc, cache_loc, useful_cols, loading_func=Table.read, kwargs=None):
+    """
+    Save a column subset of astropy.table. This can be read later to save time.
+    Args:
+        table_loc (str): file location of astropy.table to load
+        cache_loc (str): file location to save column subset of astropy.table
+        useful_cols (list): of form ['a_column_to_save', ...]
+        loading_func (func): function to load table, where first arg is table_loc
+        kwargs (dict): (optional) additional keyword arguments for loading_func
+
+    Returns:
+        None
+    """
+    print('Begin caching at {}'.format(current_time()))
+    data = loading_func(table_loc, **kwargs)
+    print('Table loaded at {}'.format(current_time()))
+    data[useful_cols].write(cache_loc, overwrite=True)
+    print('Saved to astropy.Table at {}'.format(current_time()))
+
+
+def current_time():
+    return datetime.datetime.now().time()

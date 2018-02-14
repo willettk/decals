@@ -1,7 +1,13 @@
 import pytest
 from astropy.table import Table
 
-from a_download_decals.get_images.download_images_threaded import *
+import os
+import numpy as np
+from astropy.io import fits
+
+from a_download_decals.get_images.download_images_threaded import fits_downloaded_correctly, \
+    get_download_quality_of_fits, download_fits_cutout, get_loc, download_images, download_images_multithreaded, \
+    check_images_are_downloaded, make_png_from_fits
 
 TEST_EXAMPLES_DIR = 'python/test_examples'
 

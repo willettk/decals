@@ -1,7 +1,7 @@
 
 import pytest
 
-from a_download_decals.get_catalogs.selection_cuts import *
+from a_download_decals.get_catalogs.selection_cuts import apply_selection_cuts
 from astropy.table import Table
 
 
