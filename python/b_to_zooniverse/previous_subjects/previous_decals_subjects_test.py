@@ -1,8 +1,11 @@
-import numpy as np
 import pytest
+
+import numpy as np
+import pandas as pd
 from astropy.table import Table
 
-from previous_decals_subjects import *
+
+from b_to_zooniverse.previous_subjects.previous_decals_subjects import link_previous_subjects_with_nsa
 
 
 @pytest.fixture()

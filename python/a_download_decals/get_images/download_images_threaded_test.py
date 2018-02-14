@@ -1,7 +1,7 @@
 import pytest
 from astropy.table import Table
 
-from get_images.download_images_threaded import *
+from a_download_decals.get_images.download_images_threaded import *
 
 TEST_EXAMPLES_DIR = 'python/test_examples'
 

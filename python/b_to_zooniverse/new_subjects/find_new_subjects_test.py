@@ -1,7 +1,7 @@
 import pytest
 from astropy.table import Table
 
-from new_subjects.find_new_subjects import *
+from b_to_zooniverse.new_subjects.find_new_subjects import fits_are_identical, find_new_catalog_images
 
 TEST_EXAMPLES_DIR = 'python/test_examples'
 
@@ -72,13 +72,6 @@ def nsa_decals_dr2():
          'petroth90': 24.7535,
          'fits_loc': 'no_image_here'}  # points nowhere
     ])
-
-
-def test_fits_are_identical():
-    fits_a_loc = '{}/example_a.fits'.format(TEST_EXAMPLES_DIR)
-    fits_b_loc = '{}/example_b.fits'.format(TEST_EXAMPLES_DIR)
-    assert fits_are_identical(fits_a_loc, fits_a_loc)
-    assert not fits_are_identical(fits_a_loc, fits_b_loc)
 
 
 def test_find_new_catalog_images(nsa_decals_dr2, nsa_decals_dr3):

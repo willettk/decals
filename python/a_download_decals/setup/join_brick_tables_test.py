@@ -2,7 +2,7 @@ import pytest
 
 from astropy.table import Table
 
-from setup.join_brick_tables import *
+from a_download_decals.setup.join_brick_tables import *
 
 
 @pytest.fixture()

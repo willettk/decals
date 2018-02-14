@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from astropy.table import Table
 
-from upload_decals import upload_decals_to_panoptes
+from b_to_zooniverse.upload_decals import upload_decals_to_panoptes
 
 
 @pytest.fixture
