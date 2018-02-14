@@ -6,8 +6,8 @@ import subprocess
 
 import numpy as np
 from astropy.io import fits
-from matplotlib import pyplot as plt
 from tqdm import tqdm
+from PIL import Image
 
 from a_download_decals.get_images.image_utils import dr2_style_rgb
 
@@ -74,7 +74,8 @@ def download_images(galaxy,
                     overwrite_fits=False,
                     overwrite_png=False,
                     max_attempts=5,
-                    min_pixelscale=0.1):
+                    min_pixelscale=0.1,
+                    png_size=424):
     """
     Download a multi-plane FITS image from the DECaLS skyserver
     Write multi-plane FITS images to separate files for each band
@@ -115,11 +116,12 @@ def download_images(galaxy,
                 if attempt == max_attempts:
                     warnings.warn('Failed to download {} after three attempts. No fits at {}'.format(
                         galaxy['iauname'], galaxy['fits_loc']))
+            download_fits_cutout(fits_loc, data_release, galaxy['ra'], galaxy['dec'], pixscale, 424)
 
         if not os.path.exists(png_loc) or overwrite_png:
             try:
                 # Create artistic png from the new FITS
-                make_png_from_fits(fits_loc, png_loc)
+                make_png_from_fits(fits_loc, png_loc, png_size)
             except:
                 print('Error creating png from {}'.format(fits_loc))
 
@@ -182,7 +184,7 @@ def shell_command(cmd, executable=None, timeout=10):
     return result
 
 
-def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixscale=0.262, size=424):
+def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, zoomed_pixscale=0.262, max_size=424):
     '''
     Retrieve fits image from DECALS server and save to disk
 
@@ -196,17 +198,37 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixsc
     Returns:
         None
     '''
+
+    # TODO combine these historical size and zoomed pixscale into a new, meaningful measure. pixscale -> arcsecs
+    historical_size = 424
+    arcsecs = historical_size * zoomed_pixscale
+
+    native_pixscale = 0.262
+    pixel_extent = np.ceil(arcsecs / native_pixscale).astype(int)
+
+    # two cases. Either galaxy is extended beyond maxsize, in which case download at maxsize and dif scale,
+    # or (more often) it's small, and everything's okay
+
     params = {
         'ra': ra,
         'dec': dec,
-        'pixscale': pixscale,
-        'size': size,
-        'layer': 'decals-dr{}'.format(data_release)}
+        'layer': 'decals-dr{}'.format(data_release)
+    }
+
+    if pixel_extent < max_size:
+        params['size'] = pixel_extent
+        query_params = 'ra={}&dec={}&size={}&layer={}'.format(params['ra'], params['dec'], params['size'], params['layer'])
+    else:
+        # forced to rescale to keep galaxy to reasonable num. of pixels
+        pixel_scale = arcsecs / max_size
+        params['size'] = max_size
+        params['pixscale'] = pixel_scale
+        query_params = 'ra={}&dec={}&size={}&layer={}&pixscale={}'.format(params['ra'], params['dec'], params['size'], params['layer'], params['pixscale'])
+
     if data_release == '1':
-        url = "http://imagine.legacysurvey.org/fits-cutout?{}".format(params)
+        url = "http://imagine.legacysurvey.org/fits-cutout?{}".format(query_params)
     elif data_release == '2' or '3' or '5':
-        # url = "http://legacysurvey.org/viewer/fits-cutout?{}".format(params)
-        url = "http://legacysurvey.org/viewer/fits-cutout?ra={}&dec={}&pixscale={}&size={}&layer={}".format(params['ra'], params['dec'], params['pixscale'], params['size'], params['layer'])
+        url = "http://legacysurvey.org/viewer/fits-cutout?{}".format(query_params)
     else:
         raise ValueError('Data release "{}" not recognised'.format(data_release))
 
@@ -221,7 +243,7 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixsc
     _ = shell_command(download_command)
 
 
-def make_png_from_fits(fits_loc, png_loc):
+def make_png_from_fits(fits_loc, png_loc, png_size):
     '''
     Create png from multi-band fits
 
@@ -252,7 +274,23 @@ def make_png_from_fits(fits_loc, png_loc):
             arcsinh=1.,
             scales=_scales,
             desaturate=True)
-        plt.imsave(png_loc, rgbimg, origin='lower')
+        save_carefully_resized_png(png_loc, rgbimg, target_size=png_size)
+
+
+def save_carefully_resized_png(png_loc, native_image, target_size):
+    """
+
+    Args:
+        png_loc ():
+        native_image ():
+        target_size ():
+
+    Returns:
+
+    """
+    native_pil_image = Image.fromarray(np.uint8(native_image * 255.), mode='RGB')
+    nearest_image = native_pil_image.resize(size=(target_size, target_size), resample=Image.LANCZOS)
+    nearest_image.save(png_loc)
 
 
 def check_images_are_downloaded(catalog, chunksize=1):
