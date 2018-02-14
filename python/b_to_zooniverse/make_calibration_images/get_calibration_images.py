@@ -1,3 +1,4 @@
+import os
 import functools
 from multiprocessing.dummy import Pool as ThreadPool
 
@@ -5,15 +6,33 @@ import matplotlib.pyplot as plt
 from astropy.io import fits
 from tqdm import tqdm
 
-from get_images import image_utils
+from a_download_decals.get_images import image_utils
+from a_download_decals.get_images.download_images_threaded import get_loc
 
 
 def make_calibration_images(calibration_catalog, calibration_dir, new_images=True):
+    """
+    Create calibration images in two styles: as with DR2 (by Kyle Willet) and with stronger colours (new)
+    The impact on classification performance will be tested
+    Args:
+        calibration_catalog (astropy.Table):
+        calibration_dir (str): root directory to save calibration data. Subdirectories will be created
+        new_images (bool): if True, create new calibration images. Else, this function does nothing.
+
+    Returns:
+        (astropy.Table) calibration_catalog with dr2_png_loc and colour_png_loc columns added
+    """
+    dr2_calibration_dir = '{}/dr2_style'.format(calibration_dir)
+    colour_calibration_dir = '{}/colour'.format(calibration_dir)
+    for subdirectory in [dr2_calibration_dir, colour_calibration_dir]:
+        if not os.path.exists(subdirectory):
+            os.mkdir(subdirectory)
 
     # make images with top 2 options selected from mosaic experiment
-    calibration_catalog['dr2_png_loc'] = [get_dr2_png_loc(calibration_dir, galaxy) for galaxy in calibration_catalog]
-    calibration_catalog['colour_png_loc'] = [get_colour_png_loc(calibration_dir, galaxy) for galaxy in calibration_catalog]
+    calibration_catalog['dr2_png_loc'] = [get_loc(dr2_calibration_dir, galaxy, 'png') for galaxy in calibration_catalog]
+    calibration_catalog['colour_png_loc'] = [get_loc(colour_calibration_dir, galaxy, 'png') for galaxy in calibration_catalog]
 
+    # TODO extend to checking/overwriting, similar to downloader?
     if new_images:
         pbar = tqdm(total=len(calibration_catalog), unit=' image sets created')
 
@@ -71,11 +90,3 @@ def get_colour_style_image(img_data):
         'mx': .4
     }
     return image_utils.lupton_rgb(img_bands, **kwargs)
-
-
-def get_dr2_png_loc(png_dir, galaxy):
-    return '{}/{}_dr2.png'.format(png_dir, galaxy['iauname'])
-
-
-def get_colour_png_loc(png_dir, galaxy):
-    return '{}/{}_colour.png'.format(png_dir, galaxy['iauname'])

@@ -27,9 +27,9 @@ def get_previous_decals_subjects(all_subjects, nsa_v1_0_0):
     # now we would like to clean up the inconsistent metadata and join the decals subjects with the NSA catalog
     decals_and_nsa = link_previous_subjects_with_nsa(decals_df, nsa_v1_0_0)
 
-    #  convert to astropy.Table
-    decals_and_nsa = [row.to_dict() for _, row in decals_and_nsa.iterrows()]
-    decals_and_nsa = Table(decals_and_nsa)
+    # convert to astropy.Table
+    decals_and_nsa = decals_and_nsa.applymap(json.dumps)  # convert all dict to string rep. because...
+    decals_and_nsa = Table.from_pandas(decals_and_nsa)  # this doesn't recognise dicts as subtables
 
     return decals_and_nsa
 

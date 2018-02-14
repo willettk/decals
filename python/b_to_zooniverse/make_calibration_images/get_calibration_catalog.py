@@ -10,7 +10,17 @@ from shared_utilities import match_galaxies_to_catalog
 
 
 def get_expert_catalog_joined_with_decals(joint_catalog, expert_catalog, plot=False):
+    """
+    Match Nair 2010 to the joint nsa-decals catalog. Decode Nair's binary type encoding.
+    Add convenience columns to indicate bar or ring. Optionally, plot bar/ring statistics.
+    Args:
+        joint_catalog (astropy.Table): catalog of nsa galaxies in decals
+        expert_catalog (astropy.Table): Nair 2010 expert classifications
+        plot (bool): if True, make bar charts of T-Type, Bar and Ring counts in output catalog
 
+    Returns:
+        (astropy.Table): matched catalog, with extra bar/ring columns
+    """
     output_catalog, _ = match_galaxies_to_catalog(
         galaxies=expert_catalog,
         catalog=joint_catalog,
@@ -37,7 +47,8 @@ def get_expert_catalog(expert_catalog_loc):
     for column_name in catalog.colnames:
         catalog.rename_column(column_name, column_name.lower())
     catalog.rename_column('sdss', 'iauname')
-
+    catalog.rename_column('_ra', 'ra')
+    catalog.rename_column('_de', 'dec')
     return catalog
 
 
@@ -52,6 +63,16 @@ def decode_ring_ints(encoded_int):
 
 
 def decode_binary_mask(encoded_int):
+    """
+    Nair 2010 encodes classifications as sum over n ((2^n), where n is each classification type
+    Undo the encoding to find each n
+    For example, convert 8 -> 2^3 -> [3]
+    Args:
+        encoded_int (int): value = sum(2^n)
+
+    Returns:
+        (list): decoded ints e.g. 6 -> [1, 2]
+    """
     # convert to binary base, represent as string
     binary_int_string = bin(encoded_int)[2:]
     # convert to array
@@ -76,10 +97,28 @@ def bar_int_label_to_str(bar_int_label):
 
 
 def ring_int_label_to_str(ring_int_label):
+    """
+    Binary encoding only works when you can only have at most one of each type
+    e.g. one inner 2^2 = 4 = 2^1 + 2^1 = two nuclear
+    There are many examples of e.g. '36' which could be four outer rings, three outer and two inner, etc.
+    This seems a silly way to encode data - maybe I have misunderstood?
+    Especially, some seem insanely high - having at least 8 rings is implausible
+    See e.g. row 48: ring type 76 i.e. 64 (8 * outer ring) + 8 (outer ring) + 4 (inner ring)...?
+    http://skyserver.sdss.org/dr12/SkyserverWS/ImgCutout/getjpeg?ra=211.21558&dec=-00.641614&width=512&height=512
+
+    Args:
+        ring_int_label (int): decoded int e.g. 2
+
+    Returns:
+        (str) human-readable label, paraphrased from Nair 2010 definitions
+    """
     mapping = {
         1: 'nuclear',
-        2: 'inner',
-        3: 'outer'
+        2: 'inner',  # or two nuclear...
+        3: 'outer',  # or two inner...
+        4: 'min_two',
+        5: 'min_four',
+        6: 'min_eight'
     }
     return mapping[ring_int_label]
 

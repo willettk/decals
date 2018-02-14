@@ -1,7 +1,11 @@
 import pytest
-from astropy.units import Quantity
 
-from do_upload.make_decals_metadata import *
+import numpy as np
+from astropy import units as u
+from astropy.table import Table
+
+from b_to_zooniverse.do_upload.make_decals_metadata import get_r_magnitude, get_extinction_corrected_magnitudes,\
+    get_r_flux, calculate_sizes_in_kpc, get_key_astrophysical_columns
 
 
 @pytest.fixture()
@@ -39,7 +43,7 @@ def test_get_r_flux(catalog):
 
 def test_calculate_size_in_kpc(catalog):
     size = calculate_sizes_in_kpc(catalog)
-    assert size[0] == Quantity(7.4570048368983, u.kpc)
+    assert size[0] == u.Quantity(7.4570048368983, u.kpc)
 
 
 def test_get_key_astrophysical_columns(catalog):

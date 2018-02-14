@@ -6,12 +6,11 @@ import pandas as pd
 from astropy.io import fits
 from astropy.table import Table
 
-from get_catalogs.get_joint_nsa_decals_catalog import create_joint_catalog, get_nsa_catalog, get_decals_bricks
-from get_catalogs.selection_cuts import apply_selection_cuts
-from get_images.download_images_threaded import download_images_multithreaded
-from setup.join_brick_tables import merge_bricks_catalogs
-
-import download_decals_settings
+from a_download_decals.get_catalogs.get_joint_nsa_decals_catalog import create_joint_catalog, get_nsa_catalog, get_decals_bricks
+from a_download_decals.get_catalogs.selection_cuts import apply_selection_cuts
+from a_download_decals.get_images.download_images_threaded import download_images_multithreaded
+from a_download_decals.setup.join_brick_tables import merge_bricks_catalogs
+import a_download_decals.download_decals_settings as settings
 
 
 def setup_tables(s):
@@ -98,27 +97,27 @@ def main():
     # Setup tasks generate the 'bricks' data table used later.
     # They need only be completed once after downloading the required files
     if new_bricks_table:
-        setup_tables(download_decals_settings)
+        setup_tables(settings)
         print('setup complete')
 
     # specify execution options
-    download_decals_settings.new_catalog = False
-    download_decals_settings.new_images = True
-    download_decals_settings.overwrite_fits = False
-    download_decals_settings.overwrite_png = False
-    download_decals_settings.run_to = None
+    settings.new_catalog = False
+    settings.new_images = True
+    settings.overwrite_fits = False
+    settings.overwrite_png = True
+    settings.run_to = None
 
-    if download_decals_settings.new_catalog:
-        nsa = get_nsa_catalog(download_decals_settings.nsa_catalog_loc, download_decals_settings.nsa_version)
+    if settings.new_catalog:
+        nsa = get_nsa_catalog(settings.nsa_catalog_loc, settings.nsa_version)
         print('nsa loaded')
-        bricks = get_decals_bricks(download_decals_settings.bricks_loc, download_decals_settings.data_release)
+        bricks = get_decals_bricks(settings.bricks_loc, settings.data_release)
         print('bricks loaded')
     else:
         nsa = None
         bricks = None
 
-    joint_catalog = get_decals(nsa, bricks, download_decals_settings)
-    joint_catalog.write(download_decals_settings.upload_catalog_loc, overwrite=True)
+    joint_catalog = get_decals(nsa, bricks, settings)
+    joint_catalog.write(settings.upload_catalog_loc, overwrite=True)
 
 
 if __name__ == '__main__':

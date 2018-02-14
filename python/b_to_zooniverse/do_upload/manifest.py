@@ -8,8 +8,8 @@ import pandas as pd
 from panoptes_client import Panoptes, Project, SubjectSet, Subject
 from tqdm import tqdm
 
-from do_upload.make_decals_metadata import get_key_astrophysical_columns
-from to_zooniverse_settings import zooniverse_login_loc
+from b_to_zooniverse.do_upload.make_decals_metadata import get_key_astrophysical_columns
+from b_to_zooniverse.to_zooniverse_settings import zooniverse_login_loc
 
 
 def create_manifest_from_calibration_catalog(catalog, image_columns):
@@ -59,7 +59,6 @@ def create_manifest_from_joint_catalog(catalog):
     Returns:
         (dict) of form {png_loc: img.png, key_data: {metadata_col: metadata_value}}
     """
-
     key_data = get_key_astrophysical_columns(catalog).to_pandas()
     # calibration catalog can have 'selected image' column
     try:

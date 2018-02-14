@@ -32,6 +32,7 @@ def get_key_astrophysical_columns(catalog):
     key_data = Table()
 
     columns_to_copy = [
+        'iauname',
         'ra',
         'dec',
         'nsa_id',

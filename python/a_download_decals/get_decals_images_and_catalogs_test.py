@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from get_decals_images_and_catalogs import *
+from a_download_decals.get_decals_images_and_catalogs import *
 
 
 @pytest.fixture()

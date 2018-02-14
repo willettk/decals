@@ -2,7 +2,10 @@ import pandas as pd
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy import units as u
+from astropy.table import Table
 from astropy import table
+from astropy.io import fits
+import datetime
 
 # don't know how to install conda modules on travis
 # import datashader as ds
@@ -80,6 +83,8 @@ from astropy import table
 def match_galaxies_to_catalog(galaxies, catalog, matching_radius=10 * u.arcsec,
                               galaxy_suffix='_subject', catalog_suffix=''):
 
+    print(galaxies.colnames)
+
     galaxies_coord = SkyCoord(ra=galaxies['ra'] * u.degree, dec=galaxies['dec'] * u.degree)
     catalog_coord = SkyCoord(ra=catalog['ra'] * u.degree, dec=catalog['dec'] * u.degree)
 
@@ -103,8 +108,16 @@ def match_galaxies_to_catalog(galaxies, catalog, matching_radius=10 * u.arcsec,
 
 
 def astropy_table_to_pandas(table):
-    print(table.colnames)
+    """
+    Convert astropy table to pandas
+    Wrapper for table.to_pandas() that automatically avoids multidimensional columns
+    Note that the reverse is already implemented: Table.from_pandas(df)
+    Args:
+        table (astropy.Table): table to be converted to pandas
 
+    Returns:
+        (pd.DataFrame) original table as DataFrame, excluding multi-dim columns
+    """
     for col in table.colnames:
         # if it has a shape
         try:
@@ -121,3 +134,43 @@ def astropy_table_to_pandas(table):
 
     df = table.to_pandas()
     return df
+
+
+def fits_are_identical(fits_a_loc, fits_b_loc):
+    """
+    Given the location of two fits files, do they have identical pixels?
+
+    Args:
+        fits_a_loc (str): location of one fits file
+        fits_b_loc (str): location of other fits file
+
+    Returns:
+        (bool) True if both fits files have identical pixels (including shape), else False
+    """
+    pixels_a = fits.open(fits_a_loc)[0].data
+    pixels_b = fits.open(fits_b_loc)[0].data
+    return np.array_equal(pixels_a, pixels_b)
+
+
+def cache_table(table_loc, cache_loc, useful_cols, loading_func=Table.read, kwargs=None):
+    """
+    Save a column subset of astropy.table. This can be read later to save time.
+    Args:
+        table_loc (str): file location of astropy.table to load
+        cache_loc (str): file location to save column subset of astropy.table
+        useful_cols (list): of form ['a_column_to_save', ...]
+        loading_func (func): function to load table, where first arg is table_loc
+        kwargs (dict): (optional) additional keyword arguments for loading_func
+
+    Returns:
+        None
+    """
+    print('Begin caching at {}'.format(current_time()))
+    data = loading_func(table_loc, **kwargs)
+    print('Table loaded at {}'.format(current_time()))
+    data[useful_cols].write(cache_loc, overwrite=True)
+    print('Saved to astropy.Table at {}'.format(current_time()))
+
+
+def current_time():
+    return datetime.datetime.now().time()

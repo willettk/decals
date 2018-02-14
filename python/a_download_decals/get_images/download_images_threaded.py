@@ -3,14 +3,13 @@ import os
 import warnings
 import multiprocessing
 import subprocess
-import time
 
 import numpy as np
 from astropy.io import fits
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
-from get_images.image_utils import dr2_style_rgb
+from a_download_decals.get_images.image_utils import dr2_style_rgb
 
 
 def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, overwrite_fits, overwrite_png, n_processes=10):
@@ -95,7 +94,7 @@ def download_images(galaxy,
 
     try:
 
-        pixscale = max(min(galaxy['petroth50'] * 0.04, galaxy['petroth50'] * 0.02), min_pixelscale)
+        pixscale = max(min(galaxy['petroth50'] * 0.04, galaxy['petroth90'] * 0.02), min_pixelscale)
 
         # For convenience
         fits_loc = galaxy['fits_loc']
@@ -144,7 +143,7 @@ def fits_downloaded_correctly(fits_loc):
     try:
         img, _ = fits.getdata(fits_loc, 0, header=True)
         return True
-    except:  # image fails to open
+    except Exception:  # image fails to open
         return False
 
 

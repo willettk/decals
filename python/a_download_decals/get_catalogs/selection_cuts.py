@@ -2,7 +2,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog
+from a_download_decals.get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog
 
 
 def apply_selection_cuts(input_catalog, snap_tolerance=1e-3):

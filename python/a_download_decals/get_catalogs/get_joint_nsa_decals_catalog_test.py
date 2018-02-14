@@ -1,6 +1,6 @@
 import pytest
 
-from get_catalogs.get_joint_nsa_decals_catalog import *
+from a_download_decals.get_catalogs.get_joint_nsa_decals_catalog import *
 
 
 @pytest.fixture()
