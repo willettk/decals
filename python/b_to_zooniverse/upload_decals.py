@@ -9,6 +9,7 @@ from b_to_zooniverse.previous_subjects.previous_decals_subjects import get_previ
 from b_to_zooniverse.make_calibration_images.get_calibration_catalog import get_expert_catalog, get_expert_catalog_joined_with_decals
 from b_to_zooniverse.make_calibration_images.get_calibration_images import make_calibration_images
 from b_to_zooniverse.new_subjects.find_new_subjects import find_new_catalog_images
+from b_to_zooniverse.setup.check_joint_catalog import enforce_joint_catalog_columns
 
 
 def upload_decals_to_panoptes(joint_catalog,
@@ -55,6 +56,8 @@ if __name__ == '__main__':
     settings.new_calibration_images = False
 
     joint_catalog = Table(fits.getdata(settings.joint_catalog_loc))
+    joint_catalog = enforce_joint_catalog_columns(joint_catalog)
+
     expert_catalog = get_expert_catalog(settings.expert_catalog_loc)
 
     if settings.new_previous_subjects:
@@ -66,7 +69,7 @@ if __name__ == '__main__':
         previous_subjects_df = pd.read_csv(settings.subject_loc)
         previous_subjects = Table.from_pandas(previous_subjects_df)  # previously extracted decals subjects
 
-    subject_set_name = 'aliasing_test'
+    subject_set_name = 'default'
 
     upload_decals_to_panoptes(
         joint_catalog,
