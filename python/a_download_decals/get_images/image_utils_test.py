@@ -95,10 +95,10 @@ def test_lupton_on_varying_brightness():
 
 
 def test_lupton_on_varying_saturation():
-    # image_loc = '{}/example_e.fits'.format(TEST_EXAMPLES_DIR)
+    image_loc = '{}/example_e.fits'.format(TEST_EXAMPLES_DIR)
     # image_loc = '/data/temp/sandor_bars/decals/fits_native/dr5/J104/J104031.24+121739.8.fits'
     # image_loc = '/data/temp/sandor_bars/decals/fits_native/dr5/J133/J133729.36+040615.9.fits'
-    image_loc = '/Volumes/alpha/decals/fits_native/dr5/J000/J000001.03+003228.7.fits'
+    # image_loc = '/Volumes/alpha/decals/fits_native/dr5/J000/J000001.03+003228.7.fits'
 
     original_data_by_band = image_data_by_band(image_loc)
 
