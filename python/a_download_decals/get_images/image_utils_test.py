@@ -92,3 +92,28 @@ def test_lupton_on_varying_brightness():
 
     jpegs = [lupton_rgb(image) for image in data]
     plot_jpegs(jpegs, 'lupton_comparison')
+
+
+def test_lupton_on_varying_saturation():
+    # image_loc = '{}/example_e.fits'.format(TEST_EXAMPLES_DIR)
+    # image_loc = '/data/temp/sandor_bars/decals/fits_native/dr5/J104/J104031.24+121739.8.fits'
+    # image_loc = '/data/temp/sandor_bars/decals/fits_native/dr5/J133/J133729.36+040615.9.fits'
+    image_loc = '/Volumes/alpha/decals/fits_native/dr5/J000/J000001.03+003228.7.fits'
+
+    original_data_by_band = image_data_by_band(image_loc)
+
+    kwargs = {
+        'arcsinh': .3,
+        'mn': 0,
+        'mx': .4
+    }
+    jpegs = [lupton_rgb(original_data_by_band, **kwargs, desaturate=desaturate) for desaturate in [True, False]]
+    plot_jpeg_pair(jpegs, 'lupton_comparison_desaturate')
+
+
+def plot_jpeg_pair(jpegs, name):
+    fig, axes = plt.subplots(ncols=2)
+    for ax_index, ax in enumerate(axes):
+        cbar = ax.imshow(jpegs[ax_index])
+    plt.tight_layout()
+    plt.savefig('{}/{}.jpg'.format(TEST_EXAMPLES_DIR, name))

@@ -1,5 +1,6 @@
 import numpy as np
-
+import photutils
+from astropy.stats import sigma_clipped_stats
 
 def dr2_style_rgb(imgs, bands, mnmx=None, arcsinh=None, scales=None, desaturate=False):
     '''
@@ -177,7 +178,7 @@ def decals_internal_rgb(imgs, bands, mnmx=None, arcsinh=None, scales=None,
     return rgb
 
 
-def lupton_rgb(imgs, bands='grz', arcsinh=1., mn=0.1, mx=100.):
+def lupton_rgb(imgs, bands='grz', arcsinh=1., mn=0.1, mx=100., desaturate=False):
     """
     Create human-interpretable rgb image from multi-band pixel data
     Follow the comments of Lupton (2004) to preserve colour during rescaling
@@ -210,10 +211,22 @@ def lupton_rgb(imgs, bands='grz', arcsinh=1., mn=0.1, mx=100.):
         img[:, :, plane] = (im / scale).astype(np.float32)
 
     I = img.sum(axis=2).reshape(size, size, 1)
+
+    # identify which pixels to desaturate
+    if desaturate:
+        mask = photutils.make_source_mask(I.squeeze(), snr=2, npixels=5, dilate_size=11)
+        mean, median, std = sigma_clipped_stats(I, sigma=3.0, mask=mask)
+        desaturation_mask = I < (mean + 2 * std)
+
     rescaling = nonlinear_map(I, arcsinh=arcsinh)/I
     rescaled_img = img * rescaling
 
     rescaled_img = (rescaled_img - mn) * (mx - mn)
+
+    if desaturate:
+        keep_img = rescaled_img * ~desaturation_mask
+        desaturate_img = np.average(rescaled_img * desaturation_mask, axis=2)
+        rescaled_img = keep_img + np.transpose(np.array([desaturate_img, desaturate_img, desaturate_img]), axes=[1, 2, 0])
 
     return np.clip(rescaled_img, 0., 1.)
 
