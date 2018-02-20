@@ -1,6 +1,6 @@
 import pytest
 
-from get_subject_classifications import *
+from c_from_zooniverse.get_subject_classifications import *
 
 
 """
