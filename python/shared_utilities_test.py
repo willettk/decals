@@ -1,9 +1,9 @@
 import pytest
 
-from astropy.io import fits
+from astropy import units as u
 from astropy.table import Table
 
-from shared_utilities import match_galaxies_to_catalog, astropy_table_to_pandas, fits_are_identical
+from shared_utilities import match_galaxies_to_catalog_table, fits_are_identical
 
 
 @pytest.fixture()
@@ -37,11 +37,33 @@ def catalog():
             'z': 0.05,
             'table_data': 12.
         },
+
+        {
+            'name': 'c',
+            'ra': 100.,
+            'dec': 80.,
+            'z': 0.05,
+            'table_data': 12.
+        },
     ])
 
 
-def test_match_galaxies_to_catalog(galaxies, catalog):
-    matched, unmatched = match_galaxies_to_catalog(galaxies, catalog)
+def test_match_galaxies_to_catalog_table(galaxies, catalog):
+
+    matched, unmatched = match_galaxies_to_catalog_table(galaxies, catalog)
+
+    assert matched['name'] == ['a']
+    assert unmatched['name'] == ['b']
+
+    assert set(matched.colnames) == {'dec_subject',  'galaxy_data', 'name_subject', 'ra_subject', 'z_subject', 'best_match', 'sky_separation', 'dec', 'name', 'ra', 'table_data', 'z'}
+    assert set(unmatched.colnames) == {'dec', 'name', 'ra', 'z', 'best_match', 'sky_separation', 'galaxy_data'}
+
+
+def test_match_galaxies_to_catalog_table_awkward_units(galaxies, catalog):
+    galaxies['ra'] = galaxies['ra'] * u.deg
+    catalog['dec'] = catalog['dec'] * u.deg
+
+    matched, unmatched = match_galaxies_to_catalog_table(galaxies, catalog)
 
     assert matched['name'] == ['a']
     assert unmatched['name'] == ['b']

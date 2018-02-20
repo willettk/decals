@@ -177,7 +177,7 @@ def decals_internal_rgb(imgs, bands, mnmx=None, arcsinh=None, scales=None,
     return rgb
 
 
-def lupton_rgb(imgs, bands='grz', arcsinh=1., mn=0.1, mx=100., size=424):
+def lupton_rgb(imgs, bands='grz', arcsinh=1., mn=0.1, mx=100.):
     """
     Create human-interpretable rgb image from multi-band pixel data
     Follow the comments of Lupton (2004) to preserve colour during rescaling
@@ -203,8 +203,8 @@ def lupton_rgb(imgs, bands='grz', arcsinh=1., mn=0.1, mx=100., size=424):
                      z=(0, 0.0135)
                      )
 
-    h, w = imgs[0].shape
-    img = np.zeros((h, w, 3), np.float32)
+    size = imgs[0].shape[1]
+    img = np.zeros((size, size, 3), np.float32)
     for im, band in zip(imgs, bands):
         plane, scale = grzscales.get(band, (0, 1.))
         img[:, :, plane] = (im / scale).astype(np.float32)

@@ -52,11 +52,14 @@ def upload_decals_to_panoptes(joint_catalog,
 
 if __name__ == '__main__':
 
-    settings.new_previous_subjects = False
-    settings.new_calibration_images = False
+    settings.new_previous_subjects = True
+    settings.new_calibration_images = True
 
     joint_catalog = Table(fits.getdata(settings.joint_catalog_loc))
-    joint_catalog = enforce_joint_catalog_columns(joint_catalog)
+    joint_catalog = enforce_joint_catalog_columns(joint_catalog, overwrite_cache=True)
+    # TODO temporary fix until I complete a download
+    joint_catalog['fits_loc'] = list(map(lambda x: x.replace('EXTERNAL/decals/fits', 'alpha/decals/fits_native'), joint_catalog['fits_loc']))
+    joint_catalog['png_loc'] = list(map(lambda x: x.replace('EXTERNAL/decals/png', 'alpha/decals/png_native'), joint_catalog['png_loc']))
 
     expert_catalog = get_expert_catalog(settings.expert_catalog_loc)
 
@@ -69,7 +72,7 @@ if __name__ == '__main__':
         previous_subjects_df = pd.read_csv(settings.subject_loc)
         previous_subjects = Table.from_pandas(previous_subjects_df)  # previously extracted decals subjects
 
-    subject_set_name = 'default'
+    subject_set_name = 'decals_dr5_open_beta_native_res'
 
     upload_decals_to_panoptes(
         joint_catalog,

@@ -104,7 +104,7 @@ def main():
     settings.new_catalog = False
     settings.new_images = True
     settings.overwrite_fits = False
-    settings.overwrite_png = True
+    settings.overwrite_png = False
     settings.run_to = None
 
     if settings.new_catalog:
