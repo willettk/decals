@@ -226,9 +226,8 @@ def test_download_images_multithreaded(joint_catalog, fits_dir, png_dir):
     np.array_equal(output_catalog['fits_filled'], np.ones(len(output_catalog), dtype=bool))
     np.array_equal(output_catalog['png_ready'], np.ones(len(output_catalog), dtype=bool))
 
+
 # TODO below tests are sloppy
-
-
 def test_download_images_creates_fits_and_png_small(new_galaxy):
     data_release = '5'
     new_galaxy['fits_loc'] = '{}/temp/temp_small.fits'.format(TEST_EXAMPLES_DIR)

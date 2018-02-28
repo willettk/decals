@@ -19,13 +19,8 @@ def get_bricks_loc(catalog_dir, data_release):
 
 nsa_version = '1_0_0'
 data_release = '5'
-# catalog_dir = '/media/mike/EXTERNAL/decals/catalogs'
-# catalog_dir = '/Volumes/EXTERNAL/decals/catalogs'
 catalog_dir = '/Volumes/alpha/decals/catalogs'
-# subject_loc = '/data/galaxy_zoo/decals/subjects/decals_dr1_and_dr2.csv'
 
-# fits_dir = '/data/temp'
-# png_dir = '/data/temp'
 fits_dir = '/Volumes/alpha/decals/fits_native/dr{}'.format(data_release)
 png_dir = '/Volumes/alpha/decals/png_native/dr{}'.format(data_release)
 

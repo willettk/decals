@@ -187,8 +187,8 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, zoome
         fits_loc (str): location to save file, excluding type e.g. /data/fits/test_image.fits
         ra (float): right ascension (center)
         dec (float): declination (center)
-        pixscale (float): proportional to decals pixels vs. image pixels. 0.262 for 1-1 map.
-        size (int): image edge length in pixels. Default 512.
+        zoomed_pixscale (float):  arcseconds per pixel requested. Native pixscale is 0.262
+        max_size (int): maximum pixels to download before increasing zoomed_pixscale
 
     Returns:
         None
@@ -213,9 +213,9 @@ def get_download_url(ra, dec, zoomed_pixscale, max_size, data_release, img_forma
         ra (float): right ascension of galaxy
         dec (float): declination of galaxy
         zoomed_pixscale (float): arcseconds per pixel requested. Native pixscale is 0.262.
-        max_size (int): maxiumum pixels to download before increasing zoomed_pixscale
+        max_size (int): maximum pixels to download before increasing zoomed_pixscale
         data_release (str): DECALS data release to source image from
-        format (str): image format to download. 'fits' or 'jpg'
+        img_format (str): image format to download. 'fits' or 'jpg'
 
     Returns:
         (str): url to download galaxy in requested size/format
@@ -239,7 +239,7 @@ def get_download_url(ra, dec, zoomed_pixscale, max_size, data_release, img_forma
         params['size'] = pixel_extent
         query_params = 'ra={}&dec={}&size={}&layer={}'.format(params['ra'], params['dec'], params['size'], params['layer'])
     else:
-        # forced to rescale to keep galaxy to reasonable num. of pixels
+        # forced to rescale to keep galaxy to reasonable number of pixels
         pixel_scale = arcsecs / max_size
         params['size'] = max_size
         params['pixscale'] = pixel_scale
@@ -314,6 +314,7 @@ def check_images_are_downloaded(catalog, n_processes=10):
 
     Args:
         catalog (astropy.Table): joint NSA/decals catalog
+        n_processes (int): number of processes to check images with (in parallel)
 
     Returns:
         (astropy.Table) catalog with image quality check columns added
@@ -325,7 +326,7 @@ def check_images_are_downloaded(catalog, n_processes=10):
         print('Images left: {}'.format(len(remaining_catalog)))
         chunk = remaining_catalog[:manual_chunksize]
         remaining_catalog = remaining_catalog[manual_chunksize:]
-        pool = multiprocessing.Pool(10)
+        pool = multiprocessing.Pool(n_processes)
         result = list(tqdm(
             pool.imap(check_image_is_downloaded, chunk),
             total=len(catalog),
@@ -336,7 +337,7 @@ def check_images_are_downloaded(catalog, n_processes=10):
         if len(remaining_catalog) == 0:
             break
 
-    result = [item for lst in results for item in lst]
+    result = [quality_check_lst for lst in results for quality_check_lst in lst]
     catalog['fits_ready'] = [result[n][0] for n in range(len(catalog))]
     catalog['fits_filled'] = [result[n][1] for n in range(len(catalog))]
     catalog['png_ready'] = [result[n][2] for n in range(len(catalog))]

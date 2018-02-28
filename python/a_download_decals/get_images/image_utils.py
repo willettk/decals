@@ -1,6 +1,5 @@
 import numpy as np
-import photutils
-from astropy.stats import sigma_clipped_stats
+
 
 def dr2_style_rgb(imgs, bands, mnmx=None, arcsinh=None, scales=None, desaturate=False):
     '''
@@ -187,12 +186,16 @@ def lupton_rgb(imgs, bands='grz', arcsinh=1., mn=0.1, mx=100., desaturate=False,
     3) linearly scale all pixel values to lie between mn and mx
     4) clip all pixel values to lie between 0 and 1
 
+    Optionally, desaturate pixels with low signal/noise value to avoid speckled sky (partially implemented)
+
     Args:
         imgs (list): of 2-dim np.arrays, each with pixel data on a band # TODO refactor to one 3-dim array
         bands (str): ordered characters of bands of the 2-dim pixel arrays in imgs
         arcsinh (float): softening factor for arcsinh rescaling
         mn (float): min pixel value to set before (0, 1) clipping
         mx (float): max pixel value to set before (0, 1) clipping
+        desaturate (bool): If True, reduce saturation on low S/N pixels to avoid speckled sky
+        desaturate_factor (float): parameter controlling desaturation. Proportional to saturation.
 
     Returns:
         (np.array) of shape (H, W, 3) of pixel values for colour image
@@ -203,10 +206,6 @@ def lupton_rgb(imgs, bands='grz', arcsinh=1., mn=0.1, mx=100., desaturate=False,
                      r=(1, 0.008),
                      z=(0, 0.0135)
                      )
-    # grzscales = dict(g=(2, 0.02),
-    #                  r=(1, 0.02),
-    #                  z=(0, 0.02)
-    #                  )
 
     # set the relative intensities of each band to be approximately equal
     img = np.zeros((size, size, 3), np.float32)
@@ -237,7 +236,6 @@ def lupton_rgb(imgs, bands='grz', arcsinh=1., mn=0.1, mx=100., desaturate=False,
         saturation_factor = signal_to_noise * desaturate_factor
         # if that would imply INCREASING the deviation, do nothing
         saturation_factor[saturation_factor > 1] = 1.
-        # print(saturation_factor.min(), saturation_factor.mean(), saturation_factor.max())
         img = mean_all_bands + (deviation_from_mean * saturation_factor)
 
     rescaling = nonlinear_map(I, arcsinh=arcsinh)/I
