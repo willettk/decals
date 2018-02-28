@@ -19,7 +19,7 @@ def create_prototype_subject_set(catalog_of_new, calibration_catalog, subject_se
     calibration_catalog = calibration_catalog[calibration_catalog['png_ready'] == True]
 
     # get 1000 new galaxies
-    new_galaxies = catalog_of_new[:50]
+    new_galaxies = catalog_of_new[:1000]
 
     image_columns = ['dr2_png_loc', 'colour_png_loc']
 
