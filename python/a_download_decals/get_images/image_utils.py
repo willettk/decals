@@ -177,7 +177,7 @@ def decals_internal_rgb(imgs, bands, mnmx=None, arcsinh=None, scales=None,
     return rgb
 
 
-def lupton_rgb(imgs, bands='grz', arcsinh=1., mn=0.1, mx=100., size=424):
+def lupton_rgb(imgs, bands='grz', arcsinh=1., mn=0.1, mx=100., desaturate=False, desaturate_factor=.01):
     """
     Create human-interpretable rgb image from multi-band pixel data
     Follow the comments of Lupton (2004) to preserve colour during rescaling
@@ -186,33 +186,62 @@ def lupton_rgb(imgs, bands='grz', arcsinh=1., mn=0.1, mx=100., size=424):
     3) linearly scale all pixel values to lie between mn and mx
     4) clip all pixel values to lie between 0 and 1
 
+    Optionally, desaturate pixels with low signal/noise value to avoid speckled sky (partially implemented)
+
     Args:
         imgs (list): of 2-dim np.arrays, each with pixel data on a band # TODO refactor to one 3-dim array
         bands (str): ordered characters of bands of the 2-dim pixel arrays in imgs
         arcsinh (float): softening factor for arcsinh rescaling
         mn (float): min pixel value to set before (0, 1) clipping
         mx (float): max pixel value to set before (0, 1) clipping
+        desaturate (bool): If True, reduce saturation on low S/N pixels to avoid speckled sky
+        desaturate_factor (float): parameter controlling desaturation. Proportional to saturation.
 
     Returns:
         (np.array) of shape (H, W, 3) of pixel values for colour image
     """
 
-    # set the relative intensities of each band to be approximately equal
+    size = imgs[0].shape[1]
     grzscales = dict(g=(2, 0.00526),
                      r=(1, 0.008),
                      z=(0, 0.0135)
                      )
 
-    h, w = imgs[0].shape
-    img = np.zeros((h, w, 3), np.float32)
+    # set the relative intensities of each band to be approximately equal
+    img = np.zeros((size, size, 3), np.float32)
     for im, band in zip(imgs, bands):
         plane, scale = grzscales.get(band, (0, 1.))
         img[:, :, plane] = (im / scale).astype(np.float32)
 
-    I = img.sum(axis=2).reshape(size, size, 1)
+    I = img.mean(axis=2, keepdims=True)
+
+    if desaturate:
+        img_nanomaggies = np.zeros((size, size, 3), np.float32)
+        for im, band in zip(imgs, bands):
+            plane, scale = grzscales.get(band, (0, 1.))
+            img_nanomaggies[:, :, plane] = im.astype(np.float32)
+        img_nanomaggies_nonzero = np.clip(img_nanomaggies, 1e-9, None)
+        img_ab_mag = 22.5 - 2.5 * np.log10(img_nanomaggies_nonzero)
+        img_flux = np.power(10, img_ab_mag / -2.5) * 3631
+        # DR1 release paper quotes 90s exposure time per band, 900s on completion
+        # TODO assume 3 exposures per band per image. exptime is per ccd, nexp per tile, will be awful to add
+        exposure_time_seconds = 90. * 3.
+        photon_energy = 600. * 1e-9  # TODO assume 600nm mean freq. for gri bands, can improve this
+        img_photons = img_flux * exposure_time_seconds / photon_energy
+        img_photons_per_pixel = np.sum(img_photons, axis=2, keepdims=True)
+
+        mean_all_bands = img.mean(axis=2, keepdims=True)
+        deviation_from_mean = img - mean_all_bands
+        signal_to_noise = np.sqrt(img_photons_per_pixel)
+        saturation_factor = signal_to_noise * desaturate_factor
+        # if that would imply INCREASING the deviation, do nothing
+        saturation_factor[saturation_factor > 1] = 1.
+        img = mean_all_bands + (deviation_from_mean * saturation_factor)
+
     rescaling = nonlinear_map(I, arcsinh=arcsinh)/I
     rescaled_img = img * rescaling
 
+    rescaled_img = (rescaled_img - mn) * (mx - mn)
     rescaled_img = (rescaled_img - mn) * (mx - mn)
 
     return np.clip(rescaled_img, 0., 1.)

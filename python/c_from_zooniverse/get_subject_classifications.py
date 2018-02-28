@@ -2,7 +2,7 @@ import json
 
 import pandas as pd
 
-from decals_schema import TASK_ANSWERS
+from c_from_zooniverse.decals_schema import TASK_ANSWERS
 
 
 def classifications_to_table(classifications):

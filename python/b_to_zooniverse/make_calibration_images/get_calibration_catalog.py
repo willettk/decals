@@ -6,7 +6,7 @@ import pandas as pd
 
 import matplotlib.pyplot as plt
 
-from shared_utilities import match_galaxies_to_catalog
+from shared_utilities import match_galaxies_to_catalog_table
 
 
 def get_expert_catalog_joined_with_decals(joint_catalog, expert_catalog, plot=False):
@@ -21,7 +21,7 @@ def get_expert_catalog_joined_with_decals(joint_catalog, expert_catalog, plot=Fa
     Returns:
         (astropy.Table): matched catalog, with extra bar/ring columns
     """
-    output_catalog, _ = match_galaxies_to_catalog(
+    output_catalog, _ = match_galaxies_to_catalog_table(
         galaxies=expert_catalog,
         catalog=joint_catalog,
         matching_radius=5 * u.arcsec,

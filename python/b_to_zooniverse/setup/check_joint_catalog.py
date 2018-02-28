@@ -3,13 +3,23 @@ import os
 from astropy.table import Table
 
 from a_download_decals.get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog
-from shared_utilities import match_galaxies_to_catalog, cache_table
+from shared_utilities import match_galaxies_to_catalog_table, cache_table
 import b_to_zooniverse.to_zooniverse_settings as settings
 
 
-def enforce_joint_catalog_columns(joint_catalog, overwrite_cache=True):
-    # make sure joint catalog has the required columns. If not, load the cached NSA catalog and add them
-    # if no cached NSA catalog, make one
+def enforce_joint_catalog_columns(joint_catalog, overwrite_cache=False):
+    """
+    Make sure joint catalog has the required columns for Panoptes upload.
+    If not, load the cached NSA catalog and add them.
+    If no cached NSA catalog, make one.
+    Args:
+        joint_catalog (astropy.Table): NSA and DECALS galaxies. Potentially only including a column subset.
+        overwrite_cache (bool): if True, always make a new NSA cache. If False, only make cache if none exists.
+
+    Returns:
+        (astropy.Table): joint catalog with all missing catalog columns added
+    """
+
 
     # png_loc and fits_loc must have been added to joint catalog by this point by a downloader - raise error if not
     required_user_cols = [
@@ -51,7 +61,7 @@ def enforce_joint_catalog_columns(joint_catalog, overwrite_cache=True):
         cached_nsa = cached_nsa[list(set(nsa_cols) - set(catalog_cols)) + ['ra', 'dec']]
 
         # add the missing data columns
-        expanded_joint_catalog, _ = match_galaxies_to_catalog(joint_catalog, cached_nsa)
+        expanded_joint_catalog, _ = match_galaxies_to_catalog_table(joint_catalog, cached_nsa)
 
         assert len(expanded_joint_catalog) == len(joint_catalog)
 

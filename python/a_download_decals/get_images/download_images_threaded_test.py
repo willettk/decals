@@ -38,8 +38,8 @@ def fits_image_params(fits_loc):
         'fits_loc': fits_loc,
         'ra': 114.5970,
         'dec': 21.5681,
-        'pixscale': 0.262,
-        'size': 64,  # small test image for speed
+        'zoomed_pixscale': 0.262,
+        'max_size': 424,
         'data_release': '5'}
 
 
@@ -128,8 +128,8 @@ def partially_downloaded_galaxy_params(tmpdir):
         'fits_loc': temp_incomplete_example_loc,
         'ra': 114.5970,
         'dec': 21.5681,
-        'pixscale': 0.262,
-        'size': 64,  # small test image for speed
+        'zoomed_pixscale': 0.262,
+        'max_size': 424,
         'data_release': '5'}
 
 
@@ -137,7 +137,13 @@ def test_download_fits_cutout_retrieves_fits(fits_image_params):
     download_fits_cutout(**fits_image_params)
     hdulist = fits.open(fits_image_params['fits_loc'])
     matrix = hdulist[0].data
-    assert matrix.shape == (3, fits_image_params['size'], fits_image_params['size'])
+
+    channels = 3
+    historical_size = 424
+    arcsecs = historical_size * fits_image_params['zoomed_pixscale']
+    native_pixscale = 0.262
+    pixel_extent = np.ceil(arcsecs / native_pixscale).astype(int)
+    assert matrix.shape == (channels, pixel_extent, pixel_extent)
     assert np.max(matrix) > 0
     assert np.min(matrix) <= 0
 
@@ -173,7 +179,7 @@ def test_get_download_quality_of_fits_on_bad_pix_fits():
 def test_make_png_from_fits_creates_png(png_loc):
     fits_loc = '{}/example_a.fits'.format(TEST_EXAMPLES_DIR)
     assert os.path.exists(fits_loc)
-    make_png_from_fits(fits_loc, png_loc)
+    make_png_from_fits(fits_loc, png_loc, png_size=424)
     assert os.path.exists(png_loc)
 
 
@@ -219,3 +225,38 @@ def test_download_images_multithreaded(joint_catalog, fits_dir, png_dir):
     np.array_equal(output_catalog['fits_ready'], np.ones(len(output_catalog), dtype=bool))
     np.array_equal(output_catalog['fits_filled'], np.ones(len(output_catalog), dtype=bool))
     np.array_equal(output_catalog['png_ready'], np.ones(len(output_catalog), dtype=bool))
+
+
+# TODO below tests are sloppy
+def test_download_images_creates_fits_and_png_small(new_galaxy):
+    data_release = '5'
+    new_galaxy['fits_loc'] = '{}/temp/temp_small.fits'.format(TEST_EXAMPLES_DIR)
+    new_galaxy['png_loc'] = '{}/temp/temp_small.png'.format(TEST_EXAMPLES_DIR)
+    # assert not os.path.exists(new_galaxy['fits_loc'])
+    # assert not os.path.exists(new_galaxy['png_loc'])
+    download_images(new_galaxy, data_release=data_release, overwrite_fits=False, overwrite_png=False)
+    assert fits_downloaded_correctly(new_galaxy['fits_loc'])
+    assert os.path.exists(new_galaxy['png_loc'])
+
+
+@pytest.fixture
+def extended_galaxy():
+    # should have pixscale of about 1
+    return {
+        'ra': 216.0314,
+        'dec': 34.8592,
+        'iauname': 'extended',
+        'petroth50': 1. / 0.04,
+        'petroth90': 1. / 0.02
+    }
+
+
+def test_download_images_creates_fits_and_png_extended(extended_galaxy):
+    data_release = '5'
+    extended_galaxy['fits_loc'] = '{}/temp/temp_extended.fits'.format(TEST_EXAMPLES_DIR)
+    extended_galaxy['png_loc'] = '{}/temp/temp_extended.png'.format(TEST_EXAMPLES_DIR)
+    # assert not os.path.exists(extended_galaxy['fits_loc'])
+    # assert not os.path.exists(extended_galaxy['png_loc'])
+    download_images(extended_galaxy, data_release=data_release, overwrite_fits=False, overwrite_png=False)
+    assert fits_downloaded_correctly(extended_galaxy['fits_loc'])
+    assert os.path.exists(extended_galaxy['png_loc'])

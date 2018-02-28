@@ -19,10 +19,11 @@ def get_bricks_loc(catalog_dir, data_release):
 
 nsa_version = '1_0_0'
 data_release = '5'
+
 catalog_dir = '/Volumes/alpha/decals/catalogs'
 
-fits_dir = '/Volumes/alpha/decals/fits_native/dr{}'.format(data_release)
-png_dir = '/Volumes/alpha/decals/png_native/dr{}'.format(data_release)
+fits_dir = '/data/temp/sandor_bars/sdss/fits_native'.format(data_release)
+png_dir = '/data/temp/sandor_bars/sdss/png_native'.format(data_release)
 
 # only needed for dr3+
 brick_coordinates_loc = '{}/survey-bricks.fits'.format(catalog_dir)
@@ -35,5 +36,3 @@ nsa_catalog_loc = '{}/nsa_v{}.fits'.format(catalog_dir, nsa_version)
 
 joint_catalog_loc = '{}/nsa_v{}_decals_dr{}.fits'.format(
             catalog_dir, nsa_version, data_release)
-
-upload_catalog_loc = '{}/dr{}_nsa{}_to_upload.fits'.format(catalog_dir, data_release, nsa_version)

@@ -1,6 +1,7 @@
 numpy
 scipy
 astropy
+photutils
 pandas
 pytest
 tqdm

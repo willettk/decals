@@ -6,8 +6,8 @@ import subprocess
 
 import numpy as np
 from astropy.io import fits
-from matplotlib import pyplot as plt
 from tqdm import tqdm
+from PIL import Image
 
 from a_download_decals.get_images.image_utils import dr2_style_rgb
 
@@ -23,6 +23,7 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
         png_dir (str): directory to save png files
         overwrite_fits (bool): if True, force new fits download.
         overwrite_png (bool): if True, force new png download.
+        n_processes (int): number of processes to run in parallel for download and checking of fits
     Returns:
         (astropy.Table) catalog with new columns for fits/png locations and quality checks
     '''
@@ -39,18 +40,13 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
     }
     download_images_partial = functools.partial(download_images, **download_params)
 
-    chunksize = 1
-    # TODO manual chunking
-    # if len(catalog) > 1000:
-    #     chunksize = 1000
-
     manual_chunksize = 20000
     remaining_catalog = catalog.copy()
     while True:
         print('Images left: {}'.format(len(remaining_catalog)))
         chunk = remaining_catalog[-manual_chunksize:]
         remaining_catalog = remaining_catalog[:-manual_chunksize]
-        pool = multiprocessing.Pool(10)
+        pool = multiprocessing.Pool(n_processes)
         list(tqdm(
             pool.imap(download_images_partial, chunk),  total=len(chunk),
             unit='downloaded'))
@@ -59,7 +55,7 @@ def download_images_multithreaded(catalog, data_release, fits_dir, png_dir, over
         if len(remaining_catalog) == 0:
             break
 
-    catalog = check_images_are_downloaded(catalog, chunksize=chunksize)
+    catalog = check_images_are_downloaded(catalog, n_processes=n_processes)
 
     print("\n{} total galaxies".format(len(catalog)))
     print("{} fits are downloaded".format(np.sum(catalog['fits_ready'])))
@@ -74,7 +70,8 @@ def download_images(galaxy,
                     overwrite_fits=False,
                     overwrite_png=False,
                     max_attempts=5,
-                    min_pixelscale=0.1):
+                    min_pixelscale=0.1,
+                    png_size=424):
     """
     Download a multi-plane FITS image from the DECaLS skyserver
     Write multi-plane FITS images to separate files for each band
@@ -106,7 +103,7 @@ def download_images(galaxy,
             attempt = 0
             while attempt < max_attempts:
                 try:
-                    download_fits_cutout(fits_loc, data_release, galaxy['ra'], galaxy['dec'], pixscale, 424)
+                    download_fits_cutout(fits_loc, data_release, galaxy['ra'], galaxy['dec'], pixscale, 512)
                     assert fits_downloaded_correctly(fits_loc)
                     break
                 except Exception as err:
@@ -119,7 +116,7 @@ def download_images(galaxy,
         if not os.path.exists(png_loc) or overwrite_png:
             try:
                 # Create artistic png from the new FITS
-                make_png_from_fits(fits_loc, png_loc)
+                make_png_from_fits(fits_loc, png_loc, png_size)
             except:
                 print('Error creating png from {}'.format(fits_loc))
 
@@ -171,18 +168,18 @@ def get_loc(dir, galaxy, extension):
     return '{}/{}.{}'.format(target_dir, galaxy['iauname'], extension)
 
 
-def shell_command(cmd, executable=None, timeout=10):
+def shell_command(cmd, executable=None, timeout=60):
     result = subprocess.Popen(cmd, shell=True, executable=executable)
     name = result.pid
     try:
         result.wait(timeout=timeout)
-    except TimeoutError:
+    except Exception as err:
         result.kill()
-        print('{} killed'.format(name))
+        print('{} killed due to {}'.format(name, err))
     return result
 
 
-def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixscale=0.262, size=424):
+def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, zoomed_pixscale=0.262, max_size=512):
     '''
     Retrieve fits image from DECALS server and save to disk
 
@@ -190,25 +187,14 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixsc
         fits_loc (str): location to save file, excluding type e.g. /data/fits/test_image.fits
         ra (float): right ascension (center)
         dec (float): declination (center)
-        pixscale (float): proportional to decals pixels vs. image pixels. 0.262 for 1-1 map.
-        size (int): image edge length in pixels. Default 424 to match GZ2, but consider 512.
+        zoomed_pixscale (float):  arcseconds per pixel requested. Native pixscale is 0.262
+        max_size (int): maximum pixels to download before increasing zoomed_pixscale
 
     Returns:
         None
     '''
-    params = {
-        'ra': ra,
-        'dec': dec,
-        'pixscale': pixscale,
-        'size': size,
-        'layer': 'decals-dr{}'.format(data_release)}
-    if data_release == '1':
-        url = "http://imagine.legacysurvey.org/fits-cutout?{}".format(params)
-    elif data_release == '2' or '3' or '5':
-        # url = "http://legacysurvey.org/viewer/fits-cutout?{}".format(params)
-        url = "http://legacysurvey.org/viewer/fits-cutout?ra={}&dec={}&pixscale={}&size={}&layer={}".format(params['ra'], params['dec'], params['pixscale'], params['size'], params['layer'])
-    else:
-        raise ValueError('Data release "{}" not recognised'.format(data_release))
+
+    url = get_download_url(ra, dec, zoomed_pixscale, max_size, data_release, img_format='fits')
 
     wget_location = '/opt/local/bin/wget'
     try:
@@ -216,12 +202,63 @@ def download_fits_cutout(fits_loc, data_release, ra=114.5970, dec=21.5681, pixsc
             wget_location = 'wget'
     except KeyError:
         pass
-    download_command = '{} --tries=5 --no-verbose -O "{}" "{}"'.format(wget_location, fits_loc, url)
-    print(download_command)
+    download_command = '{} --tries=5 --no-verbose -q -O "{}" "{}"'.format(wget_location, fits_loc, url)
     _ = shell_command(download_command)
 
 
-def make_png_from_fits(fits_loc, png_loc):
+def get_download_url(ra, dec, zoomed_pixscale, max_size, data_release, img_format):
+    """
+    Generate the DECALS cutout service URL used to download each image, as either png or jpeg
+    Args:
+        ra (float): right ascension of galaxy
+        dec (float): declination of galaxy
+        zoomed_pixscale (float): arcseconds per pixel requested. Native pixscale is 0.262.
+        max_size (int): maximum pixels to download before increasing zoomed_pixscale
+        data_release (str): DECALS data release to source image from
+        img_format (str): image format to download. 'fits' or 'jpg'
+
+    Returns:
+        (str): url to download galaxy in requested size/format
+    """
+    # TODO combine these historical size and zoomed pixscale into a new, meaningful measure. pixscale -> arcsecs
+    historical_size = 424
+    arcsecs = historical_size * zoomed_pixscale
+
+    native_pixscale = 0.262
+    pixel_extent = np.ceil(arcsecs / native_pixscale).astype(int)
+
+    # Two cases. Either galaxy is extended beyond maxsize, in which case download at maxsize and dif scale,
+    # or (more often) it's small, and everything's okay
+    params = {
+        'ra': ra,
+        'dec': dec,
+        'layer': 'decals-dr{}'.format(data_release)
+    }
+
+    if pixel_extent < max_size:
+        params['size'] = pixel_extent
+        query_params = 'ra={}&dec={}&size={}&layer={}'.format(params['ra'], params['dec'], params['size'], params['layer'])
+    else:
+        # forced to rescale to keep galaxy to reasonable number of pixels
+        pixel_scale = arcsecs / max_size
+        params['size'] = max_size
+        params['pixscale'] = pixel_scale
+        query_params = 'ra={}&dec={}&size={}&layer={}&pixscale={}'.format(params['ra'], params['dec'], params['size'], params['layer'], params['pixscale'])
+
+    if img_format == 'jpg':
+        img_format = 'jpeg'
+
+    if data_release == '1':
+        url = "http://imagine.legacysurvey.org/{}-cutout?{}".format(img_format, query_params)
+    elif data_release == '2' or '3' or '5':
+        url = "http://legacysurvey.org/viewer/{}-cutout?{}".format(img_format, query_params)
+    else:
+        raise ValueError('Data release "{}" not recognised'.format(data_release))
+
+    return url
+
+
+def make_png_from_fits(fits_loc, png_loc, png_size):
     '''
     Create png from multi-band fits
 
@@ -252,27 +289,55 @@ def make_png_from_fits(fits_loc, png_loc):
             arcsinh=1.,
             scales=_scales,
             desaturate=True)
-        plt.imsave(png_loc, rgbimg, origin='lower')
+        save_carefully_resized_png(png_loc, rgbimg, target_size=png_size)
 
 
-def check_images_are_downloaded(catalog, chunksize=1):
+def save_carefully_resized_png(png_loc, native_image, target_size):
+    """
+
+    Args:
+        png_loc ():
+        native_image ():
+        target_size ():
+
+    Returns:
+
+    """
+    native_pil_image = Image.fromarray(np.uint8(native_image * 255.), mode='RGB')
+    nearest_image = native_pil_image.resize(size=(target_size, target_size), resample=Image.LANCZOS)
+    nearest_image.save(png_loc)
+
+
+def check_images_are_downloaded(catalog, n_processes=10):
     """
     Record if images are downloaded. Add 'fits_ready', 'png_ready' and 'fits_complete' columns to catalog.
 
     Args:
         catalog (astropy.Table): joint NSA/decals catalog
+        n_processes (int): number of processes to check images with (in parallel)
 
     Returns:
         (astropy.Table) catalog with image quality check columns added
     """
-    pool = multiprocessing.Pool(10)
-    result = list(tqdm(
-        pool.imap(check_image_is_downloaded, catalog, chunksize=chunksize),
-        total=len(catalog),
-        unit='checked'))
-    pool.close()
-    pool.join()
+    manual_chunksize = 20000
+    remaining_catalog = catalog.copy()
+    results = []
+    while True:
+        print('Images left: {}'.format(len(remaining_catalog)))
+        chunk = remaining_catalog[:manual_chunksize]
+        remaining_catalog = remaining_catalog[manual_chunksize:]
+        pool = multiprocessing.Pool(n_processes)
+        result = list(tqdm(
+            pool.imap(check_image_is_downloaded, chunk),
+            total=len(catalog),
+            unit='checked'))
+        results.append(result)
+        pool.close()
+        pool.join()
+        if len(remaining_catalog) == 0:
+            break
 
+    result = [quality_check_lst for lst in results for quality_check_lst in lst]
     catalog['fits_ready'] = [result[n][0] for n in range(len(catalog))]
     catalog['fits_filled'] = [result[n][1] for n in range(len(catalog))]
     catalog['png_ready'] = [result[n][2] for n in range(len(catalog))]

@@ -1,9 +1,6 @@
 # TODO checking for updated images has been disabled - see https://github.com/zooniverse/decals/issues/19
 
-import numpy as np
-from astropy.io import fits
-
-from shared_utilities import match_galaxies_to_catalog
+from shared_utilities import match_galaxies_to_catalog_table
 
 
 def find_new_catalog_images(old_catalog, new_catalog):
@@ -19,7 +16,7 @@ def find_new_catalog_images(old_catalog, new_catalog):
         (astropy.Table) new catalog with only images that are new or changed since the old catalog
     """
 
-    _, catalog_of_new_galaxies = match_galaxies_to_catalog(  # unmatched galaxies are new
+    _, catalog_of_new_galaxies = match_galaxies_to_catalog_table(  # unmatched galaxies are new
         galaxies=new_catalog,
         catalog=old_catalog,
         galaxy_suffix='',
