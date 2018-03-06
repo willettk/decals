@@ -28,7 +28,6 @@ def get_key_astrophysical_columns(catalog):
     Returns:
         (astropy.Table) The most important astrophysical values from the joint catalog
     """
-
     key_data = Table()
 
     columns_to_copy = [
@@ -85,9 +84,8 @@ def get_r_magnitude(catalog):
 
 
 def get_extinction_corrected_magnitudes(catalog):
-    # nmgy: Galactic - extinction corrected AB flux used for K - correction(from SERSICFLUX) in FNugriz
+    # nmgy: Galactic - extinction corrected AB flux used for K - correction(from SERSICFLUX) in FNugriz, in nanomaggies
     mag = 22.5 - 2.5 * np.log10(catalog['nmgy']).astype(float)
-    mag[np.isnan(mag)] = -99.
     return mag
 
 

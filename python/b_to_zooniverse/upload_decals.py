@@ -44,18 +44,20 @@ def upload_decals_to_panoptes(joint_catalog,
 
     # use Nair galaxies previously classified in DR2
     calibration_catalog = get_expert_catalog_joined_with_decals(dr2_galaxies, expert_catalog)
+    print(calibration_catalog['nsa_version'])
+    print(calibration_catalog['nsa_version'][0])
     # TODO move expanding rows by image earlier, to this point. Generalises better.
-    calibration_catalog = make_calibration_images(calibration_catalog,
-                                                  calibration_dir,
-                                                  new_images=new_calibration_images)
-    calibration_set_name = 'decals_dr2_nair_calibration'
-    calibration_subjects = upload_subject_set.upload_calibration_subject_set(calibration_catalog, calibration_set_name)
+    # calibration_catalog_with_colours = make_calibration_images(calibration_catalog,
+    #                                               calibration_dir,
+    #                                               new_images=new_calibration_images)
+    # calibration_set_name = 'decals_dr2_nair_calibration'
+    # calibration_subjects = upload_subject_set.upload_calibration_subject_set(calibration_catalog, calibration_set_name)
 
     dr5_only_name = 'decals_dr5_only'
     # dr5_only_subjects = upload_subject_set.upload_galaxy_subject_set(dr5_only_galaxies, dr5_only_name)
 
-    dr2_name = 'decals_dr2'
-    # dr2_subjects = upload_subject_set.upload_galaxy_subject_set(dr2_galaxies, dr2_name)
+    dr2_name = 'decals_dr2_and_nair'
+    dr2_subjects = upload_subject_set.upload_galaxy_subject_set(calibration_catalog, dr2_name)
 
     # return main_subjects, calibration_subjects  # for debugging
 

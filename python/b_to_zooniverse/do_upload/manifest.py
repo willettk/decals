@@ -3,6 +3,7 @@ import functools
 from multiprocessing.dummy import Pool as ThreadPool
 import warnings
 
+import numpy as np
 import astropy.table
 import pandas as pd
 from panoptes_client import Panoptes, Project, SubjectSet, Subject
@@ -59,7 +60,19 @@ def create_manifest_from_joint_catalog(catalog):
     Returns:
         (dict) of form {png_loc: img.png, key_data: {metadata_col: metadata_value}}
     """
-    key_data = get_key_astrophysical_columns(catalog).to_pandas()
+    key_data = get_key_astrophysical_columns(catalog)
+
+    # there's a weird bug in astropy where certain strings are converted to bytes when added to pandas
+    # nsa_version '1_0_0' becomes b'1_0_0'
+    # TODO raise an astropy issue about this - or better, fix it!
+    nsa_version_data = key_data['nsa_version']
+    key_data = key_data.to_pandas()  # becomes bytes if included
+    key_data['nsa_version'] = nsa_version_data  # becomes bytes even when manually placed!
+    key_data['nsa_version'] = key_data['nsa_version'].str.decode("utf-8")  # convert back to string
+
+    # np.nan cannot be handled by JSON encoder. Convert to flag value of -999
+    key_data = key_data.applymap(replace_nan_with_flag)
+
     # calibration catalog can have 'selected image' column
     try:
         key_data['selected_image'] = catalog['selected_image']
@@ -161,3 +174,21 @@ def read_data_from_txt(file_loc):
     with open(file_loc, 'r') as f:
         s = f.read()
         return ast.literal_eval(s)
+
+
+def replace_nan_with_flag(x):
+    """
+    For any x, if x is nan or masked, replace with -999
+    Args:
+        x (Any): input of unknown type to be checked
+
+    Returns:
+        (float): -999 if x is of nan or masked, x if not
+    """
+    try:
+        if np.isnan(x):
+            return -999.
+        else:
+            return x
+    except TypeError:  # not a numpy-supported data type e.g. string, therefore can't be nan
+        return x

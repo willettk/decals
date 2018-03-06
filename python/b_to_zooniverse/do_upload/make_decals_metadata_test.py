@@ -27,6 +27,29 @@ def catalog():
     ])
 
 
+@pytest.fixture()
+def masked_catalog():
+    # see http://docs.astropy.org/en/stable/table/masking.html
+    masked_table = Table([
+        {'nsa_id': 'example',
+         'iauname': 'J123',
+         'ra': 10.0,
+         'dec': 12.0,
+         'petroth50': 50.,
+         'petrotheta': 4.,
+         'petroflux': [20., 21., 22., 23., 24., 25., 26.],
+         'nsa_version': '1_0_0',
+         'z': 0.1,
+         'mag': [0., 1., 2., 3., 4., 5., 6.],
+         'absmag': [10., 11., 12., 13., 14., 15., 16.],
+         'nmgy': [30., 31., 32., 33., 34., 35., 36.],
+         'another_column': 'sadness'}
+    ], masked=True)
+
+    masked_table['nmgy'].mask = [[True, False, False, False, False, False, False]]
+    return masked_table
+
+
 def test_get_r_magnitude(catalog):
     mag = get_r_magnitude(catalog)
     assert mag[0] == 14.
@@ -35,6 +58,14 @@ def test_get_r_magnitude(catalog):
 def test_get_extinction_corrected_magnitudes(catalog):
     corrected_mag = get_extinction_corrected_magnitudes(catalog)
     assert corrected_mag[0][0] == 22.5 - 2.5 * np.log10(30.).astype(float)
+
+
+def test_get_extinction_corrected_magnitudes_with_masked_catalog(masked_catalog):
+    print(masked_catalog['nmgy'])
+    print([masked_catalog['nmgy'][0][n] for n in range(7)])
+    corrected_mag = get_extinction_corrected_magnitudes(masked_catalog)
+    print([corrected_mag[0][n] for n in range(7)])
+    assert corrected_mag[0][1] == 22.5 - 2.5 * np.log10(31.).astype(float)
 
 
 def test_get_r_flux(catalog):
