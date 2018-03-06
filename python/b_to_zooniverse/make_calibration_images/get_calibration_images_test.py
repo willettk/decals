@@ -25,6 +25,6 @@ def galaxy(png_dir):
 def test_save_calibration_images_of_galaxy(galaxy):
     assert not os.path.exists(galaxy['dr2_png_loc'])
     assert not os.path.exists(galaxy['colour_png_loc'])
-    save_calibration_images_of_galaxy(galaxy)
+    save_calibration_images_of_galaxy(galaxy, size=424)
     assert os.path.exists(galaxy['dr2_png_loc'])
     assert os.path.exists(galaxy['colour_png_loc'])

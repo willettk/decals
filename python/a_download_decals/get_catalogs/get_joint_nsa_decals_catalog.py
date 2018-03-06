@@ -119,7 +119,7 @@ def find_matching_brick(galaxy, bricks, pbar=None):
     return match_count, first_match
 
 
-def create_joint_catalog(nsa, bricks, data_release, nsa_version, run_to=None, visualise=False):
+def create_joint_catalog(nsa, bricks, data_release, run_to=None, visualise=False):
     '''
     Create a matched catalogue of all NSA sources that have grz imaging in DECaLS
     Selection criteria (currently petrosian radius > 3) are NOT applied here
@@ -128,7 +128,6 @@ def create_joint_catalog(nsa, bricks, data_release, nsa_version, run_to=None, vi
         nsa (astropy.Table): NSA catalog of SDSS galaxies
         bricks (astropy.Table): catalog of DECALS imaging bricks
         data_release (str): DECALS data release version e.g. '2'
-        nsa_version (str): NASA Sloan Atlas version e.g. v1_0_0
         run_to (int): nsa galaxies to match. If None, matches all
         visualise (bool): if True, plot and save sky footprint of NSA catalog
 
@@ -138,7 +137,7 @@ def create_joint_catalog(nsa, bricks, data_release, nsa_version, run_to=None, vi
 
     # Make this routine somewhat quicker by first eliminating everything in the NSA catalog
     # outside the observed RA/dec range of the DECaLS bricks.
-    nsa_in_decals_area = filter_nsa_catalog_to_approximate_sky_area(nsa, bricks, data_release, visualise=visualise)
+    nsa_in_decals_area = filter_nsa_catalog_to_approximate_sky_area(nsa, bricks, visualise=visualise)
 
     nsa_to_match = nsa_in_decals_area[:run_to]
 
@@ -185,7 +184,7 @@ def create_joint_catalog(nsa, bricks, data_release, nsa_version, run_to=None, vi
     return nsa_decals
 
 
-def filter_nsa_catalog_to_approximate_sky_area(nsa, bricks, data_release, visualise=False):
+def filter_nsa_catalog_to_approximate_sky_area(nsa, bricks, visualise=False):
     """
     DECALS is only in a well-defined portion of sky (which depends on the data release version). Filter the NSA catalog
     so that it only includes galaxies in that approximate area. This saves time matching later.
@@ -193,7 +192,6 @@ def filter_nsa_catalog_to_approximate_sky_area(nsa, bricks, data_release, visual
     Args:
         nsa (astropy.Table): NSA catalog of SDSS galaxies
         bricks (astropy.Table): catalog of DECALS imaging bricks
-        data_release (str): DECALS data release version e.g. '2'
         visualise (bool): if True, plot and save sky footprint of NSA catalog
 
     Returns:

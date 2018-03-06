@@ -12,6 +12,7 @@ from b_to_zooniverse.do_upload.make_decals_metadata import get_r_magnitude, get_
 def catalog():
     return Table([
         {'nsa_id': 'example',
+         'iauname': 'J123',
          'ra': 10.0,
          'dec': 12.0,
          'petroth50': 50.,

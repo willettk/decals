@@ -66,8 +66,8 @@ def get_key_astrophysical_columns(catalog):
     # TODO this column has gone missing somewhere
     # only works for DR5 catalog - but that's okay, we only need the latest
     # t['metadata.nexp_g'] = nsa_decals['nexp_g']
-    # t['metadata.nexp_g'] = nsa_decals['nexp_g']
-    # t['metadata.nexp_g'] = nsa_decals['nexp_g']
+    # t['metadata.nexp_r'] = nsa_decals['nexp_r']
+    # t['metadata.nexp_i'] = nsa_decals['nexp_i']
 
     fluxarr = get_r_flux(catalog)
     key_data['petroflux'] = fluxarr
@@ -87,7 +87,7 @@ def get_r_magnitude(catalog):
 def get_extinction_corrected_magnitudes(catalog):
     # nmgy: Galactic - extinction corrected AB flux used for K - correction(from SERSICFLUX) in FNugriz
     mag = 22.5 - 2.5 * np.log10(catalog['nmgy']).astype(float)
-    mag[~np.isfinite(mag)] = -99.
+    mag[np.isnan(mag)] = -99.
     return mag
 
 

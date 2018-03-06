@@ -7,10 +7,10 @@ from astropy.io import fits
 from tqdm import tqdm
 
 from a_download_decals.get_images import image_utils
-from a_download_decals.get_images.download_images_threaded import get_loc
+from a_download_decals.get_images.download_images_threaded import get_loc, save_carefully_resized_png
 
 
-def make_calibration_images(calibration_catalog, calibration_dir, new_images=True):
+def make_calibration_images(calibration_catalog, calibration_dir, new_images=True, size=424, n_processes=30):
     """
     Create calibration images in two styles: as with DR2 (by Kyle Willet) and with stronger colours (new)
     The impact on classification performance will be tested
@@ -18,6 +18,8 @@ def make_calibration_images(calibration_catalog, calibration_dir, new_images=Tru
         calibration_catalog (astropy.Table):
         calibration_dir (str): root directory to save calibration data. Subdirectories will be created
         new_images (bool): if True, create new calibration images. Else, this function does nothing.
+        size (int): dimensions to save png images
+        n_processes (int): number of parallel processes to save calibration images with
 
     Returns:
         (astropy.Table) calibration_catalog with dr2_png_loc and colour_png_loc columns added
@@ -36,9 +38,13 @@ def make_calibration_images(calibration_catalog, calibration_dir, new_images=Tru
     if new_images:
         pbar = tqdm(total=len(calibration_catalog), unit=' image sets created')
 
-        save_calibration_images_of_galaxy_partial = functools.partial(save_calibration_images_of_galaxy, **{'pbar': pbar})
+        kwargs = {
+            'pbar': pbar,
+            'size': size
+        }
+        save_calibration_images_of_galaxy_partial = functools.partial(save_calibration_images_of_galaxy, **kwargs)
 
-        pool = ThreadPool(30)
+        pool = ThreadPool(n_processes)
         pool.map(save_calibration_images_of_galaxy_partial, calibration_catalog)
         pbar.close()
         pool.close()
@@ -47,7 +53,7 @@ def make_calibration_images(calibration_catalog, calibration_dir, new_images=Tru
     return calibration_catalog
 
 
-def save_calibration_images_of_galaxy(galaxy, pbar=None):
+def save_calibration_images_of_galaxy(galaxy, size, pbar=None):
 
     try:
         img_data = fits.getdata(galaxy['fits_loc'])
@@ -60,8 +66,8 @@ def save_calibration_images_of_galaxy(galaxy, pbar=None):
     dr2_img = get_dr2_style_image(img_data)
     colour_img = get_colour_style_image(img_data)
 
-    plt.imsave(galaxy['dr2_png_loc'], dr2_img, origin='lower')
-    plt.imsave(galaxy['colour_png_loc'], colour_img, origin='lower')
+    save_carefully_resized_png(galaxy['dr2_png_loc'], dr2_img, target_size=size)
+    save_carefully_resized_png(galaxy['colour_png_loc'], colour_img, target_size=size)
 
     if pbar:
         pbar.update()

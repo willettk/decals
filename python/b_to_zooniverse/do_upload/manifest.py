@@ -75,7 +75,7 @@ def create_manifest_from_joint_catalog(catalog):
     return manifest
 
 
-def upload_manifest_to_galaxy_zoo(subject_set_name, manifest, galaxy_zoo_id='5733'):
+def upload_manifest_to_galaxy_zoo(subject_set_name, manifest, galaxy_zoo_id='5733', n_processes=30):
     """
     Save manifest (set of galaxies with metadata prepared) to Galaxy Zoo
 
@@ -83,6 +83,7 @@ def upload_manifest_to_galaxy_zoo(subject_set_name, manifest, galaxy_zoo_id='573
         subject_set_name (str): name for subject set
         manifest (list): containing dicts of form {png_loc: img.png, key_data: {metadata_col: metadata_value}}
         galaxy_zoo_id (str): panoptes project id e.g. '5733' for Galaxy Zoo
+        n_processes (int): number of processes with which to upload galaxies in parallel
 
     Returns:
         None
@@ -102,8 +103,6 @@ def upload_manifest_to_galaxy_zoo(subject_set_name, manifest, galaxy_zoo_id='573
 
     subject_set.links.project = galaxy_zoo
     subject_set.display_name = subject_set_name
-
-
     subject_set.save()
 
     pbar = tqdm(total=len(manifest), unit=' subjects uploaded')
@@ -113,8 +112,7 @@ def upload_manifest_to_galaxy_zoo(subject_set_name, manifest, galaxy_zoo_id='573
         'pbar': pbar
     }
     save_subject_partial = functools.partial(save_subject, **save_subject_params)
-
-    pool = ThreadPool(30)
+    pool = ThreadPool(n_processes)
     new_subjects = pool.map(save_subject_partial, manifest)
     pbar.close()
     pool.close()

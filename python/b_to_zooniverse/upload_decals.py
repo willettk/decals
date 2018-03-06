@@ -4,19 +4,18 @@ from astropy.table import Table
 
 from a_download_decals.get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog
 import b_to_zooniverse.to_zooniverse_settings as settings
-from b_to_zooniverse.do_upload.create_subject_set import create_prototype_subject_set
+from b_to_zooniverse.do_upload import upload_subject_set
 from b_to_zooniverse.previous_subjects.previous_decals_subjects import get_previous_decals_subjects
 from b_to_zooniverse.make_calibration_images.get_calibration_catalog import get_expert_catalog, get_expert_catalog_joined_with_decals
 from b_to_zooniverse.make_calibration_images.get_calibration_images import make_calibration_images
-from b_to_zooniverse.new_subjects.find_new_subjects import find_new_catalog_images
 from b_to_zooniverse.setup.check_joint_catalog import enforce_joint_catalog_columns
+from shared_utilities import match_galaxies_to_catalog_table
 
 
 def upload_decals_to_panoptes(joint_catalog,
                               previous_subjects,
                               expert_catalog,
                               calibration_dir,
-                              subject_set_name,
                               new_calibration_images=False):
     """
     Using the DECALS joint catalog created by a_download_decals, upload DECALS sets to Panoptes
@@ -35,49 +34,54 @@ def upload_decals_to_panoptes(joint_catalog,
     Returns:
         None
     """
-    catalog_of_new = find_new_catalog_images(new_catalog=joint_catalog, old_catalog=previous_subjects)
-    print('New galaxies: {}'.format(len(catalog_of_new)))
+    dr2_galaxies, dr5_only_galaxies = match_galaxies_to_catalog_table(  # unmatched galaxies are new
+        galaxies=joint_catalog,
+        catalog=previous_subjects,
+        galaxy_suffix='',
+        catalog_suffix='_dr1_2')  # if field exists in both catalogs
+    print('Previously classified galaxies: {}'.format(len(dr2_galaxies)))
+    print('New galaxies: {}'.format(len(dr5_only_galaxies)))
 
-    calibration_catalog = get_expert_catalog_joined_with_decals(joint_catalog, expert_catalog)
+    # use Nair galaxies previously classified in DR2
+    calibration_catalog = get_expert_catalog_joined_with_decals(dr2_galaxies, expert_catalog)
+    # TODO move expanding rows by image earlier, to this point. Generalises better.
     calibration_catalog = make_calibration_images(calibration_catalog,
                                                   calibration_dir,
                                                   new_images=new_calibration_images)
+    calibration_set_name = 'decals_dr2_nair_calibration'
+    calibration_subjects = upload_subject_set.upload_calibration_subject_set(calibration_catalog, calibration_set_name)
 
-    main_subjects, calibration_subjects = create_prototype_subject_set(catalog_of_new,
-                                                                       calibration_catalog,
-                                                                       subject_set_name)
+    dr5_only_name = 'decals_dr5_only'
+    # dr5_only_subjects = upload_subject_set.upload_galaxy_subject_set(dr5_only_galaxies, dr5_only_name)
 
-    return main_subjects, calibration_subjects  # for debugging
+    dr2_name = 'decals_dr2'
+    # dr2_subjects = upload_subject_set.upload_galaxy_subject_set(dr2_galaxies, dr2_name)
+
+    # return main_subjects, calibration_subjects  # for debugging
 
 
 if __name__ == '__main__':
 
-    settings.new_previous_subjects = True
-    settings.new_calibration_images = True
+    settings.new_previous_subjects = False
+    settings.new_calibration_images = False
 
     joint_catalog = Table(fits.getdata(settings.joint_catalog_loc))
-    joint_catalog = enforce_joint_catalog_columns(joint_catalog, overwrite_cache=True)
-    # TODO temporary fix until I complete a download
-    joint_catalog['fits_loc'] = list(map(lambda x: x.replace('EXTERNAL/decals/fits', 'alpha/decals/fits_native'), joint_catalog['fits_loc']))
-    joint_catalog['png_loc'] = list(map(lambda x: x.replace('EXTERNAL/decals/png', 'alpha/decals/png_native'), joint_catalog['png_loc']))
+    joint_catalog = enforce_joint_catalog_columns(joint_catalog, overwrite_cache=False)
 
     expert_catalog = get_expert_catalog(settings.expert_catalog_loc)
 
     if settings.new_previous_subjects:
         raw_previous_subjects = pd.read_csv(settings.previous_subjects_loc)  # TODO make clear how to produce this
-        nsa_v1_0_0 = get_nsa_catalog(settings.nsa_v1_0_0_catalog_loc, '1_0_0')
+        nsa_v1_0_0 = get_nsa_catalog(settings.nsa_v1_0_0_catalog_loc, '1_0_0')  # takes a while
         previous_subjects = get_previous_decals_subjects(raw_previous_subjects, nsa_v1_0_0)
-        previous_subjects.write(settings.subject_loc)
+        previous_subjects.write(settings.subject_loc, overwrite=True)
     else:
         previous_subjects_df = pd.read_csv(settings.subject_loc)
         previous_subjects = Table.from_pandas(previous_subjects_df)  # previously extracted decals subjects
-
-    subject_set_name = 'decals_dr5_open_beta_native_res'
 
     upload_decals_to_panoptes(
         joint_catalog,
         previous_subjects,
         expert_catalog,
         settings.calibration_dir,
-        subject_set_name,
         settings.new_calibration_images)
