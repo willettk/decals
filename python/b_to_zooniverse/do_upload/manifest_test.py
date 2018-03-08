@@ -13,7 +13,7 @@ def joint_catalog():
             'nsa_id': 'example_nsa_id',
             'iauname': 'example_iauname',
             'ra': 10.0,
-            'dec': 12.0,
+            'dec': -12.0,
             'petroth50': 50.,
             'petrotheta': 4.,
             'petroflux': [20., 21., 22., 23., 24., 25., 26.],
@@ -35,7 +35,7 @@ def joint_catalog_masked():
             'nsa_id': 'example_nsa_id',
             'iauname': 'example_iauname',
             'ra': 10.0,
-            'dec': 12.0,
+            'dec': -12.0,
             'petroth50': 50.,
             'petrotheta': 4.,
             'petroflux': [20., 21., 22., 23., 24., 25., 26.],
@@ -61,7 +61,7 @@ def calibration_catalog():
             'nsa_id': 'example_nsa_id',
             'iauname': 'example_iauname',
             'ra': 10.0,
-            'dec': 12.0,
+            'dec': -12.0,
             'petroth50': 50.,
             'petrotheta': 4.,
             'petroflux': [20., 21., 22., 23., 24., 25., 26.],
@@ -84,7 +84,8 @@ def test_create_manifest_from_joint_catalog(joint_catalog):
     entry = new_manifest[0]
     assert entry['png_loc'] == 'jpeg_here.png'
     assert type(entry['key_data']) == dict
-    assert entry['key_data']['ra'] == 10.
+    assert entry['key_data']['!ra'] == 10.
+    assert type(entry['key_data']['!simbad_search'] == str)
 
 
 def test_create_manifest_from_joint_catalog_with_masks(joint_catalog_masked):
@@ -93,8 +94,8 @@ def test_create_manifest_from_joint_catalog_with_masks(joint_catalog_masked):
     entry = new_manifest[0]
     assert entry['png_loc'] == 'jpeg_here.png'
     assert type(entry['key_data']) == dict
-    assert entry['key_data']['ra'] == 10.
-    assert entry['key_data']['mag_faruv'] == -999.
+    assert entry['key_data']['!ra'] == 10.
+    assert entry['key_data']['!mag_faruv'] == -999.
 
 
 def test_create_manifest_from_calibration_catalog(calibration_catalog):
@@ -105,9 +106,15 @@ def test_create_manifest_from_calibration_catalog(calibration_catalog):
     first_entry = new_manifest[0]
     assert first_entry['png_loc'] == 'type_dr2.png'
     assert type(first_entry['key_data']) == dict
-    assert first_entry['key_data']['ra'] == 10.
+    assert first_entry['key_data']['!ra'] == 10.
 
     last_entry = new_manifest[-1]
     assert last_entry['png_loc'] == 'type_colour.png'
     assert type(last_entry['key_data']) == dict
-    assert last_entry['key_data']['ra'] == 10.
+    assert last_entry['key_data']['!ra'] == 10.
+
+
+def test_coords_to_simbad(joint_catalog):
+    galaxy = joint_catalog[0]
+    simbad_url = manifest.coords_to_simbad(galaxy['ra'], galaxy['dec'], search_radius=10.)
+   # TODO I don't know how to programmatically test that this query works, beyond not falling over

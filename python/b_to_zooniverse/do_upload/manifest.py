@@ -78,6 +78,17 @@ def create_manifest_from_joint_catalog(catalog):
         key_data['selected_image'] = catalog['selected_image']
     except KeyError:
         pass
+
+    key_data['simbad_search'] = key_data.apply(
+        lambda galaxy: coords_to_simbad(galaxy['ra'], galaxy['dec'], search_radius=10.),
+        axis=1)
+
+    # rename all key data columns to appear only in Talk by prepending with '!'
+    current_columns = key_data.columns.values
+    prepended_columns = ['!' + col for col in current_columns]
+    key_data = key_data.rename(columns=dict(zip(current_columns, prepended_columns)))
+
+    # create the manifest structure that Panoptes Python client expects
     key_data_as_dicts = key_data.apply(lambda x: x.to_dict(), axis=1).values
 
     png_locs = pd.Series(catalog['png_loc']).values
@@ -192,3 +203,17 @@ def replace_nan_with_flag(x):
             return x
     except TypeError:  # not a numpy-supported data type e.g. string, therefore can't be nan
         return x
+
+
+def coords_to_simbad(ra, dec, search_radius):
+    """
+    Get SIMBAD search url for objects within search_radius of ra, dec coordinates.
+    Args:
+        ra (float): right ascension in degrees
+        dec (float): declination in degrees
+        search_radius (float): search radius around ra, dec in arcseconds
+
+    Returns:
+        (str): SIMBAD database search url for objects at ra, dec
+    """
+    return 'http://simbad.u-strasbg.fr/simbad/sim-coo?Coord={0}+%09{1}&CooFrame=FK5&CooEpoch=2000&CooEqui=2000&CooDefinedFrames=none&Radius={2}&Radius.unit=arcmin&submit=submit+query&CoordList='.format(ra, dec, search_radius)
