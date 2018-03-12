@@ -15,4 +15,5 @@ nsa_cached_loc = '/data/galaxy_zoo/decals/catalogs/nsa_v{}_cached_for_upload.fit
 
 joint_catalog_loc = '/data/galaxy_zoo/decals/catalogs/dr{}_nsa{}_to_upload.fits'.format(data_release, nsa_version)
 expert_catalog_loc = '/data/galaxy_zoo/decals/catalogs/nair_sdss_catalog.fit'
-calibration_dir = '/Volumes/external/decals/png/calibration'
+
+calibration_dir = '/Volumes/alpha/decals/png_native/calibration'

@@ -53,11 +53,14 @@ def upload_decals_to_panoptes(joint_catalog,
     # calibration_set_name = 'decals_dr2_nair_calibration'
     # calibration_subjects = upload_subject_set.upload_calibration_subject_set(calibration_catalog, calibration_set_name)
 
-    dr5_only_name = 'decals_dr5_only'
+    # dr5_only_name = 'decals_dr5_only'
     # dr5_only_subjects = upload_subject_set.upload_galaxy_subject_set(dr5_only_galaxies, dr5_only_name)
 
-    dr2_name = 'decals_dr2_and_nair'
-    dr2_subjects = upload_subject_set.upload_galaxy_subject_set(calibration_catalog, dr2_name)
+    dr5_random_name = 'decals_dr5_random_first_1k'
+    dr5_only_subjects = upload_subject_set.upload_galaxy_subject_set(dr5_only_galaxies[:1000], dr5_random_name)
+
+    # dr2_name = 'decals_dr2_and_nair'
+    # dr2_subjects = upload_subject_set.upload_galaxy_subject_set(calibration_catalog, dr2_name)
 
     # return main_subjects, calibration_subjects  # for debugging
 

@@ -83,6 +83,9 @@ def create_manifest_from_joint_catalog(catalog):
         lambda galaxy: coords_to_simbad(galaxy['ra'], galaxy['dec'], search_radius=10.),
         axis=1)
 
+    key_data['simbad_search'] = key_data['simbad_search'].apply(
+        lambda url: wrap_url_in_new_tab_markdown(url=url, display_text='Click to search SIMBAD'))
+
     # rename all key data columns to appear only in Talk by prepending with '!'
     current_columns = key_data.columns.values
     prepended_columns = ['!' + col for col in current_columns]
@@ -142,6 +145,11 @@ def upload_manifest_to_galaxy_zoo(subject_set_name, manifest, galaxy_zoo_id='573
     pool.close()
     pool.join()
 
+    # new_subjects = []
+    # for subject in manifest:
+    #     print(subject)
+    #     new_subjects.append(save_subject_partial(subject))
+
     subject_set.add(new_subjects)
 
     return manifest  # for debugging only
@@ -197,7 +205,7 @@ def replace_nan_with_flag(x):
         (float): -999 if x is of nan or masked, x if not
     """
     try:
-        if np.isnan(x):
+        if np.isnan(x) or np.isinf(x):
             return -999.
         else:
             return x
@@ -217,3 +225,7 @@ def coords_to_simbad(ra, dec, search_radius):
         (str): SIMBAD database search url for objects at ra, dec
     """
     return 'http://simbad.u-strasbg.fr/simbad/sim-coo?Coord={0}+%09{1}&CooFrame=FK5&CooEpoch=2000&CooEqui=2000&CooDefinedFrames=none&Radius={2}&Radius.unit=arcmin&submit=submit+query&CoordList='.format(ra, dec, search_radius)
+
+
+def wrap_url_in_new_tab_markdown(url, display_text):
+    return '[{}](+tab+{})'.format(display_text, url)
