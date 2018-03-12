@@ -7,7 +7,7 @@ import b_to_zooniverse.to_zooniverse_settings as settings
 from b_to_zooniverse.do_upload import upload_subject_set
 from b_to_zooniverse.previous_subjects.previous_decals_subjects import get_previous_decals_subjects
 from b_to_zooniverse.make_calibration_images.get_calibration_catalog import get_expert_catalog, get_expert_catalog_joined_with_decals
-from b_to_zooniverse.make_calibration_images.get_calibration_images import make_calibration_images
+from b_to_zooniverse.make_calibration_images.get_calibration_images import make_catalog_png_images
 from b_to_zooniverse.setup.check_joint_catalog import enforce_joint_catalog_columns
 from shared_utilities import match_galaxies_to_catalog_table
 
@@ -44,8 +44,7 @@ def upload_decals_to_panoptes(joint_catalog,
 
     # use Nair galaxies previously classified in DR2
     calibration_catalog = get_expert_catalog_joined_with_decals(dr2_galaxies, expert_catalog)
-    print(calibration_catalog['nsa_version'])
-    print(calibration_catalog['nsa_version'][0])
+
     # TODO move expanding rows by image earlier, to this point. Generalises better.
     # calibration_catalog_with_colours = make_calibration_images(calibration_catalog,
     #                                               calibration_dir,

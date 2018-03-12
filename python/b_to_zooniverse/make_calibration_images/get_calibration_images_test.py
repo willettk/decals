@@ -2,7 +2,11 @@ import pytest
 
 import os
 
-from b_to_zooniverse.make_calibration_images.get_calibration_images import save_calibration_images_of_galaxy
+from astropy.table import Table
+
+from b_to_zooniverse.make_calibration_images import get_calibration_images
+from a_download_decals.get_images.download_images_threaded import get_loc
+from a_download_decals.get_images.image_utils import get_dr2_style_image
 
 
 TEST_EXAMPLES_DIR = 'python/test_examples'
@@ -14,17 +18,42 @@ def png_dir(tmpdir):
 
 
 @pytest.fixture
-def galaxy(png_dir):
+def png_loc(png_dir):
+    return png_dir + '/temp.png'
+
+
+@pytest.fixture
+def galaxy(png_loc):
     return {
+        'iauname': 'J104356',
         'fits_loc': '{}/example_a.fits'.format(TEST_EXAMPLES_DIR),
-        'dr2_png_loc': '{}/example_a_dr2.png'.format(png_dir),
-        'colour_png_loc': '{}/example_a_colour.png'.format(png_dir)
+        'png_loc': png_loc
     }
 
 
-def test_save_calibration_images_of_galaxy(galaxy):
-    assert not os.path.exists(galaxy['dr2_png_loc'])
-    assert not os.path.exists(galaxy['colour_png_loc'])
-    save_calibration_images_of_galaxy(galaxy, size=424)
-    assert os.path.exists(galaxy['dr2_png_loc'])
-    assert os.path.exists(galaxy['colour_png_loc'])
+@pytest.fixture
+def catalog():
+    return Table([
+        {
+            'iauname': 'J104356',
+            'fits_loc': '{}/example_a.fits'.format(TEST_EXAMPLES_DIR),
+        },
+
+        {
+            'iauname': 'J104357',
+            'fits_loc': '{}/example_b.fits'.format(TEST_EXAMPLES_DIR),
+        }
+    ])
+
+
+def test_save_image_of_galaxy(galaxy, png_loc):
+    assert not os.path.exists(png_loc)
+    get_calibration_images.save_image_of_galaxy(galaxy, size=424, img_creator_func=get_dr2_style_image)
+    assert os.path.exists(png_loc)
+
+
+def test_save_png_image_of_galaxy(catalog, png_dir):
+    expected_png_locs = [get_loc(png_dir, galaxy, 'png') for galaxy in catalog]
+    assert not any([os.path.exists(expected_png_loc) for expected_png_loc in expected_png_locs])
+    get_calibration_images.make_catalog_png_images(catalog, get_dr2_style_image, png_dir, size=424, n_processes=1)
+    assert all([os.path.exists(expected_png_loc) for expected_png_loc in expected_png_locs])

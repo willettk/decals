@@ -258,3 +258,46 @@ def nonlinear_map(x, arcsinh=1.):
         (np.array) array with map applied
     """
     return np.arcsinh(x * arcsinh)
+
+
+def get_dr2_style_image(img_data):
+    """
+    Create png-scaled array in style of DECALS DR2
+    Wraps the required 'magic numbers'
+    Args:
+        img_data (np.array): flux in nanomaggies in shape (3, height, width) (fits shape convention)
+
+    Returns:
+         (np.array) of shape (height, width, 3) of pixel values for colour image
+    """
+    img_bands = (img_data[0, :, :], img_data[1, :, :], img_data[2, :, :])
+    kwargs = {
+        'scales': dict(
+            g=(2, 0.008),
+            r=(1, 0.014),
+            z=(0, 0.019)),
+        'bands': 'grz',
+        'mnmx': (-0.5, 300),
+        'arcsinh': 1.,
+        'desaturate': False
+}
+    return dr2_style_rgb(img_bands, **kwargs)
+
+
+def get_colour_style_image(img_data):
+    """
+    Create png-scaled array in style of Lupton
+    Wraps the required 'magic numbers'
+    Args:
+        img_data (np.array): flux in nanomaggies in shape (3, height, width) (fits shape convention)
+
+    Returns:
+         (np.array) of shape (height, width, 3) of pixel values for colour image
+    """
+    img_bands = (img_data[0, :, :], img_data[1, :, :], img_data[2, :, :])
+    kwargs = {
+        'arcsinh': .3,
+        'mn': 0,
+        'mx': .4
+    }
+    return lupton_rgb(img_bands, **kwargs)
