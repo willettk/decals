@@ -3,6 +3,7 @@ from astropy.io import fits
 from astropy.table import Table
 
 from a_download_decals.get_catalogs.get_joint_nsa_decals_catalog import get_nsa_catalog
+from a_download_decals.get_images import image_utils
 import b_to_zooniverse.to_zooniverse_settings as settings
 from b_to_zooniverse.do_upload import upload_subject_set
 from b_to_zooniverse.previous_subjects.previous_decals_subjects import get_previous_decals_subjects
@@ -15,8 +16,7 @@ from shared_utilities import match_galaxies_to_catalog_table
 def upload_decals_to_panoptes(joint_catalog,
                               previous_subjects,
                               expert_catalog,
-                              calibration_dir,
-                              new_calibration_images=False):
+                              calibration_dir):
     """
     Using the DECALS joint catalog created by a_download_decals, upload DECALS sets to Panoptes
     Only upload new galaxies by checking against previous subjects used
@@ -34,6 +34,8 @@ def upload_decals_to_panoptes(joint_catalog,
     Returns:
         None
     """
+    joint_catalog = joint_catalog[joint_catalog['png_ready'] == True]
+
     dr2_galaxies, dr5_only_galaxies = match_galaxies_to_catalog_table(  # unmatched galaxies are new
         galaxies=joint_catalog,
         catalog=previous_subjects,
@@ -45,29 +47,46 @@ def upload_decals_to_panoptes(joint_catalog,
     # use Nair galaxies previously classified in DR2
     calibration_catalog = get_expert_catalog_joined_with_decals(dr2_galaxies, expert_catalog)
 
-    # TODO move expanding rows by image earlier, to this point. Generalises better.
-    # calibration_catalog_with_colours = make_calibration_images(calibration_catalog,
-    #                                               calibration_dir,
-    #                                               new_images=new_calibration_images)
-    # calibration_set_name = 'decals_dr2_nair_calibration'
-    # calibration_subjects = upload_subject_set.upload_calibration_subject_set(calibration_catalog, calibration_set_name)
+    # upload standard calibration set of Nair/DR2 galaxies, coloured by DR1/2 rules
+    # calibration_set_name = 'decals_dr2_nair_calibration_dr2_style_250_each'
+    # calibration_catalog_dr2_style = make_catalog_png_images(
+    #     calibration_catalog,
+    #     image_utils.get_dr2_style_image,
+    #     '{}/{}'.format(calibration_dir, calibration_set_name),
+    #     size=424,
+    #     overwrite=overwrite_png)
+    # _ = upload_subject_set.upload_nair_calibration_subject_set(
+    #     calibration_catalog_dr2_style, calibration_set_name)
 
-    # dr5_only_name = 'decals_dr5_only'
-    # dr5_only_subjects = upload_subject_set.upload_galaxy_subject_set(dr5_only_galaxies, dr5_only_name)
+    # upload all Nair/DR2 galaxies, coloured by Lupton rules
+    calibration_set_name = 'decals_dr2_nair_lupton_style_all'
+    calibration_catalog_lupton_style = make_catalog_png_images(
+        calibration_catalog,
+        image_utils.get_colour_style_image,
+        '{}/{}'.format(calibration_dir, calibration_set_name),
+        size=424,
+        overwrite=True)  # places new png in calibration folder under this name
+    upload_subject_set.upload_galaxy_subject_set(
+        calibration_catalog_lupton_style, calibration_set_name)
 
-    dr5_random_name = 'decals_dr5_random_first_1k'
-    dr5_only_subjects = upload_subject_set.upload_galaxy_subject_set(dr5_only_galaxies[:1000], dr5_random_name)
+    # upload all Nair/DR2 galaxies, coloured by DR2 rules
+    # calibration_set_name = 'decals_dr2_nair_dr2_style_all'
+    # _ = upload_subject_set.upload_galaxy_subject_set(calibration_catalog, calibration_set_name)
 
-    # dr2_name = 'decals_dr2_and_nair'
-    # dr2_subjects = upload_subject_set.upload_galaxy_subject_set(calibration_catalog, dr2_name)
+    # upload first n DR2-only galaxies
+    # dr2_only_name = 'first_1k_decals_dr2'
+    # _ = upload_subject_set.upload_galaxy_subject_set(dr2_galaxies[:1000], dr2_only_name)
 
-    # return main_subjects, calibration_subjects  # for debugging
+    # upload first n DR5-only galaxies
+    # dr5_only_name = 'first_1k_decals_dr5_only'
+    # _ = upload_subject_set.upload_galaxy_subject_set(dr5_only_galaxies[:1000], dr5_only_name)
+    # dr5_only_name = 'first_10k_decals_dr5_only'
+    # _ = upload_subject_set.upload_galaxy_subject_set(dr5_only_galaxies[:10000], dr5_only_name)
 
 
 if __name__ == '__main__':
 
     settings.new_previous_subjects = False
-    settings.new_calibration_images = False
 
     joint_catalog = Table(fits.getdata(settings.joint_catalog_loc))
     joint_catalog = enforce_joint_catalog_columns(joint_catalog, overwrite_cache=False)
@@ -88,4 +107,4 @@ if __name__ == '__main__':
         previous_subjects,
         expert_catalog,
         settings.calibration_dir,
-        settings.new_calibration_images)
+    )

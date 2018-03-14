@@ -233,6 +233,7 @@ def get_download_url(ra, dec, zoomed_pixscale, max_size, data_release, img_forma
         'ra': ra,
         'dec': dec,
         'layer': 'decals-dr{}'.format(data_release)
+        # 'layer': 'sdss'.format(data_release)
     }
 
     if pixel_extent < max_size:

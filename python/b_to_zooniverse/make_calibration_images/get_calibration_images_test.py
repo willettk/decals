@@ -1,6 +1,7 @@
 import pytest
 
 import os
+import shutil
 
 from astropy.table import Table
 
@@ -56,4 +57,17 @@ def test_save_png_image_of_galaxy(catalog, png_dir):
     expected_png_locs = [get_loc(png_dir, galaxy, 'png') for galaxy in catalog]
     assert not any([os.path.exists(expected_png_loc) for expected_png_loc in expected_png_locs])
     get_calibration_images.make_catalog_png_images(catalog, get_dr2_style_image, png_dir, size=424, n_processes=1)
+    assert all([os.path.exists(expected_png_loc) for expected_png_loc in expected_png_locs])
+
+
+def test_save_png_image_of_galaxy_missing_dir(catalog, png_dir):
+    missing_dir = '{}/{}'.format(png_dir, 'some_other_dir')
+    os.mkdir(missing_dir)  # temporarily created in order to be able to safely  construct expected locations
+    expected_png_locs = [get_loc(missing_dir, galaxy, 'png') for galaxy in catalog]
+    assert not any([os.path.exists(expected_png_loc) for expected_png_loc in expected_png_locs])
+    shutil.rmtree(missing_dir)  # remove again, including the empty folders that get_loc creates
+    assert not os.path.isdir(missing_dir)
+
+    get_calibration_images.make_catalog_png_images(catalog, get_dr2_style_image, missing_dir, size=424, n_processes=1)
+    assert os.path.isdir(missing_dir)
     assert all([os.path.exists(expected_png_loc) for expected_png_loc in expected_png_locs])

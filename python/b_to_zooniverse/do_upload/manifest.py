@@ -1,4 +1,5 @@
 import ast
+import os
 import functools
 from multiprocessing.dummy import Pool as ThreadPool
 import warnings
@@ -170,6 +171,7 @@ def save_subject(manifest_item, project, pbar=None):
     subject = Subject()
 
     subject.links.project = project
+    assert os.path.exists(manifest_item['png_loc'])
     subject.add_location(manifest_item['png_loc'])
     subject.metadata.update(manifest_item['key_data'])
 

@@ -8,7 +8,7 @@ from tqdm import tqdm
 from a_download_decals.get_images.download_images_threaded import get_loc, save_carefully_resized_png
 
 
-def make_catalog_png_images(catalog, img_creator_func, png_dir, size=424, n_processes=30, overwrite=False):
+def make_catalog_png_images(catalog, img_creator_func, png_dir, size=424, n_processes=10, overwrite=False):
     """
     Create calibration images in two styles: as with DR2 (by Kyle Willet) and with stronger colours (new)
     The impact on classification performance will be tested
@@ -25,9 +25,13 @@ def make_catalog_png_images(catalog, img_creator_func, png_dir, size=424, n_proc
         (astropy.Table) calibration_catalog with png_loc column added
     """
     catalog = catalog.copy()  # avoid mutating original catalog
+
+    if not os.path.isdir(png_dir):
+        os.mkdir(png_dir)
+    assert os.path.isdir(png_dir)
     catalog['png_loc'] = [get_loc(png_dir, galaxy, 'png') for galaxy in catalog]
 
-    pbar = tqdm(total=len(catalog), unit=' image sets created')
+    pbar = tqdm(total=len(catalog), unit=' png created')
 
     kwargs = {
         'size': size,
@@ -64,7 +68,8 @@ def save_image_of_galaxy(galaxy, size, img_creator_func, overwrite=False, pbar=N
         try:
             img_data = fits.getdata(galaxy['fits_loc'])
         except:
-            print('no or invalid fits at ' + galaxy['fits_loc'])
+            print('Fatal error: no or invalid fits at ' + galaxy['fits_loc'], flush=True)
+            exit(1)
             if pbar:
                 pbar.update()
             return None
