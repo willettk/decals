@@ -2,91 +2,81 @@ import os
 import functools
 from multiprocessing.dummy import Pool as ThreadPool
 
-import matplotlib.pyplot as plt
 from astropy.io import fits
 from tqdm import tqdm
 
-from a_download_decals.get_images import image_utils
-from a_download_decals.get_images.download_images_threaded import get_loc
+from a_download_decals.get_images.download_images_threaded import get_loc, save_carefully_resized_png
 
 
-def make_calibration_images(calibration_catalog, calibration_dir, new_images=True):
+def make_catalog_png_images(catalog, img_creator_func, png_dir, size=424, n_processes=10, overwrite=False):
     """
     Create calibration images in two styles: as with DR2 (by Kyle Willet) and with stronger colours (new)
     The impact on classification performance will be tested
+    Ignores 'png_loc' column of catalog in favour of png_loc generated from png_dir argument
     Args:
-        calibration_catalog (astropy.Table):
-        calibration_dir (str): root directory to save calibration data. Subdirectories will be created
-        new_images (bool): if True, create new calibration images. Else, this function does nothing.
+        catalog (astropy.Table): catalog of galaxies to save png of. 'png_loc' column will be ignored.
+        img_creator_func (function): function to map nanomaggie fits array (c, h, w) to png array (h, w, c)
+        png_dir (str): root directory to save new pngs. Subdirectories will be created
+        size (int): dimensions to save png images
+        n_processes (int): number of parallel processes to save calibration images with
+        overwrite (bool): if True, create new calibration images. Else, this function does nothing.
 
     Returns:
-        (astropy.Table) calibration_catalog with dr2_png_loc and colour_png_loc columns added
+        (astropy.Table) calibration_catalog with png_loc column added
     """
-    dr2_calibration_dir = '{}/dr2_style'.format(calibration_dir)
-    colour_calibration_dir = '{}/colour'.format(calibration_dir)
-    for subdirectory in [dr2_calibration_dir, colour_calibration_dir]:
-        if not os.path.exists(subdirectory):
-            os.mkdir(subdirectory)
+    catalog = catalog.copy()  # avoid mutating original catalog
 
-    # make images with top 2 options selected from mosaic experiment
-    calibration_catalog['dr2_png_loc'] = [get_loc(dr2_calibration_dir, galaxy, 'png') for galaxy in calibration_catalog]
-    calibration_catalog['colour_png_loc'] = [get_loc(colour_calibration_dir, galaxy, 'png') for galaxy in calibration_catalog]
+    if not os.path.isdir(png_dir):
+        os.mkdir(png_dir)
+    assert os.path.isdir(png_dir)
+    catalog['png_loc'] = [get_loc(png_dir, galaxy, 'png') for galaxy in catalog]
 
-    # TODO extend to checking/overwriting, similar to downloader?
-    if new_images:
-        pbar = tqdm(total=len(calibration_catalog), unit=' image sets created')
+    pbar = tqdm(total=len(catalog), unit=' png created')
 
-        save_calibration_images_of_galaxy_partial = functools.partial(save_calibration_images_of_galaxy, **{'pbar': pbar})
+    kwargs = {
+        'size': size,
+        'img_creator_func': img_creator_func,
+        'overwrite': overwrite,
+        'pbar': pbar
+    }
+    save_calibration_images_of_galaxy_partial = functools.partial(save_image_of_galaxy, **kwargs)
 
-        pool = ThreadPool(30)
-        pool.map(save_calibration_images_of_galaxy_partial, calibration_catalog)
-        pbar.close()
-        pool.close()
-        pool.join()
+    pool = ThreadPool(n_processes)
+    pool.map(save_calibration_images_of_galaxy_partial, catalog)
+    pbar.close()
+    pool.close()
+    pool.join()
 
-    return calibration_catalog
+    return catalog
 
 
-def save_calibration_images_of_galaxy(galaxy, pbar=None):
+def save_image_of_galaxy(galaxy, size, img_creator_func, overwrite=False, pbar=None):
+    """
 
-    try:
-        img_data = fits.getdata(galaxy['fits_loc'])
-    except:
-        print('no fits at ' + galaxy['fits_loc'])
-        if pbar:
-            pbar.update()
-        return None
+    Args:
+        galaxy (dict): galaxy to save png of
+        size (int): size of output png e.g. 424
+        img_creator_func (function): function to map nanomaggie fits array (c, h, w) to png array (h, w, c)
+        overwrite (bool): if True, overwrite existing png. Else, skip existing png.
+        pbar (tqdm.pbar): tqdm progress bar
 
-    dr2_img = get_dr2_style_image(img_data)
-    colour_img = get_colour_style_image(img_data)
+    Returns:
+        None
+    """
 
-    plt.imsave(galaxy['dr2_png_loc'], dr2_img, origin='lower')
-    plt.imsave(galaxy['colour_png_loc'], colour_img, origin='lower')
+    if overwrite or not os.path.exists(galaxy['png_loc']):
+        try:
+            img_data = fits.getdata(galaxy['fits_loc'])
+        except:
+            print('Fatal error: no or invalid fits at ' + galaxy['fits_loc'], flush=True)
+            exit(1)
+            if pbar:
+                pbar.update()
+            return None
+
+        img = img_creator_func(img_data)
+
+        save_carefully_resized_png(galaxy['png_loc'], img, target_size=size)
 
     if pbar:
         pbar.update()
-
-
-def get_dr2_style_image(img_data):
-    img_bands = (img_data[0, :, :], img_data[1, :, :], img_data[2, :, :])
-    kwargs = {
-        'scales': dict(
-            g=(2, 0.008),
-            r=(1, 0.014),
-            z=(0, 0.019)),
-        'bands': 'grz',
-        'mnmx': (-0.5, 300),
-        'arcsinh': 1.,
-        'desaturate': False
-}
-    return image_utils.dr2_style_rgb(img_bands, **kwargs)
-
-
-def get_colour_style_image(img_data):
-    img_bands = (img_data[0, :, :], img_data[1, :, :], img_data[2, :, :])
-    kwargs = {
-        'arcsinh': .3,
-        'mn': 0,
-        'mx': .4
-    }
-    return image_utils.lupton_rgb(img_bands, **kwargs)

@@ -22,8 +22,8 @@ data_release = '5'
 
 catalog_dir = '/Volumes/alpha/decals/catalogs'
 
-fits_dir = '/data/temp/sandor_bars/sdss/fits_native'.format(data_release)
-png_dir = '/data/temp/sandor_bars/sdss/png_native'.format(data_release)
+# fits_dir = '/data/temp/sandor_bars/sdss/fits_native'.format(data_release)
+# png_dir = '/data/temp/sandor_bars/sdss/png_native'.format(data_release)
 
 # only needed for dr3+
 brick_coordinates_loc = '{}/survey-bricks.fits'.format(catalog_dir)

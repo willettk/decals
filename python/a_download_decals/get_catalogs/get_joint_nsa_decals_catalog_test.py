@@ -93,7 +93,7 @@ def bricks(data_release):
 
 
 @pytest.fixture()
-def bricks(data_release):
+def bricks():
     return Table([
         # galaxies RA 0->90 and dec -10->10 should match
         {'ra1': 0.,
@@ -122,8 +122,8 @@ def bricks(data_release):
     ])
 
 
-def test_filter_catalog_to_approximate_sky_area_dr5(catalog, bricks, data_release):
-    nsa_in_decals_area = filter_nsa_catalog_to_approximate_sky_area(catalog, bricks, data_release, visualise=False)
+def test_filter_catalog_to_approximate_sky_area_dr5(catalog, bricks):
+    nsa_in_decals_area = filter_nsa_catalog_to_approximate_sky_area(catalog, bricks, visualise=False)
     remaining_names = set(nsa_in_decals_area['iauname'])
 
     assert 'gal_a' in remaining_names
@@ -136,8 +136,8 @@ def test_filter_catalog_to_approximate_sky_area_dr5(catalog, bricks, data_releas
     assert 'gal_above_bricks' not in remaining_names
 
 
-def test_create_joint_catalog(catalog, bricks, data_release, nsa_version):
-    joint_catalog = create_joint_catalog(catalog, bricks, data_release, nsa_version, visualise=False)
+def test_create_joint_catalog(catalog, bricks, data_release):
+    joint_catalog = create_joint_catalog(catalog, bricks, data_release, visualise=False)
     remaining_names = set(joint_catalog['iauname'])
 
     assert 'gal_a' in remaining_names

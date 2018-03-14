@@ -38,7 +38,8 @@ def nsa():
             'petrotheta': 1.,
             'petroth50': 3.5,
             'petroth90': 10.,
-            'z': 0.01
+            'z': 0.01,
+            'nsa_version': '1_0_0'
         },
 
         {
@@ -49,7 +50,8 @@ def nsa():
             'petrotheta': 4.,
             'petroth50': 3.5,
             'petroth90': 10.,
-            'z': 1.
+            'z': 1.,
+            'nsa_version': '1_0_0'
         },
 
         {
@@ -60,7 +62,8 @@ def nsa():
             'petrotheta': 4.,
             'petroth50': 3.5,
             'petroth90': 10.,
-            'z': .01
+            'z': .01,
+            'nsa_version': '1_0_0'
         },
 
         {
@@ -71,7 +74,8 @@ def nsa():
             'petrotheta': 4.,
             'petroth50': 3.5,
             'petroth90': 10.,
-            'z': .01
+            'z': .01,
+            'nsa_version': '1_0_0'
         },
 
         {
@@ -82,7 +86,8 @@ def nsa():
             'petrotheta': 4.,
             'petroth50': 3.5,
             'petroth90': 10.,
-            'z': .01
+            'z': .01,
+            'nsa_version': '1_0_0'
         },
 
     ])

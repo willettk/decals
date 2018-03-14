@@ -13,7 +13,7 @@ def joint_catalog():
             'nsa_id': 'example_nsa_id',
             'iauname': 'example_iauname',
             'ra': 10.0,
-            'dec': 12.0,
+            'dec': -12.0,
             'petroth50': 50.,
             'petrotheta': 4.,
             'petroflux': [20., 21., 22., 23., 24., 25., 26.],
@@ -29,13 +29,39 @@ def joint_catalog():
 
 
 @pytest.fixture()
+def joint_catalog_masked():
+    masked_table = Table([
+        {
+            'nsa_id': 'example_nsa_id',
+            'iauname': 'example_iauname',
+            'ra': 10.0,
+            'dec': -12.0,
+            'petroth50': 50.,
+            'petrotheta': 4.,
+            'petroflux': [20., 21., 22., 23., 24., 25., 26.],
+            'nsa_version': '1_0_0',
+            'z': 0.1,
+            'mag': [0., 1., 2., 3., 4., 5., 6.],
+            'absmag': [10., 11., 12., 13., 14., 15., 16.],
+            'nmgy': [30., 31., 32., 33., 34., 35., 36.],
+            'png_loc': 'jpeg_here.png',
+            'fits_loc': 'fits_there.fits'
+        }
+    ],
+    masked=True)
+
+    masked_table['nmgy'].mask = [[True, False, False, False, False, False, False]]  # mask entry for mag_faruv
+    return masked_table
+
+
+@pytest.fixture()
 def calibration_catalog():
     return Table([
         {
             'nsa_id': 'example_nsa_id',
             'iauname': 'example_iauname',
             'ra': 10.0,
-            'dec': 12.0,
+            'dec': -12.0,
             'petroth50': 50.,
             'petrotheta': 4.,
             'petroflux': [20., 21., 22., 23., 24., 25., 26.],
@@ -58,7 +84,18 @@ def test_create_manifest_from_joint_catalog(joint_catalog):
     entry = new_manifest[0]
     assert entry['png_loc'] == 'jpeg_here.png'
     assert type(entry['key_data']) == dict
-    assert entry['key_data']['ra'] == 10.
+    assert entry['key_data']['!ra'] == 10.
+    assert type(entry['key_data']['!simbad_search'] == str)
+
+
+def test_create_manifest_from_joint_catalog_with_masks(joint_catalog_masked):
+    new_manifest = manifest.create_manifest_from_joint_catalog(joint_catalog_masked)
+    assert len(new_manifest) == len(joint_catalog_masked)
+    entry = new_manifest[0]
+    assert entry['png_loc'] == 'jpeg_here.png'
+    assert type(entry['key_data']) == dict
+    assert entry['key_data']['!ra'] == 10.
+    assert entry['key_data']['!mag_faruv'] == -999.
 
 
 def test_create_manifest_from_calibration_catalog(calibration_catalog):
@@ -69,9 +106,15 @@ def test_create_manifest_from_calibration_catalog(calibration_catalog):
     first_entry = new_manifest[0]
     assert first_entry['png_loc'] == 'type_dr2.png'
     assert type(first_entry['key_data']) == dict
-    assert first_entry['key_data']['ra'] == 10.
+    assert first_entry['key_data']['!ra'] == 10.
 
     last_entry = new_manifest[-1]
     assert last_entry['png_loc'] == 'type_colour.png'
     assert type(last_entry['key_data']) == dict
-    assert last_entry['key_data']['ra'] == 10.
+    assert last_entry['key_data']['!ra'] == 10.
+
+
+def test_coords_to_simbad(joint_catalog):
+    galaxy = joint_catalog[0]
+    simbad_url = manifest.coords_to_simbad(galaxy['ra'], galaxy['dec'], search_radius=10.)
+   # TODO I don't know how to programmatically test that this query works, beyond not falling over
