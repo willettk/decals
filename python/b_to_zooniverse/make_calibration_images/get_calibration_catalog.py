@@ -9,12 +9,12 @@ import matplotlib.pyplot as plt
 from shared_utilities import match_galaxies_to_catalog_table
 
 
-def get_expert_catalog_joined_with_decals(joint_catalog, expert_catalog, plot=False):
+def get_expert_catalog_joined_with_decals(decals_catalog, expert_catalog, plot=False):
     """
     Match Nair 2010 to the joint nsa-decals catalog. Decode Nair's binary type encoding.
     Add convenience columns to indicate bar or ring. Optionally, plot bar/ring statistics.
     Args:
-        joint_catalog (astropy.Table): catalog of nsa galaxies in decals
+        decals_catalog (astropy.Table): catalog of nsa galaxies in decals
         expert_catalog (astropy.Table): Nair 2010 expert classifications
         plot (bool): if True, make bar charts of T-Type, Bar and Ring counts in output catalog
 
@@ -23,15 +23,9 @@ def get_expert_catalog_joined_with_decals(joint_catalog, expert_catalog, plot=Fa
     """
     output_catalog, _ = match_galaxies_to_catalog_table(
         galaxies=expert_catalog,
-        catalog=joint_catalog,
+        catalog=decals_catalog,
         matching_radius=5 * u.arcsec,
         galaxy_suffix='_expert')
-
-    output_catalog['has_bar'] = output_catalog['bar'] != 0
-    output_catalog['has_ring'] = output_catalog['ring'] != 0
-
-    output_catalog['bar_types'] = list(map(decode_bar_ints, output_catalog['bar']))
-    output_catalog['ring_types'] = list(map(decode_ring_ints, output_catalog['ring']))
 
     if plot:
         save_output_catalog_statistics(output_catalog)
@@ -39,16 +33,31 @@ def get_expert_catalog_joined_with_decals(joint_catalog, expert_catalog, plot=Fa
     return output_catalog
 
 
-def get_expert_catalog(expert_catalog_loc):
-
+def get_expert_catalog(expert_catalog_loc, save_loc=None):
     catalog = Table(fits.getdata(expert_catalog_loc))
+    catalog = interpret_expert_catalog(catalog)
+    if save_loc is not None:
+        # cannot save lists to .fits format
+        catalog['bar_types'] = list(map(lambda x: str(x), catalog['bar_types']))
+        catalog['ring_types'] = list(map(lambda x: str(x), catalog['ring_types']))
+        catalog.write(save_loc, overwrite=True)
+    return catalog
 
+
+def interpret_expert_catalog(catalog):
     # convert column names to be consistent with nsa
     for column_name in catalog.colnames:
         catalog.rename_column(column_name, column_name.lower())
     catalog.rename_column('sdss', 'iauname')
     catalog.rename_column('_ra', 'ra')
     catalog.rename_column('_de', 'dec')
+
+    catalog['has_bar'] = catalog['bar'] != 0
+    catalog['has_ring'] = catalog['ring'] != 0
+
+    catalog['bar_types'] = list(map(decode_bar_ints, catalog['bar']))
+    catalog['ring_types'] = list(map(decode_ring_ints, catalog['ring']))
+
     return catalog
 
 

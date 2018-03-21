@@ -34,6 +34,8 @@ def upload_decals_to_panoptes(joint_catalog,
     Returns:
         None
     """
+
+    print('galaxies in joint catalog: {}'.format(len(joint_catalog)))
     joint_catalog = joint_catalog[joint_catalog['png_ready'] == True]
     joint_catalog = joint_catalog[joint_catalog['fits_filled'] == True]
 
@@ -47,6 +49,7 @@ def upload_decals_to_panoptes(joint_catalog,
 
     # use Nair galaxies previously classified in DR2
     calibration_catalog = get_expert_catalog_joined_with_decals(dr2_galaxies, expert_catalog)
+    print(len(calibration_catalog))
 
     # calibration_set_name = 'decals_dr2_nair_calibration_dr2_style_250_each'
     # calibration_catalog_dr2_style = make_catalog_png_images(
@@ -72,14 +75,14 @@ def upload_decals_to_panoptes(joint_catalog,
     #     calibration_catalog_lupton_style, calibration_set_name)
 
     # upload all Nair/DR2 galaxies, coloured by DR2 rules
-    calibration_set_name = 'decals_dr2_nair_dr2_style_all'
-    calibration_catalog_dr2_style = make_catalog_png_images(
-        calibration_catalog,
-        image_utils.get_dr2_style_image,
-        '{}/{}'.format(calibration_dir, calibration_set_name),
-        size=424,
-        overwrite=False)
-    _ = upload_subject_set.upload_galaxy_subject_set(calibration_catalog_dr2_style, calibration_set_name)
+    # calibration_set_name = 'decals_dr2_nair_dr2_style_all'
+    # calibration_catalog_dr2_style = make_catalog_png_images(
+    #     calibration_catalog,
+    #     image_utils.get_dr2_style_image,
+    #     '{}/{}'.format(calibration_dir, calibration_set_name),
+    #     size=424,
+    #     overwrite=False)
+    # _ = upload_subject_set.upload_galaxy_subject_set(calibration_catalog_dr2_style, calibration_set_name)
 
     # upload first n DR2-only galaxies
     # dr2_only_name = 'first_1k_decals_dr2'
@@ -88,32 +91,31 @@ def upload_decals_to_panoptes(joint_catalog,
     # upload first n DR5-only galaxies
     # dr5_only_name = 'first_1k_decals_dr5_only'
     # _ = upload_subject_set.upload_galaxy_subject_set(dr5_only_galaxies[:1000], dr5_only_name)
-    dr5_only_name = '10k_to_30k_decals_dr5_only'
-    _ = upload_subject_set.upload_galaxy_subject_set(dr5_only_galaxies[10000:30000], dr5_only_name)
+    # dr5_only_name = '10k_to_30k_decals_dr5_only'
+    # _ = upload_subject_set.upload_galaxy_subject_set(dr5_only_galaxies[10000:30000], dr5_only_name)
 
 
 if __name__ == '__main__':
 
-    settings.new_previous_subjects = True
+    settings.new_previous_subjects = False
 
     joint_catalog = Table(fits.getdata(settings.joint_catalog_loc))
     joint_catalog = enforce_joint_catalog_columns(joint_catalog, overwrite_cache=False)
 
-    expert_catalog = get_expert_catalog(settings.expert_catalog_loc)
+    expert_catalog = get_expert_catalog(settings.expert_catalog_loc, settings.expert_catalog_interpreted_loc)
 
-    if settings.new_previous_subjects:
-        raw_previous_subjects = pd.read_csv(settings.previous_subjects_loc)  # MongoDB subject dump to csv from Ouro.
-        nsa_v1_0_0 = get_nsa_catalog(settings.nsa_v1_0_0_catalog_loc, '1_0_0')  # takes a while
-        previous_subjects = get_previous_decals_subjects(raw_previous_subjects, nsa_v1_0_0)
-        previous_subjects.write(settings.subject_loc, overwrite=True)
-    else:
-        previous_subjects_df = pd.read_csv(settings.subject_loc)
-        previous_subjects = Table.from_pandas(previous_subjects_df)  # previously extracted decals subjects
-
-    exit(0)
-    upload_decals_to_panoptes(
-        joint_catalog,
-        previous_subjects,
-        expert_catalog,
-        settings.calibration_dir,
-    )
+    # if settings.new_previous_subjects:
+    #     raw_previous_subjects = pd.read_csv(settings.previous_subjects_loc)  # MongoDB subject dump to csv from Ouro.
+    #     nsa_v1_0_0 = get_nsa_catalog(settings.nsa_v1_0_0_catalog_loc, '1_0_0')  # takes a while
+    #     previous_subjects = get_previous_decals_subjects(raw_previous_subjects, nsa_v1_0_0)
+    #     previous_subjects.write(settings.subject_loc, overwrite=True)
+    # else:
+    #     previous_subjects_df = pd.read_csv(settings.subject_loc)
+    #     previous_subjects = Table.from_pandas(previous_subjects_df)  # previously extracted decals subjects
+    #
+    # upload_decals_to_panoptes(
+    #     joint_catalog,
+    #     previous_subjects,
+    #     expert_catalog,
+    #     settings.calibration_dir,
+    # )
