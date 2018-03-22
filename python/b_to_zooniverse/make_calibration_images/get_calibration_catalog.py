@@ -3,6 +3,7 @@ from astropy.table import Table
 from astropy.io import fits
 from astropy import units as u
 import pandas as pd
+import json
 
 import matplotlib.pyplot as plt
 
@@ -37,10 +38,7 @@ def get_expert_catalog(expert_catalog_loc, save_loc=None):
     catalog = Table(fits.getdata(expert_catalog_loc))
     catalog = interpret_expert_catalog(catalog)
     if save_loc is not None:
-        # cannot save lists to .fits format
-        catalog['bar_types'] = list(map(lambda x: str(x), catalog['bar_types']))
-        catalog['ring_types'] = list(map(lambda x: str(x), catalog['ring_types']))
-        catalog.write(save_loc, overwrite=True)
+        catalog.to_pandas().to_csv(save_loc, encoding='utf-8', index=False)
     return catalog
 
 

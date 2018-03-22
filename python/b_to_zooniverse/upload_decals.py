@@ -104,18 +104,18 @@ if __name__ == '__main__':
 
     expert_catalog = get_expert_catalog(settings.expert_catalog_loc, settings.expert_catalog_interpreted_loc)
 
-    # if settings.new_previous_subjects:
-    #     raw_previous_subjects = pd.read_csv(settings.previous_subjects_loc)  # MongoDB subject dump to csv from Ouro.
-    #     nsa_v1_0_0 = get_nsa_catalog(settings.nsa_v1_0_0_catalog_loc, '1_0_0')  # takes a while
-    #     previous_subjects = get_previous_decals_subjects(raw_previous_subjects, nsa_v1_0_0)
-    #     previous_subjects.write(settings.subject_loc, overwrite=True)
-    # else:
-    #     previous_subjects_df = pd.read_csv(settings.subject_loc)
-    #     previous_subjects = Table.from_pandas(previous_subjects_df)  # previously extracted decals subjects
-    #
-    # upload_decals_to_panoptes(
-    #     joint_catalog,
-    #     previous_subjects,
-    #     expert_catalog,
-    #     settings.calibration_dir,
-    # )
+    if settings.new_previous_subjects:
+        raw_previous_subjects = pd.read_csv(settings.previous_subjects_loc)  # MongoDB subject dump to csv from Ouro.
+        nsa_v1_0_0 = get_nsa_catalog(settings.nsa_v1_0_0_catalog_loc, '1_0_0')  # takes a while
+        previous_subjects = get_previous_decals_subjects(raw_previous_subjects, nsa_v1_0_0)
+        previous_subjects.write(settings.subject_loc, overwrite=True)
+    else:
+        previous_subjects_df = pd.read_csv(settings.subject_loc)
+        previous_subjects = Table.from_pandas(previous_subjects_df)  # previously extracted decals subjects
+
+    upload_decals_to_panoptes(
+        joint_catalog,
+        previous_subjects,
+        expert_catalog,
+        settings.calibration_dir,
+    )

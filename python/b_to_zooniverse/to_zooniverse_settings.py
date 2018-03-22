@@ -14,7 +14,7 @@ nsa_cached_loc = '/data/galaxy_zoo/decals/catalogs/nsa_v{}_cached_for_upload.fit
 
 joint_catalog_loc = '/data/galaxy_zoo/decals/catalogs/dr{}_nsa_v{}_to_upload.fits'.format(data_release, nsa_version)
 expert_catalog_loc = '/data/galaxy_zoo/decals/catalogs/nair_sdss_catalog.fit'
-expert_catalog_interpreted_loc = '/data/galaxy_zoo/decals/catalogs/nair_sdss_catalog_interpreted.fits'
+expert_catalog_interpreted_loc = '/data/galaxy_zoo/decals/catalogs/nair_sdss_catalog_interpreted.csv'
 
 # only calibration_dir and the files that joint catalog point to are on external drives
 calibration_dir = '/Volumes/alpha/decals/png_native/calibration'
