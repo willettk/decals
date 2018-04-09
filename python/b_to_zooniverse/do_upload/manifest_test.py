@@ -85,7 +85,10 @@ def test_create_manifest_from_joint_catalog(joint_catalog):
     assert entry['png_loc'] == 'jpeg_here.png'
     assert type(entry['key_data']) == dict
     assert entry['key_data']['!ra'] == 147.45674
+    assert type(entry['key_data']['!sdss_search'] == str)
+    assert type(entry['key_data']['!decals_search'] == str)
     assert type(entry['key_data']['!simbad_search'] == str)
+    assert type(entry['key_data']['!nasa_ned_search'] == str)
 
 
 def test_create_manifest_from_joint_catalog_with_masks(joint_catalog_masked):
@@ -96,6 +99,10 @@ def test_create_manifest_from_joint_catalog_with_masks(joint_catalog_masked):
     assert type(entry['key_data']) == dict
     assert entry['key_data']['!ra'] == 147.45674
     assert entry['key_data']['!mag_faruv'] == -999.
+    assert type(entry['key_data']['!sdss_search'] == str)
+    assert type(entry['key_data']['!decals_search'] == str)
+    assert type(entry['key_data']['!simbad_search'] == str)
+    assert type(entry['key_data']['!nasa_ned_search'] == str)
 
 
 def test_create_manifest_from_calibration_catalog(calibration_catalog):

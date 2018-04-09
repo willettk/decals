@@ -96,7 +96,7 @@ def create_manifest_from_joint_catalog(catalog):
 
     markdown_text = {
         'decals_search': 'Click to view in DECALS',
-        'sdss search': 'Click to view in SDSS',
+        'sdss_search': 'Click to view in SDSS',
         'simbad_search': 'Click to search SIMBAD',
         'nasa_ned_search': 'Click to search NASA NED'
     }
