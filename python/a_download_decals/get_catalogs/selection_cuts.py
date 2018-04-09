@@ -60,6 +60,7 @@ def visualise_bad_petrotheta_measurements(nsa):
 
     print(pd.Series(nsa_wrong['petrotheta']).value_counts())
 
+
 if __name__ == '__main__':
     # save figures of the petrotheta measurement problem
     nsa_version = '1_0_0'

@@ -147,3 +147,17 @@ def test_coords_to_ned(joint_catalog):
     url = manifest.coords_to_ned(galaxy['ra'], galaxy['dec'], search_radius=10.)
     print(url)
     # TODO I don't know how to programmatically test that this query works, beyond not falling over
+
+
+def test_replace_bytes_with_str():
+
+    byt = b'J094552.53-000534.1'
+    assert type(byt) == bytes
+    assert type(byt) != str
+    string = manifest.replace_bytes_with_str(byt)
+    assert type(string) == str
+    print(string)
+
+    not_byt = 'hello world'
+    string = manifest.replace_bytes_with_str(not_byt)
+    assert type(string) == str
