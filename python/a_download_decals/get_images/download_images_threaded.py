@@ -5,6 +5,7 @@ import multiprocessing
 import subprocess
 
 import numpy as np
+from numba import jit
 from astropy.io import fits
 from tqdm import tqdm
 from PIL import Image
@@ -295,7 +296,7 @@ def make_png_from_fits(fits_loc, png_loc, png_size):
 
 def save_carefully_resized_png(png_loc, native_image, target_size):
     """
-
+    # TODO
     Args:
         png_loc ():
         native_image ():
@@ -306,6 +307,7 @@ def save_carefully_resized_png(png_loc, native_image, target_size):
     """
     native_pil_image = Image.fromarray(np.uint8(native_image * 255.), mode='RGB')
     nearest_image = native_pil_image.resize(size=(target_size, target_size), resample=Image.LANCZOS)
+    nearest_image = nearest_image.transpose(Image.FLIP_TOP_BOTTOM)  # to align with north/east
     nearest_image.save(png_loc)
 
 
@@ -369,13 +371,14 @@ def get_download_quality_of_fits(fits_loc, badmax_limit=0.2):
     """
 
     try:
-        img, _ = fits.getdata(fits_loc, 0, header=True)
+        img = fits.getdata(fits_loc)
         complete = few_missing_pixels(img, badmax_limit)
         return True, complete
-    except:  # image fails to open
+    except:  # image fails to open for any reason (not existing, corrupt, etc)
         return False, False
 
 
+@jit  # just-in-time compile to C for speed (not actually much faster)
 def few_missing_pixels(img, badmax_limit):
     """
     Find if img contains few NaN pixels e.g. from incomplete imaging

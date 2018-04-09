@@ -18,20 +18,33 @@ def get_previous_decals_subjects(all_subjects, nsa_v1_0_0):
     Returns:
         (astropy.Table): all decals subjects classified by Galaxy Zoo prior to DR5, as a flat table, joined to NSA
     """
+
+    # all_subjects[:1000].to_csv('temp_subjects.csv')
+
     if any(nsa_v1_0_0['nsa_version'] != '1_0_0'):
         raise Exception('Fatal error: using previous subjects requires NSA catalog version 1_0_0')
 
-    data_df = split_json_str_to_columns(all_subjects, 'metadata')
+    data_df = split_json_str_to_columns(all_subjects, 'metadata')  # expanded metadata nested dict field
     decals_df = data_df[data_df['survey'] == 'decals']
 
     # now we would like to clean up the inconsistent metadata and join the decals subjects with the NSA catalog
     decals_and_nsa = link_previous_subjects_with_nsa(decals_df, nsa_v1_0_0)
 
+    print(decals_and_nsa)
+    # decals_and_nsa[:1000].to_csv('temp.csv')
+
     # convert to astropy.Table
-    decals_and_nsa = decals_and_nsa.applymap(json.dumps)  # convert all dict to string rep. because...
+    decals_and_nsa = decals_and_nsa.applymap(if_dict_make_json)  # convert all dict to string rep. because...
     decals_and_nsa = Table.from_pandas(decals_and_nsa)  # this doesn't recognise dicts as subtables
 
     return decals_and_nsa
+
+
+def if_dict_make_json(x):
+    if type(x) == dict:
+        return json.dumps(x)
+    else:
+        return x
 
 
 def split_json_str_to_columns(input_df, json_column_name):
