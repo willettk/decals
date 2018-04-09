@@ -10,19 +10,27 @@ def upload_galaxy_subject_set(catalog, subject_set_name):
     return manifest.upload_manifest_to_galaxy_zoo(name, galaxy_manifest)
 
 
-def upload_nair_calibration_subject_set(calibration_catalog, subject_set_name):
+def upload_nair_calibration_subject_set(calibration_catalog, subject_set_name, n_subjects=None):
     """
-    Upload from the calibration catalog up to 1000 bars or rings, and 1000 others
+    Upload from the calibration catalog up to n_subjects/2 bars or rings, and n_subjects/2 others
     Color them with both DR2 style and Lupton style
     Args:
         calibration_catalog (astropy.Table): table of expertly classified galaxies, with nsa and decals info
         subject_set_name (str): name to give uploaded subject set on Panoptes. Must not already exist.
+        n_subjects (int): total number of galaxies to upload, split evenly between featured (bar/ring) and other
 
     Returns:
         (astropy.Table): calibration subject set manifest, as uploaded to Panoptes
     """
-    featured_galaxies = calibration_catalog[calibration_catalog['has_bar'] | calibration_catalog['has_ring']][:250]
-    other_galaxies = calibration_catalog[~calibration_catalog['has_bar'] & ~calibration_catalog['has_ring']][:250]
+    if n_subjects is None:
+        n_subjects_per_class = len(calibration_catalog)  # don't slice, upload all
+    else:
+        n_subjects_per_class = int(n_subjects / 2)
+
+    featured_galaxies = \
+        calibration_catalog[calibration_catalog['has_bar'] | calibration_catalog['has_ring']][:n_subjects_per_class]
+    other_galaxies = \
+        calibration_catalog[~calibration_catalog['has_bar'] & ~calibration_catalog['has_ring']][:n_subjects_per_class]
     calibration_galaxies = astropy.table.vstack([featured_galaxies, other_galaxies])
     print('Calibration bars: {}'.format(featured_galaxies['has_bar'].sum()))
     print('Calibration rings: {}'.format(featured_galaxies['has_ring'].sum()))
