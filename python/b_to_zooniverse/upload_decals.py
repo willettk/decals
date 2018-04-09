@@ -49,15 +49,16 @@ def upload_decals_to_panoptes(joint_catalog,
 
     # use Nair galaxies previously classified in DR2
     calibration_catalog = get_expert_catalog_joined_with_decals(dr2_galaxies, expert_catalog)
-    print(len(calibration_catalog))
+    # print(len(calibration_catalog))
 
     # calibration_set_name = 'decals_dr2_nair_calibration_dr2_style_250_each'
+    # calibration_set_name = 'test_upload'
     # calibration_catalog_dr2_style = make_catalog_png_images(
-    #     calibration_catalog,
+    #     calibration_catalog[:20],
     #     image_utils.get_dr2_style_image,
     #     '{}/{}'.format(calibration_dir, calibration_set_name),
     #     size=424,
-    #     overwrite=False)
+    #     overwrite=True)
 
     # upload standard calibration set of Nair/DR2 galaxies, coloured by DR1/2 rules
     # _ = upload_subject_set.upload_nair_calibration_subject_set(
@@ -75,22 +76,24 @@ def upload_decals_to_panoptes(joint_catalog,
     #     calibration_catalog_lupton_style, calibration_set_name)
 
     # upload all Nair/DR2 galaxies, coloured by DR2 rules
-    # calibration_set_name = 'decals_dr2_nair_dr2_style_all'
-    # calibration_catalog_dr2_style = make_catalog_png_images(
-    #     calibration_catalog,
-    #     image_utils.get_dr2_style_image,
-    #     '{}/{}'.format(calibration_dir, calibration_set_name),
-    #     size=424,
-    #     overwrite=False)
-    # _ = upload_subject_set.upload_galaxy_subject_set(calibration_catalog_dr2_style, calibration_set_name)
+    calibration_set_name = 'decals_dr2_nair_dr2_style_all'
+    calibration_catalog_dr2_style = make_catalog_png_images(
+        calibration_catalog,
+        image_utils.get_dr2_style_image,
+        '{}/{}'.format(calibration_dir, calibration_set_name),
+        size=424,
+        overwrite=False)
+    _ = upload_subject_set.upload_galaxy_subject_set(calibration_catalog_dr2_style, calibration_set_name)
 
     # upload first n DR2-only galaxies
     # dr2_only_name = 'first_1k_decals_dr2'
     # _ = upload_subject_set.upload_galaxy_subject_set(dr2_galaxies[:1000], dr2_only_name)
 
     # upload first n DR5-only galaxies
-    # dr5_only_name = 'first_1k_decals_dr5_only'
-    # _ = upload_subject_set.upload_galaxy_subject_set(dr5_only_galaxies[:1000], dr5_only_name)
+    # dr5_only_name = 'first_3k_decals_dr5_only'
+    # _ = upload_subject_set.upload_galaxy_subject_set(dr5_only_galaxies[:3000], dr5_only_name)
+    # dr5_only_name = '3k_to_5k_decals_dr5_only'
+    # _ = upload_subject_set.upload_galaxy_subject_set(dr5_only_galaxies[3000:5000], dr5_only_name)
     # dr5_only_name = '10k_to_30k_decals_dr5_only'
     # _ = upload_subject_set.upload_galaxy_subject_set(dr5_only_galaxies[10000:30000], dr5_only_name)
 

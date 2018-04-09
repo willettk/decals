@@ -3,7 +3,7 @@ import pytest
 from astropy.io import fits
 
 
-from a_download_decals.get_images.image_utils import dr2_style_rgb, decals_internal_rgb, lupton_rgb
+from a_download_decals.get_images import image_utils
 
 TEST_EXAMPLES_DIR = 'python/test_examples'
 
@@ -63,12 +63,12 @@ def test_dstn_rgb_on_varying_brightness():
     data = [data_down_20pc, original_data_by_band, data_up_20pc]
 
     desaturate_off = jpeg_creation_params()
-    jpegs = [dr2_style_rgb(image, **desaturate_off) for image in data]
+    jpegs = [image_utils.dr2_style_rgb(image, **desaturate_off) for image in data]
     plot_jpegs(jpegs, 'ours_comparison')
 
     desaturate_on = desaturate_off
     desaturate_on['desaturate'] = True
-    jpegs = [dr2_style_rgb(image, **desaturate_on) for image in data]
+    jpegs = [image_utils.dr2_style_rgb(image, **desaturate_on) for image in data]
     plot_jpegs(jpegs, 'ours_comparison_desaturate')
 
 
@@ -79,7 +79,7 @@ def test_decals_on_varying_brightness():
 
     data = [data_down_20pc, original_data_by_band, data_up_20pc]
 
-    jpegs = [decals_internal_rgb(image, **dustin_creation_params()) for image in data]
+    jpegs = [image_utils.decals_internal_rgb(image, **dustin_creation_params()) for image in data]
     plot_jpegs(jpegs, 'dustin_comparison')
 
 
@@ -90,7 +90,7 @@ def test_lupton_on_varying_brightness():
 
     data = [data_down_20pc, original_data_by_band, data_up_20pc]
 
-    jpegs = [lupton_rgb(image) for image in data]
+    jpegs = [image_utils.lupton_rgb(image) for image in data]
     plot_jpegs(jpegs, 'lupton_comparison')
 
 
@@ -107,7 +107,7 @@ def test_lupton_on_varying_saturation():
         'mn': 0,
         'mx': .4
     }
-    jpegs = [lupton_rgb(original_data_by_band, **kwargs, desaturate=desaturate) for desaturate in [True, False]]
+    jpegs = [image_utils.lupton_rgb(original_data_by_band, **kwargs, desaturate=desaturate) for desaturate in [True, False]]
     plot_jpeg_pair(jpegs, 'lupton_comparison_desaturate')
 
 

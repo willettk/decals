@@ -12,6 +12,7 @@ from tqdm import tqdm
 
 from b_to_zooniverse.do_upload.make_decals_metadata import get_key_astrophysical_columns
 from b_to_zooniverse.to_zooniverse_settings import zooniverse_login_loc
+import shared_utilities
 
 
 def create_manifest_from_calibration_catalog(catalog, image_columns):
@@ -80,17 +81,36 @@ def create_manifest_from_joint_catalog(catalog):
     except KeyError:
         pass
 
+    key_data['decals_search'] = key_data.apply(
+        lambda galaxy: coords_to_decals_skyviewer(galaxy['ra'], galaxy['dec']),
+        axis=1)
+    key_data['sdss_search'] = key_data.apply(
+        lambda galaxy: coords_to_sdss_navigate(galaxy['ra'], galaxy['dec']),
+        axis=1)
     key_data['simbad_search'] = key_data.apply(
         lambda galaxy: coords_to_simbad(galaxy['ra'], galaxy['dec'], search_radius=10.),
         axis=1)
+    key_data['nasa_ned_search'] = key_data.apply(
+        lambda galaxy: coords_to_ned(galaxy['ra'], galaxy['dec'], search_radius=10.),
+        axis=1)
 
-    key_data['simbad_search'] = key_data['simbad_search'].apply(
-        lambda url: wrap_url_in_new_tab_markdown(url=url, display_text='Click to search SIMBAD'))
+    markdown_text = {
+        'decals_search': 'Click to view in DECALS',
+        'sdss search': 'Click to view in SDSS',
+        'simbad_search': 'Click to search SIMBAD',
+        'nasa_ned_search': 'Click to search NASA NED'
+    }
+    for link_column, link_text in markdown_text.items():
+        key_data[link_column] = key_data[link_column].apply(
+            lambda url: wrap_url_in_new_tab_markdown(url=url, display_text=link_text))
 
     # rename all key data columns to appear only in Talk by prepending with '!'
     current_columns = key_data.columns.values
     prepended_columns = ['!' + col for col in current_columns]
     key_data = key_data.rename(columns=dict(zip(current_columns, prepended_columns)))
+
+    key_data['metadata_message'] = 'Metadata is available in [Talk](+tab+https://www.zooniverse.org/projects/zookeeper/galaxy-zoo/talk)'
+    key_data['#upload_date'] = shared_utilities.current_date()  # not shown to users
 
     # create the manifest structure that Panoptes Python client expects
     key_data_as_dicts = key_data.apply(lambda x: x.to_dict(), axis=1).values
@@ -116,7 +136,6 @@ def upload_manifest_to_galaxy_zoo(subject_set_name, manifest, galaxy_zoo_id='573
     Returns:
         None
     """
-
     if 'TEST' in subject_set_name:
         warnings.warn('Testing mode detected - not uploading!')
         return manifest
@@ -227,6 +246,50 @@ def coords_to_simbad(ra, dec, search_radius):
         (str): SIMBAD database search url for objects at ra, dec
     """
     return 'http://simbad.u-strasbg.fr/simbad/sim-coo?Coord={0}+%09{1}&CooFrame=FK5&CooEpoch=2000&CooEqui=2000&CooDefinedFrames=none&Radius={2}&Radius.unit=arcmin&submit=submit+query&CoordList='.format(ra, dec, search_radius)
+
+
+def coords_to_decals_skyviewer(ra, dec):
+    """
+    Get decals_skyviewer viewpoint url for objects within search_radius of ra, dec coordinates. Default zoom.
+    Args:
+        ra (float): right ascension in degrees
+        dec (float): declination in degrees
+
+    Returns:
+        (str): decals_skyviewer viewpoint url for objects at ra, dec
+    """
+    return 'http://www.legacysurvey.org/viewer?ra={}&dec={}&zoom=15&layer=decals-dr5'.format(ra, dec)
+
+
+def coords_to_sdss_navigate(ra, dec):
+    """
+    Get sdss navigate url for objects within search_radius of ra, dec coordinates. Default zoom.
+    Args:
+        ra (float): right ascension in degrees
+        dec (float): declination in degrees
+
+    Returns:
+        (str): sdss navigate url for objects at ra, dec
+    """
+    # skyserver.sdss.org really does skip the http and wwww preprends!
+    return 'skyserver.sdss.org/dr14/en/tools/chart/navi.aspx?ra={}&dec={}&scale=0.1&width=120&height=120&opt='.format(ra, dec)
+
+
+def coords_to_ned(ra, dec, search_radius):
+    """
+    Get NASA NED search url for objects within search_radius of ra, dec coordinates.
+    Args:
+        ra (float): right ascension in degrees
+        dec (float): declination in degrees
+        search_radius (float): search radius around ra, dec in arcseconds
+
+    Returns:
+        (str): SIMBAD database search url for objects at ra, dec
+    """
+    ra_string = '{:3.8f}d'.format(ra)
+    dec_string = '{:3.8f}d'.format(dec)
+    search_radius_arcmin = search_radius / 60.
+    return 'https://ned.ipac.caltech.edu/cgi-bin/objsearch?search_type=Near+Position+Search&in_csys=Equatorial&in_equinox=J2000.0&lon={}&lat={}&radius={}&hconst=73&omegam=0.27&omegav=0.73&corr_z=1&z_constraint=Unconstrained&z_value1=&z_value2=&z_unit=z&ot_include=ANY&nmp_op=ANY&out_csys=Equatorial&out_equinox=J2000.0&obj_sort=Distance+to+search+center&of=pre_text&zv_breaker=30000.0&list_limit=5&img_stamp=YES'.format(ra_string, dec_string, search_radius_arcmin)
 
 
 def wrap_url_in_new_tab_markdown(url, display_text):
