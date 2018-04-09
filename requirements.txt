@@ -13,3 +13,4 @@ python-coveralls
 pytest-cov
 codecov
 requests
+numba
