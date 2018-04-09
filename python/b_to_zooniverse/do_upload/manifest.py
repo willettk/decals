@@ -74,6 +74,8 @@ def create_manifest_from_joint_catalog(catalog):
 
     # np.nan cannot be handled by JSON encoder. Convert to flag value of -999
     key_data = key_data.applymap(replace_nan_with_flag)
+    # bytes cannot be handled by JSON encoder. Convert to string
+    key_data = key_data.applymap(replace_bytes_with_str)
 
     # calibration catalog can have 'selected image' column
     try:
@@ -234,6 +236,21 @@ def replace_nan_with_flag(x):
         return x
 
 
+def replace_bytes_with_str(x):
+    """
+    For any x, if x is nan or masked, replace with -999
+    Args:
+        x (Any): input of unknown type to be checked
+
+    Returns:
+        (float): -999 if x is of nan or masked, x if not
+    """
+    if type(x) is bytes:
+        return x.decode('utf-8')
+    else:
+        return x
+
+
 def coords_to_simbad(ra, dec, search_radius):
     """
     Get SIMBAD search url for objects within search_radius of ra, dec coordinates.
@@ -271,8 +288,8 @@ def coords_to_sdss_navigate(ra, dec):
     Returns:
         (str): sdss navigate url for objects at ra, dec
     """
-    # skyserver.sdss.org really does skip the http and wwww preprends!
-    return 'skyserver.sdss.org/dr14/en/tools/chart/navi.aspx?ra={}&dec={}&scale=0.1&width=120&height=120&opt='.format(ra, dec)
+    # skyserver.sdss.org really does skip the wwww, but needs https or link keeps the original Zooniverse root
+    return 'https://skyserver.sdss.org/dr14/en/tools/chart/navi.aspx?ra={}&dec={}&scale=0.1&width=120&height=120&opt='.format(ra, dec)
 
 
 def coords_to_ned(ra, dec, search_radius):

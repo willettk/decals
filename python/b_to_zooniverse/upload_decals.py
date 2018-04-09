@@ -14,7 +14,7 @@ from b_to_zooniverse.setup.check_joint_catalog import enforce_joint_catalog_colu
 from shared_utilities import match_galaxies_to_catalog_table
 
 
-def upload_decals_to_panoptes(joint_catalog,
+def upload_decals_to_panoptes(joint_catalog_all,
                               previous_subjects,
                               expert_catalog,
                               calibration_dir):
@@ -36,7 +36,10 @@ def upload_decals_to_panoptes(joint_catalog,
         None
     """
 
-    print('galaxies in joint catalog: {}'.format(len(joint_catalog)))
+    print('galaxies in joint catalog: {}'.format(len(joint_catalog_all)))
+    print('fits in joint catalog: {}'.format(joint_catalog_all['fits_ready'].sum()))
+
+    joint_catalog = joint_catalog_all.copy()
     joint_catalog = joint_catalog[joint_catalog['png_ready'] == True]
     joint_catalog = joint_catalog[joint_catalog['fits_filled'] == True]
 
@@ -111,21 +114,18 @@ def upload_decals_to_panoptes(joint_catalog,
     """
     Upload all galaxies from custom catalog
     """
-    gordon_galaxies = Table.from_pandas(pd.read_csv('/data/galaxy_zoo/decals/catalogs/gordon_sdss_sample.csv'))
-    gordon_and_dr5, lost = match_galaxies_to_catalog_table(
-        galaxies=gordon_galaxies,
-        catalog=joint_catalog,
-        galaxy_suffix='',
-        catalog_suffix='_dr5',
-        matching_radius=5. * u.arcsec
-    )
-    print(len(gordon_and_dr5))
-    # print(gordon_and_dr5[0])
-
-    print(lost[['objID', 'ra', 'dec', 'sky_separation']])
-
-    custom_catalog_name = 'yjan_gordon_sdss_sample'
-    # _ = upload_subject_set.upload_galaxy_subject_set(gordon_and_dr5, custom_catalog_name)
+    # gordon_galaxies = Table.from_pandas(pd.read_csv('/data/galaxy_zoo/decals/catalogs/gordon_sdss_sample.csv'))
+    # custom_catalog, lost = match_galaxies_to_catalog_table(
+    #     galaxies=gordon_galaxies,
+    #     catalog=joint_catalog_all,
+    #     galaxy_suffix='',
+    #     catalog_suffix='_dr5',
+    #     matching_radius=10. * u.arcsec
+    # )
+    # print('Missing: {}'.format(len(lost)))
+    #
+    # custom_catalog_name = 'yjan_gordon_sdss_sample_790'
+    # _ = upload_subject_set.upload_galaxy_subject_set(custom_catalog, custom_catalog_name)
 
 
 if __name__ == '__main__':
