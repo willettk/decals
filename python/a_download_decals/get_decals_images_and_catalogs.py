@@ -102,7 +102,7 @@ def main():
         print('setup complete')
 
     # specify execution options
-    settings.new_catalog = False
+    settings.new_catalog = True
     settings.new_images = True
     settings.overwrite_fits = False
     settings.overwrite_png = False
