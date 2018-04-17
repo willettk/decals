@@ -1,3 +1,7 @@
+
+import logging
+import datetime
+
 import pandas as pd
 from astropy.io import fits
 from astropy.table import Table
@@ -126,6 +130,34 @@ def upload_decals_to_panoptes(joint_catalog_all,
     #
     # custom_catalog_name = 'yjan_gordon_sdss_sample_790'
     # _ = upload_subject_set.upload_galaxy_subject_set(custom_catalog, custom_catalog_name)
+
+    """
+    Upload first n DR5-only galaxies NOT already uploaded
+    Must redo exports before uploading new galaxies. 
+    Alternative: use endpoint API
+    """
+    latest_workflow_classification_export_loc = '/data/galaxy_zoo/decals/classifications/panoptes_dr5_classifications_2018_03_18.csv'
+    previous_classifications = pd.read_csv(latest_workflow_classification_export_loc)
+    start_date = datetime.datetime(year=2018, month=3, day=15)
+    relevant_classifications = previous_classifications['created_at'] >= start_date
+    subjects_with_classifications = set(relevant_classifications['subject_id'])
+    logging.info('Subjects classified since launch: {}'.format(len(subjects_with_classifications)))
+
+    latest_subject_extract_loc = '/data/galaxy_zoo/decals/subjects/panoptes_subjects_2018_03_18.csv'
+    uploaded_subjects = Table.from_pandas(pd.read_csv(latest_subject_extract_loc))
+
+    subjects_already_added = uploaded_subjects[uploaded_subjects['subject_id'] in subjects_with_classifications]
+    logging.info('Subjects identified as classified since launch: {}'.format(len(subjects_already_added)))
+
+    _, subjects_not_yet_added = match_galaxies_to_catalog_table(
+        galaxies=dr5_only_galaxies,
+        catalog=subjects_already_added,
+        galaxy_suffix='',
+        catalog_suffix='_from_extract',
+        matching_radius=10. * u.arcsec)
+    logging.info('Subjects not yet classified (to upload): {}'.format(len(subjects_already_added)))
+    subjects_not_yet_added_name = '5k_subjects_not_yet_classified'
+    _ = upload_subject_set.upload_galaxy_subject_set(subjects_not_yet_added_name[:5000], subjects_not_yet_added_name)
 
 
 if __name__ == '__main__':
