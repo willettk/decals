@@ -1,1 +1,3 @@
 python/willett/* linguist-vendored
+python/*.ipynb linguist-vendored
+*.html linguist-vendored
