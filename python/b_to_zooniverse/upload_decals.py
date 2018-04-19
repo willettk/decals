@@ -1,3 +1,7 @@
+
+import logging
+import datetime
+
 import pandas as pd
 from astropy.io import fits
 from astropy.table import Table
@@ -11,7 +15,7 @@ from b_to_zooniverse.previous_subjects.previous_decals_subjects import get_previ
 from b_to_zooniverse.make_calibration_images.get_calibration_catalog import get_expert_catalog, get_expert_catalog_joined_with_decals
 from b_to_zooniverse.make_calibration_images.get_calibration_images import make_catalog_png_images
 from b_to_zooniverse.setup.check_joint_catalog import enforce_joint_catalog_columns
-from shared_utilities import match_galaxies_to_catalog_table
+import shared_utilities
 
 
 def upload_decals_to_panoptes(joint_catalog_all,
@@ -36,21 +40,21 @@ def upload_decals_to_panoptes(joint_catalog_all,
         None
     """
 
-    print('galaxies in joint catalog: {}'.format(len(joint_catalog_all)))
-    print('fits in joint catalog: {}'.format(joint_catalog_all['fits_ready'].sum()))
+    logging.info('Galaxies in joint catalog: {}'.format(len(joint_catalog_all)))
+    logging.info('fits in joint catalog: {}'.format(joint_catalog_all['fits_ready'].sum()))
 
     joint_catalog = joint_catalog_all.copy()
     joint_catalog = joint_catalog[joint_catalog['png_ready'] == True]
     joint_catalog = joint_catalog[joint_catalog['fits_filled'] == True]
 
-    dr2_galaxies, dr5_only_galaxies = match_galaxies_to_catalog_table(  # unmatched galaxies are new
+    dr2_galaxies, dr5_only_galaxies = shared_utilities.match_galaxies_to_catalog_table(  # unmatched galaxies are new
         galaxies=joint_catalog,
         catalog=previous_subjects,
         galaxy_suffix='',
         catalog_suffix='_dr1_2')  # if field exists in both catalogs
 
-    print('Previously classified galaxies: {}'.format(len(dr2_galaxies)))
-    print('New galaxies: {}'.format(len(dr5_only_galaxies)))
+    logging.info('Previously classified galaxies: {}'.format(len(dr2_galaxies)))
+    logging.info('New galaxies: {}'.format(len(dr5_only_galaxies)))
 
     # use Nair galaxies previously classified in DR2
     calibration_catalog = get_expert_catalog_joined_with_decals(dr2_galaxies, expert_catalog)
@@ -127,8 +131,86 @@ def upload_decals_to_panoptes(joint_catalog_all,
     # custom_catalog_name = 'yjan_gordon_sdss_sample_790'
     # _ = upload_subject_set.upload_galaxy_subject_set(custom_catalog, custom_catalog_name)
 
+    """
+    Upload first n DR5-only galaxies NOT already uploaded
+    Must redo exports before uploading new galaxies. 
+    Alternative: use endpoint API
+    """
+    latest_workflow_classification_export_loc = '/data/galaxy_zoo/decals/classifications/decals-dr5-classifications_2018-04-18.csv'
+    previous_classifications = pd.read_csv(
+        latest_workflow_classification_export_loc,
+        dtype={'workflow_id': str},
+        parse_dates=['created_at'])
+
+    latest_subject_extract_loc = '/data/galaxy_zoo/decals/subjects/panoptes-subjects_2018-03-18.csv'
+    uploaded_subjects = pd.read_csv(
+        latest_subject_extract_loc,
+        dtype={'workflow_id': str})
+
+    subjects_not_yet_added = subjects_not_yet_classified(
+        catalog=dr5_only_galaxies,
+        subject_extract=uploaded_subjects,
+        classification_extract=previous_classifications,
+        workflow_id='6122',
+        start_date=datetime.datetime(year=2018, month=3, day=15))  # public launch date of DR5
+
+    logging.info('Galaxies in catalog not yet classified (to upload): {}'.format(len(subjects_not_yet_added)))
+    subjects_not_yet_added_name = '5k_subjects_not_yet_classified'
+    _ = upload_subject_set.upload_galaxy_subject_set(subjects_not_yet_added_name[:5000], subjects_not_yet_added_name)
+    logging.info('Subject set {} successfully uploaded'.format(subjects_not_yet_added_name))
+
+
+def subjects_not_yet_classified(catalog, subject_extract, classification_extract, workflow_id=None, start_date=None):
+    """
+    Filter for galaxies in catalog that are not classified
+    Will return uploaded galaxies with 0 classifications. Do not run with fresh subject batch.
+    Args:
+        catalog (astropy.Table): all galaxies, with metadata for upload
+        subject_extract (pd.DataFrame): Panoptes subject extract
+        classification_extract (pd.DataFrame): Panoptes classification extract
+        workflow_id (str): (optional) if not None, filter classifications and subjects to be from workflow id
+        start_date (datetime.pyi): (optional) if not None, filter classifications to be made after start_date
+
+    Returns:
+        (astropy.Table) galaxies in catalog which have 0 classifications or are not yet uploaded anywhere
+    """
+
+    relevant_classifications = classification_extract[
+        (classification_extract['created_at'] >= start_date) &
+        (classification_extract['workflow_id'].astype(str) == workflow_id)]
+
+    uploaded_subjects = set(relevant_classifications['subject_ids'])
+    logging.info('Subjects uploaded since launch: {}'.format(len(uploaded_subjects)))
+
+    # 'subjects_already_added' includes any subject id duplicates: each workflow will have a row for that subject_id
+    subjects_already_added = subject_extract[
+        (subject_extract['subject_id'].isin(uploaded_subjects)) &
+        (subject_extract['workflow_id'].astype(str) == '6122')
+        ]
+    logging.info('Unique subjects identified as classified since launch: {}'.format(
+        len(subjects_already_added['subject_id'].unique())))
+
+    # get ra and dec from subject metadata
+    subjects_already_added = shared_utilities.load_current_subjects(subjects_already_added, workflow='6122',
+                                                                    save_loc='temp.csv')
+
+    _, subjects_not_yet_added = shared_utilities.match_galaxies_to_catalog_table(
+        galaxies=catalog,
+        catalog=Table.from_pandas(subjects_already_added),  # duplicates don't matter here
+        galaxy_suffix='',
+        catalog_suffix='_from_extract',
+        matching_radius=10. * u.arcsec)
+
+    return subjects_not_yet_added
+
 
 if __name__ == '__main__':
+
+    logging.basicConfig(
+        filename='upload_decals.log',
+        filemode='w',
+        format='%(asctime)s %(message)s',
+        level=logging.INFO)
 
     settings.new_previous_subjects = False
 

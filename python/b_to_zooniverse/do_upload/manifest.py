@@ -288,8 +288,8 @@ def coords_to_sdss_navigate(ra, dec):
     Returns:
         (str): sdss navigate url for objects at ra, dec
     """
-    # skyserver.sdss.org really does skip the wwww, but needs https or link keeps the original Zooniverse root
-    return 'https://skyserver.sdss.org/dr14/en/tools/chart/navi.aspx?ra={}&dec={}&scale=0.1&width=120&height=120&opt='.format(ra, dec)
+    # skyserver.sdss.org really does skip the wwww, but needs http or link keeps the original Zooniverse root
+    return 'http://skyserver.sdss.org/dr14/en/tools/chart/navi.aspx?ra={}&dec={}&scale=0.1&width=120&height=120&opt='.format(ra, dec)
 
 
 def coords_to_ned(ra, dec, search_radius):

@@ -1,12 +1,20 @@
 env:
-  - ON_TRAVIS="True"
+  global:
+    - ON_TRAVIS="True"
+    - CC_TEST_REPORTER_ID=be6faf0767e3af0ef3350b4ceed55479e881cc38ead267a5c389bf6bf713a8f6
 language: python
 python:
   - "3.6"
 install:
   - pip install -r requirements.txt
+before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
 script:
   - pytest --cov=./
 after_success:
   - codecov
   - coveralls
+after_script:
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT

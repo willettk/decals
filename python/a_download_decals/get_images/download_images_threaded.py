@@ -72,7 +72,8 @@ def download_images(galaxy,
                     overwrite_png=False,
                     max_attempts=5,
                     min_pixelscale=0.1,
-                    png_size=424):
+                    png_size=424,
+                    lazy_checking=False):
     """
     Download a multi-plane FITS image from the DECaLS skyserver
     Write multi-plane FITS images to separate files for each band
@@ -85,6 +86,7 @@ def download_images(galaxy,
         pbar (tqdm): progress bar shared between processes, to be updated. If None, no progress bar will be shown.
         max_attempts (int): max number of fits download attempts per file
         min_pixelscale(float): minimum pixel scale to request from server, if object is tiny
+        lazy_checking (bool): if True, attempt to open .fits files. Else, only check if .fits exists
 
     Returns:
         None
@@ -99,8 +101,12 @@ def download_images(galaxy,
         png_loc = galaxy['png_loc']
 
         # Download multi-band fits images
-        # if not fits_downloaded_correctly(fits_loc) or overwrite_fits:
-        if (not os.path.exists(fits_loc)) or overwrite_fits:   # lazy mode
+        if lazy_checking:   # only check if file exists, for speed
+            get_new_fits = (not os.path.exists(fits_loc)) or overwrite_fits
+        else:
+            get_new_fits = not fits_downloaded_correctly(fits_loc) or overwrite_fits
+
+        if get_new_fits:
             attempt = 0
             while attempt < max_attempts:
                 try:

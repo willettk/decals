@@ -1,0 +1,15 @@
+version: "2"
+checks:
+  method-lines:
+    config:
+      threshold: 100
+  argument-count:
+    enabled: false
+exclude_patterns:
+  - "python/willett"
+  - "*.png"
+  - "*.csv"
+  - "*/**.png"
+  - "*/**.csv"
+  - "*/**_test.py"
+  - "*_test.py"
